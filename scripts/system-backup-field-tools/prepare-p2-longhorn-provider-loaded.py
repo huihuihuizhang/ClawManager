@@ -84,7 +84,7 @@ def validate_core_successor(core, successor, hold_pin):
          'native successor changed unrelated configuration or Longhorn material binding')
 
 
-def confirmed_native_failure(exit_record, refusal, argv, pool_history=False, service_account=False):
+def confirmed_native_failure(exit_record, refusal, argv, pool_history=False, service_account=False, shared_protocol=False):
     need(exit_record == {'ExitCode': 1} and refusal.get('Status') == 'original_mount_author_refused' and
          refusal.get('Phase') == 'native_writers' and argv[1] == 'prepare-mount-materials' and
          argv[argv.index('--source-selection-sha256') + 1] == SELECTION_SHA,
@@ -96,18 +96,25 @@ def confirmed_native_failure(exit_record, refusal, argv, pool_history=False, ser
         need(refusal.get('Step') == 'native_instance_deployment' and refusal.get('Kind') == 'Deployment' and
              refusal.get('Reason') == 'validation' and refusal.get('InstanceID') == 1,
              'observed instance 1 deployment refusal required')
+    if shared_protocol:
+        need(refusal.get('Step') == 'native_agent_capabilities' and refusal.get('Kind') == 'RuntimeAgent' and
+             refusal.get('Reason') == 'read_error' and refusal.get('InstanceID') == 1,
+             'observed instance 1 isolated capability refusal required')
     return Path(argv[argv.index('--output-directory') + 1])
 
 
-def main(native_readback=False, pool_history=False, service_account=False):
+def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False):
     os.umask(0o077); need(os.name == 'posix', 'Linux operator required')
-    need(sum((native_readback, pool_history, service_account)) <= 1, 'select one successor mode')
+    need(sum((native_readback, pool_history, service_account, shared_protocol)) <= 1, 'select one successor mode')
     A, L, H, D, F = [load(name) for name in ('assemble-p2-installation-candidate', 'load-p2-formal-vault',
                                            'prepare-p2-longhorn-source', 'p2-source-dns', 'p2-vault-local-forward')]
     done = A.decode((PARENT / 'completed.json').read_bytes())
     receipt, selected = A.obj(done['Receipt']), A.obj(done['SourceSelection'])
     core = A.obj(receipt['Deployment']); A.read(done['Definition'])
     validate_parent(done, receipt, selected, core)
+    if shared_protocol:
+        need(core['runtime_sources'].get('shared_runtime_protocol') == 'shared-container-freeze.v1' and
+             core['runtime_sources'].get('shared_runtime_observer'), 'original shared protocol and observer required')
     now = dt.datetime.now(dt.timezone.utc); until = dt.datetime.fromisoformat(selected['Until'].replace('Z', '+00:00'))
     need(dt.datetime.fromisoformat(selected['NotBefore'].replace('Z', '+00:00')) <= now < until - dt.timedelta(minutes=10),
          'source window insufficient; preserve records and renew source')
@@ -115,25 +122,27 @@ def main(native_readback=False, pool_history=False, service_account=False):
         need(not selected.get(key) or not Path(selected[key]).exists(), 'source facts already exist')
     native, native_sha = BIN, BIN_SHA
     journal = ROOT / 'longhorn-source-20261113-provider-loaded'
-    if native_readback or pool_history or service_account:
-        if service_account:
+    if native_readback or pool_history or service_account or shared_protocol:
+        if shared_protocol:
+            journal = ROOT / (journal.name + '-service-account-repair')
+        elif service_account:
             journal = ROOT / (journal.name + '-pool-history-repair')
         elif pool_history:
             journal = ROOT / (journal.name + '-native-readback')
         need(not (journal / 'completed.json').exists(), 'prior mount author already completed')
         previous = A.decode((journal / 'native.sent.private.json').read_bytes())['Argv']
         prior_out = confirmed_native_failure(A.decode((journal / 'native.exit.json').read_bytes()),
-                                            A.decode((journal / 'native.stdout.private').read_bytes()), previous, pool_history, service_account)
+                                            A.decode((journal / 'native.stdout.private').read_bytes()), previous, pool_history, service_account, shared_protocol)
         expected_out = Path(done['SourceSelection']['File']).parent.parent / journal.name
         need(prior_out == expected_out and prior_out.resolve(strict=True) == prior_out and prior_out.is_dir() and
              not list(prior_out.iterdir()), 'partial mount outputs require reconciliation')
         package = Path(__file__).resolve().parent
         build = A.decode((package / 'BUILD_RECEIPT.json').read_bytes())
-        expected_build = 'runtime-service-account-default.v1' if service_account else ('runtime-pool-history.v1' if pool_history else 'native-writer-step.v1')
+        expected_build = 'runtime-shared-protocol.v1' if shared_protocol else 'runtime-service-account-default.v1' if service_account else ('runtime-pool-history.v1' if pool_history else 'native-writer-step.v1')
         need(build['Diagnostic'] == expected_build and
              build['SourceRevision'] == (package / 'SOURCE_REVISION').read_text().strip(), 'native writer diagnostic build required')
         native, native_sha = package / 'system-backup-source-registries', build['NativeSHA256']
-        suffix = 'service-account-repair' if service_account else ('pool-history-repair' if pool_history else 'native-readback')
+        suffix = 'shared-protocol-repair' if shared_protocol else 'service-account-repair' if service_account else ('pool-history-repair' if pool_history else 'native-readback')
         journal = ROOT / ('longhorn-source-20261113-provider-loaded-' + suffix)
     A.read({'File': str(native), 'SHA256': native_sha}, 128 << 20)
     journal.mkdir(mode=0o700, exist_ok=True)
@@ -210,7 +219,8 @@ if __name__ == '__main__':
         modes.add_argument('--native-writer-readback', action='store_true')
         modes.add_argument('--runtime-pool-history-repair', action='store_true')
         modes.add_argument('--runtime-service-account-repair', action='store_true')
+        modes.add_argument('--runtime-shared-protocol-repair', action='store_true')
         args = parser.parse_args()
-        main(args.native_writer_readback, args.runtime_pool_history_repair, args.runtime_service_account_repair)
+        main(args.native_writer_readback, args.runtime_pool_history_repair, args.runtime_service_account_repair, args.runtime_shared_protocol_repair)
     except Exception as error:
         raise SystemExit('P2_LONGHORN_PROVIDER_LOADED_UNCONFIRMED ' + (str(error) if type(error) is ValueError else type(error).__name__))

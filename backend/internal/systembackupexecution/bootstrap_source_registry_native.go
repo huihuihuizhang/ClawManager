@@ -118,6 +118,7 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 	}
 	var agent services.BackupGatewayAgent
 	var capabilities services.RuntimeAgentBackupClient
+	var sharedCapabilities *services.RuntimeSharedBackupCallbacks
 	lite := false
 	for _, instance := range sqlFacts.inventory.Instances {
 		lite = lite || instance.Mode == "lite" && !deferredRuntimeTestInstance(x.config, instance)
@@ -151,8 +152,23 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 		if !ok {
 			return nil, install.ErrInstall
 		}
-		capabilities, ok = client.(services.RuntimeAgentBackupClient)
-		if !ok {
+		step, kind, observed = "native_agent_protocol", "RuntimeAgent", nil
+		switch x.config.RuntimeSources.SharedRuntimeProtocol {
+		case "":
+			capabilities, ok = client.(services.RuntimeAgentBackupClient)
+			if !ok {
+				return nil, install.ErrInstall
+			}
+		case services.RuntimeSharedBackupProtocol:
+			if x.config.RuntimeSources.SharedObserver == nil {
+				return nil, install.ErrInstall
+			}
+			sharedCapabilities, err = services.NewRuntimeSharedBackupCallbacks(client)
+			observed = err
+			if err != nil {
+				return nil, install.ErrInstall
+			}
+		default:
 			return nil, install.ErrInstall
 		}
 	}
@@ -259,11 +275,25 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 		if err != nil || string(node.UID) != x.config.Security.NodeUIDs[pod.Spec.NodeName] || node.DeletionTimestamp != nil || node.Labels["kubernetes.io/os"] != "linux" || x.checkPhysical(x.physical) != nil {
 			return nil, install.ErrInstall
 		}
-		step, kind, observed = "native_agent_capabilities", "RuntimeAgent", nil
-		caps, err := capabilities.BackupCapabilities(x.physical, row.Endpoint, binding.Port)
-		observed = err
-		if err != nil || caps == nil || caps.Protocol != services.RuntimeBackupProtocol || caps.Scope != services.RuntimeBackupStopScope || caps.Namespace != row.Namespace || caps.PodUID != string(pod.UID) || caps.GatewayPort != binding.Port || caps.AgentEpoch == "" || caps.Slot == "" || !caps.Supported || !caps.DurableReservation || !services.RuntimeBackupSupportsOriginalOperationRecovery(caps) || x.checkPhysical(x.physical) != nil {
-			return nil, install.ErrInstall
+		native := bootstrapSourceNativeWriter{InstanceID: instance.ID, UserID: instance.UserID, Generation: instance.Generation, RuntimePodID: row.ID, PID: binding.PID, Port: binding.Port, Namespace: row.Namespace, Pod: row.Name, PodUID: string(pod.UID), Deployment: row.Deployment, Gateway: binding.Gateway, Endpoint: row.Endpoint, DeploymentUID: string(dep.UID), ReplicaSetUID: string(rs.UID), ServiceAccount: sa.Name, ServiceAccountUID: string(sa.UID), NodeUID: string(node.UID)}
+		if sharedCapabilities != nil {
+			step, kind, observed = "native_shared_agent_capabilities", "RuntimeAgent", nil
+			caps, _, err := sharedCapabilities.Capabilities(x.physical, row.Endpoint)
+			observed = err
+			if err != nil || caps.Namespace != row.Namespace || caps.PodUID != string(pod.UID) || caps.Deployment != dep.Name || x.checkPhysical(x.physical) != nil {
+				return nil, install.ErrInstall
+			}
+			native.SharedCapabilities = &caps
+			native.AgentEpoch, native.DurableReservation, native.AgentRestartReconciliation = caps.AgentEpoch, caps.DurableReservation, caps.AgentRestartReconciliation
+		} else {
+			step, kind, observed = "native_agent_capabilities", "RuntimeAgent", nil
+			caps, err := capabilities.BackupCapabilities(x.physical, row.Endpoint, binding.Port)
+			observed = err
+			if err != nil || caps == nil || caps.Protocol != services.RuntimeBackupProtocol || caps.Scope != services.RuntimeBackupStopScope || caps.Namespace != row.Namespace || caps.PodUID != string(pod.UID) || caps.GatewayPort != binding.Port || caps.AgentEpoch == "" || caps.Slot == "" || !caps.Supported || !caps.DurableReservation || !services.RuntimeBackupSupportsOriginalOperationRecovery(caps) || x.checkPhysical(x.physical) != nil {
+				return nil, install.ErrInstall
+			}
+			native.AgentEpoch, native.RecoveryScope, native.AgentRestartPolicy = caps.AgentEpoch, caps.RecoveryScope, caps.AgentRestartPolicy
+			native.DurableReservation, native.AgentRestartReconciliation = caps.DurableReservation, caps.AgentRestartReconciliation
 		}
 		step, kind, observed = "native_gateway_state", "RuntimeAgent", nil
 		state, err := agent.GatewayState(x.physical, row.Endpoint, binding.Gateway)
@@ -272,7 +302,8 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 			return nil, install.ErrInstall
 		}
 		seen[instance.ID] = true
-		out = append(out, bootstrapSourceNativeWriter{InstanceID: instance.ID, UserID: instance.UserID, Generation: instance.Generation, RuntimePodID: row.ID, PID: binding.PID, Port: binding.Port, Namespace: row.Namespace, Pod: row.Name, PodUID: string(pod.UID), Deployment: row.Deployment, Gateway: binding.Gateway, Endpoint: row.Endpoint, AgentEpoch: caps.AgentEpoch, State: state.State, DeploymentUID: string(dep.UID), ReplicaSetUID: string(rs.UID), ServiceAccount: sa.Name, ServiceAccountUID: string(sa.UID), NodeUID: string(node.UID), RecoveryScope: caps.RecoveryScope, AgentRestartPolicy: caps.AgentRestartPolicy, DurableReservation: caps.DurableReservation, AgentRestartReconciliation: caps.AgentRestartReconciliation})
+		native.State = state.State
+		out = append(out, native)
 	}
 	step, kind, observed = "native_binding_coverage", "RuntimeBinding", nil
 	for _, binding := range sqlFacts.bindings {

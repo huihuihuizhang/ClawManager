@@ -48,6 +48,16 @@ class LoadedProviderLonghornTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             P.confirmed_native_failure({'ExitCode': 1}, failure, [x if x != P.SELECTION_SHA else 'other' for x in argv], service_account=True)
 
+    def test_shared_protocol_repair_requires_exact_capability_refusal(self):
+        argv = ['/native', 'prepare-mount-materials', '--source-selection-sha256', P.SELECTION_SHA, '--output-directory', '/original/out']
+        failure = {'Status': 'original_mount_author_refused', 'Phase': 'native_writers', 'Step': 'native_agent_capabilities',
+                   'Kind': 'RuntimeAgent', 'Reason': 'read_error', 'InstanceID': 1}
+        P.confirmed_native_failure({'ExitCode': 1}, failure, argv, shared_protocol=True)
+        for key, value in [('Step', 'native_shared_agent_capabilities'), ('Kind', 'Deployment'), ('Reason', 'validation'), ('InstanceID', 3), ('Phase', 'write_outputs')]:
+            with self.subTest(key=key):
+                with self.assertRaises(ValueError):
+                    P.confirmed_native_failure({'ExitCode': 1}, {**failure, key: value}, argv, shared_protocol=True)
+
     def fixture(self):
         ref = {'Namespace': 'ns', 'Deployment': 'controller', 'DeploymentUID': 'e4e27f27-8f02-40ab-8c62-09f2ffa3fafa',
                'Pod': 'new-pod', 'PodUID': P.POD_UID, 'ReplicaSet': 'new-rs', 'ReplicaSetUID': P.RS_UID,

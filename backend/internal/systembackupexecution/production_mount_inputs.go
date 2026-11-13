@@ -48,6 +48,23 @@ type InstancePersistentMountLayout struct {
 	MountID, Container, Volume, MountPath, DataPath string
 }
 
+// Protocol comes from pinned deployment configuration, never from an HTTP
+// failure or a caller-selected fallback. These remain unsigned mount locators.
+func runtimeMountProtocolMatches(cfg DeploymentConfig, spec b.RuntimeWriterSpec) bool {
+	protocol := ""
+	if cfg.RuntimeSources != nil {
+		protocol = cfg.RuntimeSources.SharedRuntimeProtocol
+	}
+	switch protocol {
+	case "":
+		return spec.Kind == "gateway" && spec.Runtime.Version == "runtime-locator.v2" && spec.SharedCohort == ""
+	case "shared-container-freeze.v1":
+		return cfg.RuntimeSources.SharedObserver != nil && spec.Kind == "shared" && spec.Runtime.Version == "runtime-locator.shared.v1" && spec.UID != "" && spec.SharedCohort == spec.UID && spec.Runtime.RegisteredPodUID == spec.UID && spec.Name == spec.RuntimePod() && spec.Runtime.AgentEpoch != "" && spec.Runtime.Deployment != "" && spec.Runtime.RuntimePodID > 0 && spec.Runtime.GatewayPID > 0
+	default:
+		return false
+	}
+}
+
 // BuildOriginalInstanceMountScope prepares UNSIGNED comparison data for the
 // existing original material definition. D must supply SQL/native observations
 // under its original maintenance/source authority, then use A's unchanged
@@ -105,7 +122,7 @@ func BuildOriginalInstanceMountScope(ctx context.Context, client kubernetes.Inte
 			return nil, mountInputError("stopped_original_snapshot_and_witness_required", instance.ID, "")
 		}
 		spec := byID[instance.ID]
-		if instance.Status != "running" || spec.Source != instance || spec.Kind != "gateway" || spec.UID == "" || spec.Runtime.Version != "runtime-locator.v2" || spec.Runtime.RegisteredPodUID != "" && spec.Runtime.RegisteredPodUID != spec.UID || spec.RuntimeNamespace() != cfg.Namespace || spec.RuntimePod() == "" || instance.Namespace != "" && instance.Namespace != spec.RuntimeNamespace() || instance.Pod != "" && instance.Pod != spec.RuntimePod() {
+		if instance.Status != "running" || spec.Source != instance || !runtimeMountProtocolMatches(cfg, spec) || spec.UID == "" || spec.Runtime.RegisteredPodUID != "" && spec.Runtime.RegisteredPodUID != spec.UID || spec.RuntimeNamespace() != cfg.Namespace || spec.RuntimePod() == "" || instance.Namespace != "" && instance.Namespace != spec.RuntimeNamespace() || instance.Pod != "" && instance.Pod != spec.RuntimePod() {
 			return nil, mountInputError("sql_runtime_binding_mismatch", instance.ID, "")
 		}
 		owners[instance.ID] = instance

@@ -223,7 +223,7 @@ func (x *originalSourceMetadataAuthority) additionalInstanceMounts(ctx context.C
 		// D currently stores {} for original stopped sources. Neither SQL stopped
 		// nor a missing Pod establishes its last complete persistent mount set.
 		// Do not invent this missing original snapshot or start the instance.
-		if record.Spec.Source != instance || record.Spec.Kind != "gateway" || record.Spec.UID == "" {
+		if record.Spec.Source != instance || !runtimeMountProtocolMatches(x.service.Config, record.Spec) || record.Spec.UID == "" {
 			return nil, nil, d.ErrNotReady
 		}
 		pod, err := x.owner.Client.CoreV1().Pods(record.Spec.RuntimeNamespace()).Get(ctx, record.Spec.RuntimePod(), metav1.GetOptions{})

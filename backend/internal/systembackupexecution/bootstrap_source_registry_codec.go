@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	"clawreef/internal/services"
 	"reflect"
 	"regexp"
 
@@ -26,8 +27,9 @@ type bootstrapSourcePartsRegistry struct {
 	Deployment, Secrets                  worker.ResourceCaptureSpec
 }
 type bootstrapSourceNativeWriter struct {
-	RunningTenantPro                                                         *runningTenantProMount `json:",omitempty"`
-	RuntimeCaptureDeferred                                                   *domain.SourceInstance `json:",omitempty"`
+	SharedCapabilities                                                       *services.RuntimeSharedBackupCapabilities `json:",omitempty"`
+	RunningTenantPro                                                         *runningTenantProMount                    `json:",omitempty"`
+	RuntimeCaptureDeferred                                                   *domain.SourceInstance                    `json:",omitempty"`
 	RecoveryScope, AgentRestartPolicy                                        string
 	DurableReservation, AgentRestartReconciliation                           bool
 	CurrentStoppedPro                                                        *CurrentStoppedProSourceMaterial `json:",omitempty"`

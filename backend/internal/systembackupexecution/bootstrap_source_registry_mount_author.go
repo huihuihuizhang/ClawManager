@@ -123,7 +123,14 @@ func originalMountNativeSpecs(instances []b.InstanceIdentity, native []bootstrap
 		if n.RunningTenantPro != nil || n.UserID != instance.UserID || n.Generation != instance.Generation || n.State != "running" || n.PodUID == "" || n.Namespace == "" || n.Pod == "" || n.Deployment == "" || n.DeploymentUID == "" || n.ReplicaSetUID == "" || n.ServiceAccountUID == "" || n.NodeUID == "" || n.Endpoint == "" || n.AgentEpoch == "" || n.Gateway == "" || n.RuntimePodID <= 0 || n.PID <= 0 || n.Port <= 0 || n.Port > 65535 {
 			return nil, mountInputError("sql_runtime_binding_mismatch", instance.ID, "")
 		}
-		out = append(out, b.RuntimeWriterSpec{Source: instance, Kind: "gateway", UID: n.PodUID, Name: n.Gateway, Endpoint: n.Endpoint, Port: n.Port, Runtime: b.RuntimeLocator{Version: "runtime-locator.v2", Namespace: n.Namespace, Pod: n.Pod, RegisteredPodUID: n.PodUID, Deployment: n.Deployment, AgentEpoch: n.AgentEpoch, RuntimePodID: n.RuntimePodID, GatewayPID: n.PID}})
+		spec := b.RuntimeWriterSpec{Source: instance, Kind: "gateway", UID: n.PodUID, Name: n.Gateway, Endpoint: n.Endpoint, Port: n.Port, Runtime: b.RuntimeLocator{Version: "runtime-locator.v2", Namespace: n.Namespace, Pod: n.Pod, RegisteredPodUID: n.PodUID, Deployment: n.Deployment, AgentEpoch: n.AgentEpoch, RuntimePodID: n.RuntimePodID, GatewayPID: n.PID}}
+		if caps := n.SharedCapabilities; caps != nil {
+			if caps.Protocol != "shared-container-freeze.v1" || caps.Namespace != n.Namespace || caps.PodUID != n.PodUID || caps.Deployment != n.Deployment || caps.AgentEpoch != n.AgentEpoch || !caps.Supported || !caps.DurableReservation || caps.AgentRestartReconciliation || caps.AgentPID <= 0 || caps.AgentStartTicks == "" {
+				return nil, mountInputError("shared_runtime_capability_mismatch", instance.ID, "")
+			}
+			spec.Kind, spec.Name, spec.SharedCohort, spec.Runtime.Version = "shared", n.Pod, n.PodUID, "runtime-locator.shared.v1"
+		}
+		out = append(out, spec)
 	}
 	return out, nil
 }
