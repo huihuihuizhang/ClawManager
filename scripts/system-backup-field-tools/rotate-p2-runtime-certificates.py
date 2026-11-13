@@ -19,6 +19,8 @@ import time
 NS='clawmanager-sbk-validation-system'
 WORK=Path('/root/sbk-validation-tls-inspect.7LVU7vpE')
 APP_UID='8ebd4d4c-57b6-4a82-b310-fae596681a4e'
+APP_IMAGE='10.130.14.23:5000/clawmanager@sha256:322ba63b49d21c4030be2760c88ae03457fbe9454ee138906066b29bc68541ca'
+OLD_RECEIPT=Path('/root/sbk/p2-runtime-rollout.us14OMgn/runtime-agent-tls.receipt.private.json')
 OLD_CA='c99ddcf7198d4e8cc0445a141ddef69e6998ec213c007955b38bb37efda394f3'
 NEW_CA='4d6ffb92650f28a7148a536b60cfab6a0b025856a4b30dba3b6059905c128478'
 IMAGES={'hermes-runtime':('de547f9b-b21a-45b3-9d74-c77ce35ab0d4','10.130.14.23:5000/hermes-lite@sha256:279fa5b365f875de1fad93b0f58cda20599d2339fa067bf062e08ef80d770254'),
@@ -65,7 +67,7 @@ def runtime_spec(deployment,target):
 
 def app_spec(spec,ca_sha):
     desired=copy.deepcopy(spec);pod=desired['template']['spec'];cs=pod['containers']
-    need(len(cs)==1 and cs[0]['image']=='10.130.14.23:5000/clawmanager@sha256:322ba63b49d21c4030be2760c88ae03457fbe9454ee138906066b29bc68541ca','original App image required')
+    need(len(cs)==1 and cs[0]['image']==APP_IMAGE,'original App image required')
     c=cs[0];env=c['env'];need(len({e['name'] for e in env})==len(env),'duplicate App env')
     roots=[e for e in env if e['name']=='RUNTIME_AGENT_CA_FILE']
     hashes=[e for e in env if e['name']=='RUNTIME_AGENT_CA_SHA256']
@@ -127,7 +129,7 @@ class Site:
 
 def verify_app_ca(site,pods,expected):
     for pod in pods:
-        need(pod['status']['containerStatuses'][0]['imageID'].endswith('@sha256:322ba63b49d21c4030be2760c88ae03457fbe9454ee138906066b29bc68541ca'),'loaded App digest changed')
+        need(pod['status']['containerStatuses'][0]['imageID'].endswith('@'+APP_IMAGE.split('@')[1]),'loaded App digest changed')
         result=site.call(['exec',pod['metadata']['name'],'-c','clawmanager-app','--','sh','-ec','sha256sum "$RUNTIME_AGENT_CA_FILE"; printf "PIN=%s\\n" "$RUNTIME_AGENT_CA_SHA256"'])
         need(result.split()[0].decode()==expected and ('PIN='+expected).encode() in result,'App did not load expected CA bytes')
         print('APP_AGENT_CA_READBACK_OK',pod['metadata']['name'],expected,flush=True)
@@ -158,7 +160,7 @@ def main(root):
     receipt=json.loads((root/'runtime-agent.receipt.private.json').read_bytes())
     need(receipt['Version']=='original-shared-agent-tls-materials.v1' and receipt['CA']['SHA256']==NEW_CA and receipt['Namespace']==NS,'actual issued CA required')
     need(datetime.datetime.fromisoformat(receipt['NotAfter'].replace('Z','+00:00'))>datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(minutes=15),'certificate window insufficient')
-    new=pinned(receipt['CA']);old_receipt=json.loads(Path('/root/sbk/p2-runtime-rollout.us14OMgn/runtime-agent-tls.receipt.private.json').read_bytes())
+    new=pinned(receipt['CA']);old_receipt=json.loads(OLD_RECEIPT.read_bytes())
     need(old_receipt['CA']['SHA256']==OLD_CA,'original CA changed');old=pinned(old_receipt['CA'])
     bridge=old.rstrip()+b'\n'+new;bridge_sha=sha(bridge)
     plan_file=records/'plan.private.json'
