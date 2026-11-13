@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Read instance 1's pinned runtime capability endpoint; never send control actions."""
+import argparse
 import base64
 import datetime as dt
 import hashlib
@@ -62,11 +63,41 @@ def capability_summary(raw, row):
             'RestartReconciliationFalse': value.get('agent_restart_reconciliation', False) is False}
 
 
-def main():
+def shared_capability_summary(raw, row):
+    try:
+        value = json.loads(raw)
+    except (ValueError, UnicodeError):
+        return {'JSONValid': False}
+    if not isinstance(value, dict):
+        return {'JSONValid': True, 'Object': False}
+    strings = ('Protocol', 'Namespace', 'PodUID', 'Deployment', 'AgentEpoch', 'AgentStartTicks', 'GuardPath', 'JournalDirectory')
+    booleans = ('Supported', 'DurableReservation', 'AgentRestartReconciliation')
+    known = set(strings + booleans + ('AgentPID',))
+    return {'JSONValid': True, 'Object': True, 'UnknownFieldCount': len(set(value)-known), 'MissingFields': sorted(known-set(value)),
+            'TypesMatch': all(isinstance(value.get(k), str) for k in strings) and all(type(value.get(k)) is bool for k in booleans) and type(value.get('AgentPID')) is int,
+            'ProtocolMatches': value.get('Protocol') == 'shared-container-freeze.v1',
+            'NamespaceMatches': value.get('Namespace') == row['namespace'], 'PodUIDMatches': value.get('PodUID') == row['pod_uid'],
+            'DeploymentMatches': value.get('Deployment') == row['deployment'],
+            'Supported': value.get('Supported') is True, 'DurableReservation': value.get('DurableReservation') is True,
+            'RestartReconciliationFalse': value.get('AgentRestartReconciliation') is False,
+            'AgentPIDPositive': type(value.get('AgentPID')) is int and value['AgentPID'] > 0,
+            'StartTicksPresent': isinstance(value.get('AgentStartTicks'), str) and bool(value['AgentStartTicks']),
+            'EpochValid': isinstance(value.get('AgentEpoch'), str) and bool(re.fullmatch('[a-f0-9]{32}', value['AgentEpoch'])),
+            'GuardPathAbsolute': isinstance(value.get('GuardPath'), str) and value['GuardPath'].startswith('/'),
+            'JournalDirectoryAbsolute': isinstance(value.get('JournalDirectory'), str) and value['JournalDirectory'].startswith('/')}
+
+
+def main(shared=False):
     need(os.name == 'posix', 'Linux operator required'); os.umask(0o077)
     spec = importlib.util.spec_from_file_location('assembly', Path(__file__).with_name('assemble-p2-installation-candidate.py'))
     A = importlib.util.module_from_spec(spec); spec.loader.exec_module(A)
     selected = A.obj(SELECTION)
+    core = A.obj(selected['Deployment'])
+    protocol = core['runtime_sources'].get('shared_runtime_protocol', '')
+    print('RUNTIME_SOURCE_PROTOCOL', json.dumps({'SharedProtocolConfigured': protocol == 'shared-container-freeze.v1',
+          'LegacyProtocolConfigured': protocol == '', 'SharedObserverPresent': bool(core['runtime_sources'].get('shared_runtime_observer'))}), flush=True)
+    if shared:
+        need(protocol == 'shared-container-freeze.v1', 'original source does not select shared protocol')
     now = dt.datetime.now(dt.timezone.utc)
     need(dt.datetime.fromisoformat(selected['NotBefore'].replace('Z', '+00:00')) <= now <
          dt.datetime.fromisoformat(selected['Until'].replace('Z', '+00:00')), 'source window expired; retain records')
@@ -147,14 +178,16 @@ COMMIT;"""
                 connection = http.client.HTTPConnection(endpoint.hostname, endpoint.port or 443, timeout=10)
                 connection.sock = secured
                 try:
-                    connection.request('GET', '/v1/backup/capabilities?gateway_port='+str(row['port']),
+                    route = '/v1/shared-backup/capabilities' if shared else '/v1/backup/capabilities?gateway_port='+str(row['port'])
+                    connection.request('GET', route,
                         headers={'X-ClawManager-Control-Token': token, 'Content-Type': 'application/json'})
                     response = connection.getresponse(); raw = response.read((64 << 10)+1)
                     A.retain(records/'capability.body.private', raw or b'\n')
-                    print('RUNTIME_CAPABILITY_HTTP', json.dumps({'Status': response.status, 'BodyBytes': len(raw),
+                    print('RUNTIME_CAPABILITY_HTTP', json.dumps({'Route': route, 'Status': response.status, 'BodyBytes': len(raw),
                           'Bounded': len(raw) <= 64 << 10, 'SHA256': hashlib.sha256(raw).hexdigest()}), flush=True)
                     if response.status == 200 and len(raw) <= 64 << 10:
-                        print('RUNTIME_CAPABILITY_FIELDS', json.dumps(capability_summary(raw, row)), flush=True)
+                        summary = shared_capability_summary(raw, row) if shared else capability_summary(raw, row)
+                        print('RUNTIME_CAPABILITY_FIELDS', json.dumps(summary), flush=True)
                 finally:
                     connection.close()
     except ssl.SSLCertVerificationError as error:
@@ -166,6 +199,8 @@ COMMIT;"""
 
 if __name__ == '__main__':
     try:
-        main()
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument('--shared-runtime', action='store_true')
+        main(parser.parse_args().shared_runtime)
     except Exception as error:
         raise SystemExit('RUNTIME_CAPABILITY_DIAGNOSTIC_UNCONFIRMED '+(str(error) if type(error) is ValueError else type(error).__name__))

@@ -56,6 +56,22 @@ class CapabilityDiagnosticTests(unittest.TestCase):
         self.assertFalse(summary['Supported'])
         self.assertFalse(summary['EpochValid'])
 
+    def test_shared_protocol_is_distinct_and_identity_bound(self):
+        row = {'namespace': 'source', 'pod_uid': 'private-pod', 'deployment': 'runtime'}
+        caps = {'Protocol': 'shared-container-freeze.v1', 'Namespace': 'source', 'PodUID': 'private-pod',
+                'Deployment': 'runtime', 'AgentEpoch': '1'*32, 'AgentStartTicks': '123', 'AgentPID': 17,
+                'GuardPath': '/private-guard', 'JournalDirectory': '/private-journal', 'Supported': True,
+                'DurableReservation': True, 'AgentRestartReconciliation': False}
+        summary = R.shared_capability_summary(json.dumps(caps).encode(), row)
+        self.assertTrue(all(v for v in summary.values() if type(v) is bool))
+        self.assertNotIn('private', json.dumps(summary))
+        for field, value, check in [('Protocol', 'isolated-backup.v1', 'ProtocolMatches'), ('PodUID', 'changed', 'PodUIDMatches'),
+                ('Deployment', 'other', 'DeploymentMatches'), ('Supported', False, 'Supported'), ('AgentPID', 0, 'AgentPIDPositive'),
+                ('AgentPID', True, 'TypesMatch'), ('GuardPath', 'relative', 'GuardPathAbsolute')]:
+            with self.subTest(field=field):
+                self.assertFalse(R.shared_capability_summary(json.dumps({**caps, field: value}).encode(), row)[check])
+        self.assertEqual(R.shared_capability_summary(b'invalid', row), {'JSONValid': False})
+
 
 if __name__ == '__main__':
     unittest.main()
