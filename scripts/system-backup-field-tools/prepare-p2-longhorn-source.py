@@ -90,21 +90,25 @@ def cleanup_release_pod(site, r, A):
     A.retain(r/'release-pod-cleaned.json',{'PodUID':uid,'PVCUID':after['metadata']['uid'],'PVCPreserved':True})
     print('P2_COMPLETED_RELEASE_POD_CLEANED_PVC_PRESERVED',flush=True)
 
-def main(redis_renewed=False, phase_readback=False, credential_encoding=False, pv_read_repaired=False, november13=False):
+def main(redis_renewed=False, phase_readback=False, credential_encoding=False, pv_read_repaired=False, november13=False, runtime_scope=False):
     os.umask(0o077); need(os.name == 'posix','Linux operator required')
     directory = Path(__file__).resolve().parent
     A = load('longhorn_assembly',directory/'assemble-p2-installation-candidate.py')
     source_name = 'source-preparation-redis-renew7d' if redis_renewed else 'source-preparation-renew8h'
     output_name = 'longhorn-source-redis-renew7d' if redis_renewed else 'longhorn-source-renew8h'
     native, native_sha = BIN, BIN_SHA
-    if november13:
+    need(not (november13 and runtime_scope),'select one November source')
+    if november13 or runtime_scope:
         need(not any([redis_renewed,phase_readback,credential_encoding,pv_read_repaired]),'select one successor mode')
         source_name, output_name = 'source-preparation-20261113-ca-alias', 'longhorn-source-20261113'
         prior = ROOT/'longhorn-source-redis-renew7d-pv-read-repaired'
+        if runtime_scope:
+            source_name, output_name = 'source-preparation-20261113-runtime-scope-final-retry', 'longhorn-source-20261113-runtime-scope'
+            prior = ROOT/'longhorn-source-20261113'
         need(json.loads((prior/'native.exit.json').read_bytes()) == {'ExitCode':1} and
              not (prior/'completed.json').exists(),'prior native failure required')
         refusal = json.loads((prior/'native.stdout.private').read_bytes())
-        need(refusal['Status']=='original_mount_author_refused' and refusal['Phase']=='native_writers','prior writer refusal required')
+        need(refusal['Status']=='original_mount_author_refused' and refusal['Phase']==('source_sql' if runtime_scope else 'native_writers'),'observed prior refusal required')
         old = json.loads((prior/'native.sent.private.json').read_bytes())['Argv']
         old_out = Path(old[old.index('--output-directory')+1])
         need(old_out.is_dir() and not list(old_out.iterdir()),'partial outputs require reconciliation')
@@ -139,10 +143,15 @@ def main(redis_renewed=False, phase_readback=False, credential_encoding=False, p
     need(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0,'private journal required')
     renewed = json.loads((ROOT/source_name/'completed.json').read_bytes())
     pin = renewed['SourceSelection']
-    if november13:
-        need(renewed['Version']=='p2-source-ca-alias-reauthored.v1' and
-             renewed['Receipt']['SHA256']=='b6c38df3fc7cf42f461c7bdd693bda6eefe9ed22ba09bf913e9df10f676b10c8' and
-             pin['SHA256']=='bf23877e281b5b44669f285bee4943d26a100d713e1247884b3530c650ba5d62','observed November source required')
+    if november13 or runtime_scope:
+        version = 'p2-runtime-scope-source-reauthored.v1' if runtime_scope else 'p2-source-ca-alias-reauthored.v1'
+        receipt_sha = '11dfe569db6defd550bcc124e3659e15823d922f618e6f5ec2b2e9ab051601c8' if runtime_scope else 'b6c38df3fc7cf42f461c7bdd693bda6eefe9ed22ba09bf913e9df10f676b10c8'
+        selection_sha = 'a323dc03ada6b3ef8863ee4e0126f2ea7549fd8aecc9f182d7d8a49946db9565' if runtime_scope else 'bf23877e281b5b44669f285bee4943d26a100d713e1247884b3530c650ba5d62'
+        need(renewed['Version']==version and renewed['Receipt']['SHA256']==receipt_sha and
+             pin['SHA256']==selection_sha,'observed November source required')
+        if runtime_scope:
+            need(renewed['DeferredIDs']==[4,5,6] and renewed['TokenReissued'] is False,'original runtime scope required')
+            A.read(renewed['Coordinates']);A.read(renewed['Definition'])
         receipt = A.obj(renewed['Receipt'])
         need(receipt['SourceSelection']==pin and receipt['GrantsIssued'] is False and receipt['BackupReady'] is False,'native source receipt differs')
     elif redis_renewed:
@@ -220,7 +229,8 @@ if __name__ == '__main__':
         parser.add_argument('--credential-encoding', action='store_true')
         parser.add_argument('--pv-read-repaired', action='store_true')
         parser.add_argument('--november13', action='store_true')
+        parser.add_argument('--runtime-scope-renewed', action='store_true')
         args = parser.parse_args()
-        main(args.redis_renewed_source, args.phase_readback, args.credential_encoding, args.pv_read_repaired, args.november13)
+        main(args.redis_renewed_source, args.phase_readback, args.credential_encoding, args.pv_read_repaired, args.november13, args.runtime_scope_renewed)
     except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as error:
         raise SystemExit('P2_LONGHORN_SOURCE_UNCONFIRMED '+(str(error) if type(error) is ValueError else type(error).__name__))
