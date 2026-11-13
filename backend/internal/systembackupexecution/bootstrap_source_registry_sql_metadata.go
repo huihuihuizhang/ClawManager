@@ -38,6 +38,11 @@ func (x *bootstrapSourceRegistryReader) readSourceSQLMetadata(ctx context.Contex
 		return zero, install.ErrInstall
 	}
 	metadata := productionSQLSourceMetadata{Schema: schema, Census: census, Images: map[int]string{}, WorkBuddy: map[int]domain.WorkBuddyUIDIdentity{}}
+	if x.config.DatabaseWorkload != nil {
+		if tx.QueryRowContext(ctx, "SELECT @@hostname").Scan(&metadata.DatabaseHostname) != nil || metadata.DatabaseHostname == "" {
+			return zero, install.ErrInstall
+		}
+	}
 	byID := map[int]b.InstanceIdentity{}
 	for _, instance := range instances {
 		byID[instance.ID] = instance

@@ -164,6 +164,9 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 		return nil, c.ErrSourceRecoveryProofRequired
 	}
 	s, o := x.service, x.owner
+	if s.checkDatabaseWorkloadLive(ctx, o.Client) != nil {
+		return nil, c.ErrSourceRecoveryProofRequired
+	}
 	var source b.SourceInventory
 	var metadata productionCaptureMetadata
 	if hash(desc.Source) != desc.SourceSHA256 || decodeMetadataCanonical(desc.Source, &source) != nil || decodeMetadataCanonical(source.CaptureMetadata, &metadata) != nil || metadata.Version != productionCaptureMetadataVersion {
@@ -393,7 +396,7 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 	if dependencyErr != nil || !reflect.DeepEqual(currentDependencies, metadata.ProviderDependencies) {
 		return nil, c.ErrSourceRecoveryProofRequired
 	}
-	if len(instances) != 0 || o.Gate.Recovery.Check(ctx, in.Authority) != nil {
+	if len(instances) != 0 || o.Gate.Recovery.Check(ctx, in.Authority) != nil || s.checkDatabaseWorkloadLive(ctx, o.Client) != nil {
 		return nil, c.ErrSourceRecoveryProofRequired
 	}
 	return out, nil

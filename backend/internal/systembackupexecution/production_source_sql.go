@@ -17,6 +17,7 @@ import (
 )
 
 type productionSQLSourceMetadata struct {
+	DatabaseHostname         string                              `json:",omitempty"`
 	CurrentStoppedProStorage map[int]currentStoppedProSQLStorage `json:",omitempty"`
 	Schema                   domain.BusinessCaptureSchema
 	Census                   domain.BusinessSchemaCensusObjects
@@ -72,6 +73,11 @@ func readProductionSQLMetadata(ctx context.Context, s *DeploymentService, tx *sq
 		return zero, d.ErrNotReady
 	}
 	metadata := productionSQLSourceMetadata{Schema: schema, Census: census, Images: map[int]string{}, WorkBuddy: map[int]domain.WorkBuddyUIDIdentity{}}
+	if s.Config.DatabaseWorkload != nil {
+		if tx.QueryRowContext(ctx, "SELECT @@hostname").Scan(&metadata.DatabaseHostname) != nil || metadata.DatabaseHostname == "" {
+			return zero, d.ErrNotReady
+		}
+	}
 	byID := map[int]b.InstanceIdentity{}
 	for _, instance := range instances {
 		byID[instance.ID] = instance

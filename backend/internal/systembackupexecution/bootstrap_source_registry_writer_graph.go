@@ -7,7 +7,7 @@ import (
 	c "clawreef/internal/systembackupcontroller"
 )
 
-func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventory, api *observedWriterAPI) error {
+func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventory, api *observedWriterAPI, sql ...productionSQLSourceMetadata) error {
 	if x == nil || x.config.RuntimeSources == nil || x.materials.Discovery == nil || api == nil || requireScopedRunningSourceMetadata(x.config, source) != nil {
 		return ErrSourceWriterObservationIncomplete
 	}
@@ -39,6 +39,9 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 			return ErrSourceWriterObservationIncomplete
 		}
 		want[key] = w.DeploymentUID
+	}
+	if addDatabaseGraphRoot(x.config, api, want, sql) != nil {
+		return ErrSourceWriterObservationIncomplete
 	}
 	stoppedRoots, err := currentStoppedProGraphRoots(x.config, source, api, want)
 	if err != nil {

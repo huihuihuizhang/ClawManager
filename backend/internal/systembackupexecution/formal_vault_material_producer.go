@@ -56,6 +56,10 @@ func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *insta
 	if e != nil || selected.ApplicationScope != selection.ApplicationScope || len(x.config.ProviderDependencies) != 0 {
 		return zero, install.ErrInstall
 	}
+	kept, e := formalVaultWriterRoster(x.config, selected, selection.Controller.Deployment, selection.Controller.DeploymentUID)
+	if e != nil {
+		return zero, install.ErrInstall
+	}
 	clients, e := x.openMetadataClients()
 	if e != nil {
 		return zero, install.ErrInstall
@@ -179,42 +183,6 @@ func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *insta
 		patch = append(patch, formalObserverPatchOperation{"add", position + "/volumeMounts", []corev1.VolumeMount{mount}})
 	} else {
 		patch = append(patch, formalObserverPatchOperation{"add", position + "/volumeMounts/-", mount})
-	}
-	// Remove only the exact genuinely observed dependency, and prove that every
-	// original non-provider Deployment remains in the signed business roster.
-	roster := map[string]string{}
-	roles := map[string]string{}
-	expectedWriters := 0
-	for _, d := range selected.Deployments {
-		if roster[d.Name] != "" {
-			return zero, install.ErrInstall
-		}
-		roster[d.Name] = d.UID
-		roles[d.Name] = d.Role
-		if d.Role == "writer" {
-			expectedWriters++
-		}
-	}
-	kept := make([]PlatformDeployment, 0, len(x.config.Writers))
-	removed := 0
-	for _, w := range x.config.Writers {
-		if w.Namespace != x.config.Namespace || roster[w.Name] != w.UID {
-			return zero, install.ErrInstall
-		}
-		if w.Name == materials.Workload.Deployment {
-			if w.UID != materials.Workload.DeploymentUID {
-				return zero, install.ErrInstall
-			}
-			removed++
-			continue
-		}
-		if roles[w.Name] != "writer" {
-			return zero, install.ErrInstall
-		}
-		kept = append(kept, w)
-	}
-	if removed != 1 || len(kept) != expectedWriters {
-		return zero, install.ErrInstall
 	}
 	x.config.Writers = kept
 	x.config.ProviderDependencies = []FormalVaultProviderDependency{{Version: "formal-vault-provider-dependency.v1", Workload: materials.Workload, Observer: install.BootstrapSourceFilePin{File: path.Join(formalVaultDependencyMount, "observer.json"), SHA256: hash(observerRaw)}}}

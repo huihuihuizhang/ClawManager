@@ -136,11 +136,17 @@ func (s *DeploymentService) PublicCapability() json.RawMessage {
 func (s *DeploymentService) platformWriterLeaf(o *PublicJobOwner) func(context.Context, d.Input, b.SourceInventory, []b.FrozenWriter) ([]flow.Writer, error) {
 	cfg := s.Config
 	return func(ctx context.Context, in d.Input, inventory b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
-		if o == nil || ctx == nil || ctx.Err() != nil || in.Authority.AttemptNo == 0 {
+		if o == nil || ctx == nil || ctx.Err() != nil || in.Authority.AttemptNo == 0 || validateDatabaseWorkload(cfg) != nil {
+			return nil, d.ErrNotReady
+		}
+		if s.checkDatabaseWorkloadLive(ctx, o.Client) != nil {
 			return nil, d.ErrNotReady
 		}
 		out := make([]flow.Writer, 0, len(cfg.Writers))
 		for _, ref := range cfg.Writers {
+			if ref.UID == cfg.ControllerOwner || s.captureMaterials != nil && s.captureMaterials.Discovery != nil && (ref.Name == s.captureMaterials.Discovery.ControllerDeployment || ref.UID == s.captureMaterials.Discovery.ControllerDeploymentUID) {
+				return nil, d.ErrNotReady
+			}
 			ref := ref
 			id := "deployment/" + ref.Namespace + "/" + ref.Name
 			if native, selected, e := s.buildFormalMinIOReadWriter(ctx, o, in, inventory, ref, frozen); e != nil {

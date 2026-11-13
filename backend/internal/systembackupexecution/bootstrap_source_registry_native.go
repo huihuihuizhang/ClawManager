@@ -17,7 +17,7 @@ import (
 // Native read endpoints are derived exclusively from complete actual SQL rows
 // and the current Pod graph. No task/runtime-control/gate/stop key is built.
 func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSourceSQLFacts, api *observedWriterAPI, clients *productionMetadataClients) ([]bootstrapSourceNativeWriter, error) {
-	if sqlFacts == nil || api == nil || clients == nil || clients.API == nil || x.checkWriterGraph(sqlFacts.inventory, api) != nil {
+	if sqlFacts == nil || api == nil || clients == nil || clients.API == nil || x.checkWriterGraph(sqlFacts.inventory, api, sqlFacts.metadata) != nil {
 		return nil, install.ErrInstall
 	}
 	controller := x.association.Source.Controller

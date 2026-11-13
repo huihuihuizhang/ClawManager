@@ -334,6 +334,8 @@ def source_core(m, stages, assembly, data, writer, profile, relay, public):
             seen.add(key); runtime["supported"].append(dict(zip(("Type", "Mode", "Variant", "OS"), key)))
     m.need(isinstance(writer["Participants"], list) and runtime["shared_runtime_protocol"] == "shared-container-freeze.v1",
            "actual_original_participant_census_and_shared_protocol_required")
+    m.need([d for d in writer["Deployments"] if d["Name"] == host["Deployment"] or d["UID"] == host["DeploymentUID"]] ==
+           [{"Name": host["Deployment"], "UID": host["DeploymentUID"], "Role": "writer"}], "exact_original_controller_role_required")
     config = {"schema_version": "system-backup-public-deployment.v1", "capture_scope": "six-part", "installation_id": target["InstallationID"], "controller_owner": host["DeploymentUID"],
         "application_scope": writer["ApplicationScope"], "namespace": target["Namespace"], "namespace_uid": target["NamespaceUID"], "trust_domain": "clawmanager.invalid",
         "forward_grant": {"path": str(directory / "forward.grant.json"), "public_key_base64": public}, "recovery_grant": {"path": str(directory / "recovery.grant.json"), "public_key_base64": public},
@@ -343,9 +345,12 @@ def source_core(m, stages, assembly, data, writer, profile, relay, public):
         "worker_security": {"node_uids": data["NodeUIDs"], "volumes": ([volume_pin(workspace_pin, "workspace")] if workspace_pin is not None else []) + [volume_pin(staging_pins[0], "staging")], "ServiceAccountName": worker["Name"], "ServiceAccountUID": worker["UID"]},
         "control_url": host_result["control_service"]["SelectedURL"], "listen": ":9443", "server_certificate": relay["ServerCertificate"]["File"], "server_key": relay["ServerKey"]["File"],
         "issuer_certificate": relay["CA"]["File"], "issuer_certificate_sha256": relay["CA"]["SHA256"], "issuer_key": relay["IssuerKey"]["File"],
-        "platform_writers": [{"namespace": target["Namespace"], "name": d["Name"], "uid": d["UID"]} for d in writer["Deployments"] if d["Role"] == "writer"], "workspace": work,
+        "platform_writers": [{"namespace": target["Namespace"], "name": d["Name"], "uid": d["UID"]} for d in writer["Deployments"] if d["Role"] == "writer" and d["Name"] != host["Deployment"]], "workspace": work,
         "acquire_seconds": int(writer["Policy"]["AcquisitionTimeout"] / 1000000000), "hold_seconds": int(writer["Policy"]["MaxHold"] / 1000000000), "runtime_sources": runtime, "formal_verifier": {"protocol": "controller-verifier-materials.v1", "path": str(directory / "formal-verifier.json")},
         "capture_modules": {"protocol": "original-six-part-capture-materials.v1", "path": str(directory / "capture-materials.json")}, "redis_read_keepers": writer.get("RedisReadKeepers", [])}
+    databases = [d for d in writer["Deployments"] if d["Role"] == "database"]
+    m.need(len(databases) == 1, "one_original_database_workload_required")
+    config["database_workload"] = {"namespace": target["Namespace"], "name": databases[0]["Name"], "uid": databases[0]["UID"]}
     # Consume actual R30 enrolled trust in the NEW value, before any source
     # author writes/hashes the Core and before Forward1 is ever issued.
     trust = stages.op.prepare_relay_runtime_trust()

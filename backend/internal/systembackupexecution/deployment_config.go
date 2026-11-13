@@ -24,6 +24,7 @@ import (
 // DeploymentConfig is an administrator-pinned input; public create requests
 // cannot supply paths, trusted roots, source identities or resource UIDs.
 type DeploymentConfig struct {
+	DatabaseWorkload        *PlatformDeployment                        `json:"database_workload,omitempty"`
 	OriginalRelayEnrollment *OriginalRelayEnrollmentReference          `json:"original_relay_enrollment,omitempty"`
 	MinIOReadKeepers        []FormalMinIOReadKeeperSelection           `json:"minio_read_keepers,omitempty"`
 	ProviderDependencies    []FormalVaultProviderDependency            `json:"provider_dependencies,omitempty"`
@@ -234,10 +235,13 @@ func (cnf DeploymentConfig) Validate() error {
 			return c.ErrExecutionAuthority
 		}
 	}
+	if validateDatabaseWorkload(cnf) != nil {
+		return c.ErrExecutionAuthority
+	}
 	seen := map[string]bool{}
 	for _, w := range cnf.Writers {
 		id := w.Namespace + "/" + w.Name
-		if w.Namespace != cnf.Namespace || w.Name == "" || w.UID == "" || seen[id] {
+		if w.Namespace != cnf.Namespace || w.Name == "" || w.UID == "" || w.UID == cnf.ControllerOwner || seen[id] {
 			return c.ErrExecutionAuthority
 		}
 		seen[id] = true

@@ -64,6 +64,14 @@ func RequiredCaptureAccess(cfg DeploymentConfig, controllerSA ...string) ([]Capt
 	add(cfg.Namespace, "", "persistentvolumeclaims", []string{"get"}, sortedUnique(claims))
 	add(cfg.Namespace, "coordination.k8s.io", "leases", []string{"get", "update", "patch"}, []string{"clawmanager-public-backup-controller"})
 	add(cfg.Namespace, "coordination.k8s.io", "leases", []string{"create"}, nil)
+	if cfg.DatabaseWorkload != nil {
+		if validateDatabaseWorkload(cfg) != nil {
+			return nil, c.ErrExecutionAuthority
+		}
+		add(cfg.DatabaseWorkload.Namespace, "apps", "deployments", []string{"get"}, []string{cfg.DatabaseWorkload.Name})
+		add(cfg.DatabaseWorkload.Namespace, "apps", "replicasets", []string{"get"}, nil)
+		add(cfg.DatabaseWorkload.Namespace, "", "pods", []string{"get", "list"}, nil)
+	}
 	namespaces := map[string][]string{}
 	for _, ref := range cfg.Writers {
 		if len(validation.IsDNS1123Label(ref.Namespace)) != 0 || len(validation.IsDNS1123Subdomain(ref.Name)) != 0 {

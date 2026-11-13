@@ -106,7 +106,7 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 	if x.recheck(ctx) != nil || registry == nil || api == nil || requireScopedRunningSourceMetadata(s.Config, source) != nil {
 		return "", ErrSourceWriterObservationIncomplete
 	}
-	if err := checkObservedWriterGraph(s, source, api); err != nil {
+	if err := checkObservedWriterGraph(s, source, api, observedSQL...); err != nil {
 		return "", err
 	}
 	for _, object := range api.objects {
@@ -239,7 +239,7 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 	return hash(raw), nil
 }
 
-func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, api *observedWriterAPI) error {
+func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, api *observedWriterAPI, sql ...productionSQLSourceMetadata) error {
 	if s == nil || s.Config.RuntimeSources == nil || s.captureMaterials == nil || s.captureMaterials.Discovery == nil || api == nil || requireScopedRunningSourceMetadata(s.Config, source) != nil {
 		return ErrSourceWriterObservationIncomplete
 	}
@@ -271,6 +271,9 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 			return ErrSourceWriterObservationIncomplete
 		}
 		want[key] = w.DeploymentUID
+	}
+	if addDatabaseGraphRoot(s.Config, api, want, sql) != nil {
+		return ErrSourceWriterObservationIncomplete
 	}
 	stoppedRoots, err := currentStoppedProGraphRoots(s.Config, source, api, want)
 	if err != nil {
