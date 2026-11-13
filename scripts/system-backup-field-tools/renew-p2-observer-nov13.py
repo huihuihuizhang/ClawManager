@@ -12,6 +12,12 @@ ROOT = Path('/root/sbk/p2-cert-renewal.1KyqMtsd')
 NEW_CA = '7e7fee88fc2ff7fb10822914c466248bf2b555a0f9ce1d37e06bd50c9c1afecc'
 
 
+def read_node_bundle(assembly, rotation, pin):
+    # Four independently bounded ELF members make the complete tar larger
+    # than the 64 MiB limit for any individual member.
+    return rotation.tar_files(assembly.read(pin, 256 << 20), 64 << 20)
+
+
 def load(name):
     spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(name+'.py'))
     m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
@@ -89,9 +95,9 @@ def main():
     until = json.loads(window.read_bytes())['Until']
     N.need(now<dt.datetime.fromisoformat(until),'payload window expired; preserve records')
     for node in N.NODES:
-        old_files = N.tar_files(A.read(old_host['NodeBundles'][node],64<<20),64<<20)
+        old_files = read_node_bundle(A,N,old_host['NodeBundles'][node])
         N.OLD_UNITS[node] = {kind:A.sha(old_files[N.unit_name(kind)]) for kind in N.BINARIES}
-        new_files = N.tar_files(A.read(host['NodeBundles'][node],64<<20),64<<20)
+        new_files = read_node_bundle(A,N,host['NodeBundles'][node])
         raw = N.payload(node,new_files,old_pki,new_pki,until)
         pin = A.retain(r/(node+'.renewal.private.tar'),raw)
         print('NOV13_OBSERVER_PAYLOAD_READY',node,json.dumps(pin),flush=True)
