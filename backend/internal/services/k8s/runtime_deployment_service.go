@@ -786,6 +786,26 @@ func (s *runtimeDeploymentService) rolloutImage(ctx context.Context, namespace, 
 	return nil
 }
 
+// RuntimePodIdentityReader includes terminating and terminal Pods; scheduling
+// inventory is deliberately filtered and cannot prove an old writer is absent.
+type RuntimePodIdentityReader interface {
+	RuntimePodUIDPresent(context.Context, string, string, string) (bool, error)
+}
+
+func (s *runtimeDeploymentService) RuntimePodUIDPresent(ctx context.Context, namespace, name, uid string) (bool, error) {
+	if s == nil || s.client == nil || strings.TrimSpace(namespace) == "" || strings.TrimSpace(name) == "" || strings.TrimSpace(uid) == "" {
+		return false, fmt.Errorf("complete original runtime Pod identity required")
+	}
+	pod, err := s.client.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return string(pod.UID) == uid, nil
+}
+
 func (s *runtimeDeploymentService) ListPods(ctx context.Context, namespace, runtimeType string) ([]RuntimeDeploymentPod, error) {
 	if s == nil || s.client == nil {
 		return nil, fmt.Errorf("k8s client not initialized")

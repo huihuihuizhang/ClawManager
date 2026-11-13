@@ -1652,8 +1652,25 @@ func (s *RuntimeScheduler) failoverStalePods(ctx context.Context) error {
 	kubernetesPodsByType := map[string][]k8s.RuntimeDeploymentPod{}
 	var errs []error
 	for _, pod := range pods {
-		if pod.State == "unhealthy" || pod.State == "pending" {
+		if pod.State == "pending" {
 			continue
+		}
+		retryUnhealthy := pod.State == "unhealthy"
+		if retryUnhealthy {
+			// MarkState can succeed before failoverBinding obtains its lifecycle
+			// lock or updates the instance. Such a retained binding must be
+			// retried, but an unhealthy label alone is not writer fencing.
+			if pod.PodUID == nil || strings.TrimSpace(*pod.PodUID) == "" || pod.Namespace != s.runtimeNamespace {
+				continue
+			}
+			bindings, readErr := s.bindingRepo.ListByRuntimePodID(ctx, pod.ID)
+			if readErr != nil {
+				errs = append(errs, fmt.Errorf("read retained unhealthy pod %d bindings: %w", pod.ID, readErr))
+				continue
+			}
+			if len(bindings) == 0 {
+				continue
+			}
 		}
 		if pod.LastSeenAt == nil || !pod.LastSeenAt.Before(cutoff) {
 			continue
@@ -1671,6 +1688,22 @@ func (s *RuntimeScheduler) failoverStalePods(ctx context.Context) error {
 				return fmt.Errorf("confirm stale %s runtime pods with Kubernetes: %w", runtimeType, err)
 			}
 			kubernetesPodsByType[runtimeType] = inventory
+		}
+		if retryUnhealthy {
+			reader, ok := s.deployments.(k8s.RuntimePodIdentityReader)
+			if !ok {
+				continue
+			}
+			// ListPods intentionally filters terminating Pods. Only a direct
+			// API read can confirm the exact old identity is no longer present.
+			present, readErr := reader.RuntimePodUIDPresent(ctx, pod.Namespace, pod.PodName, *pod.PodUID)
+			if readErr != nil {
+				errs = append(errs, fmt.Errorf("confirm unhealthy pod %d identity: %w", pod.ID, readErr))
+				continue
+			}
+			if present {
+				continue
+			}
 		}
 		if runtimePodStillReadyInKubernetes(pod, inventory) {
 			continue

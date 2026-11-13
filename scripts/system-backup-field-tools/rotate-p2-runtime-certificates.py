@@ -147,7 +147,10 @@ def instance_status(records):
         need(p.returncode==0,'post-rotation instance read unconfirmed; retain TLS completion and private logs')
         rows=[json.loads(line) for line in p.stdout.splitlines() if line.strip()]
         running=[r['id'] for r in rows if r['status']=='running'];print('RUNNING_IDS',running,flush=True)
-        if running==[1,2,3,7,8]:print('RUNTIME_TLS_AND_INSTANCE_RECOVERY_PASSED',flush=True);return
+        if running==[1,2,3,7,8]:
+            # A running SQL row can retain a binding to a deleted old pool.
+            # Only the separate SQL/Pod/Gateway readback can certify recovery.
+            print('RUNTIME_TLS_ROTATED_SQL_RUNNING_BINDING_VERIFICATION_REQUIRED',flush=True);return
         if attempt<6:time.sleep(10)
     for row in rows:print('INSTANCE_STATUS',json.dumps(row),flush=True)
     print('RUNTIME_TLS_ROTATED_INSTANCE_RECOVERY_PENDING',flush=True)
