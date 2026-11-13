@@ -22,6 +22,29 @@ func TestSourceRegistryCLIRejectsMissingOrCrossActionInputs(t *testing.T) {
 	}
 }
 
+func TestProviderLocalForwardIsOptionalAndProviderOnly(t *testing.T) {
+	common := []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "source-selection-file", "source-selection-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "output-directory"}
+	for _, action := range []string{"prepare-provider-materials", "prepare-redis-materials", "prepare-observer-materials"} {
+		for _, forwarded := range []bool{false, true} {
+			args := []string{action}
+			for _, name := range common {
+				args = append(args, "--"+name, "nonexistent-input")
+			}
+			if forwarded {
+				args = append(args, "--provider-local-forward", "127.0.0.1:1234")
+			}
+			var out bytes.Buffer
+			want := 1 // Accepted syntax must still fail closed on absent original authority.
+			if forwarded && action != "prepare-provider-materials" {
+				want = 2
+			}
+			if code := run(context.Background(), args, &out); code != want || out.Len() != 0 {
+				t.Fatal(action, forwarded, code)
+			}
+		}
+	}
+}
+
 func TestSourceRegistryCLIOwnerBindingsShareOriginalCapture(t *testing.T) {
 	dir := t.TempDir()
 	args := []string{"owner-bindings", "--capture-consumer-file", filepath.Join(dir, "capture.json"), "--capture-consumer-pin-file", filepath.Join(dir, "capture.sha256"), "--record-file", filepath.Join(dir, "source.record.json"), "--record-sha256", strings.Repeat("a", 64), "--signature-file", filepath.Join(dir, "source.signature")}

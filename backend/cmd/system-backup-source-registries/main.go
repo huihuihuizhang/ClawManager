@@ -182,7 +182,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	flags := flag.NewFlagSet(action, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	values := map[string]*string{}
-	for _, name := range []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "source-selection-file", "source-selection-sha256", "mount-layouts-file", "mount-layouts-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "definition-file", "definition-sha256", "consumption-file", "consumption-sha256", "request-files-file", "request-files-sha256", "bundle-file", "bundle-sha256", "issuer-private-file", "output-directory"} {
+	for _, name := range []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "source-selection-file", "source-selection-sha256", "mount-layouts-file", "mount-layouts-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "definition-file", "definition-sha256", "consumption-file", "consumption-sha256", "request-files-file", "request-files-sha256", "bundle-file", "bundle-sha256", "issuer-private-file", "output-directory", "provider-local-forward"} {
 		values[name] = flags.String(name, "", "")
 	}
 	if flags.Parse(args[1:]) != nil || flags.NArg() != 0 {
@@ -194,6 +194,9 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		if *values[name] == "" {
 			return 2
 		}
+	}
+	if action == "prepare-provider-materials" {
+		allowed["provider-local-forward"] = true
 	}
 	for name, v := range values {
 		if !allowed[name] && *v != "" {
@@ -282,8 +285,12 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 0
 	}
 	if action == "prepare-provider-materials" {
-		receipt, err := execution.ProduceFormalVaultDependencyMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("writer-selection-file"), get("writer-selection-sha256"), get("controller-container"), get("output-directory"))
+		receipt, err := execution.ProduceFormalVaultDependencyMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("writer-selection-file"), get("writer-selection-sha256"), get("controller-container"), get("output-directory"), get("provider-local-forward"))
 		if err != nil {
+			var failure *execution.FormalVaultMaterialFailure
+			if errors.As(err, &failure) {
+				_ = json.NewEncoder(out).Encode(struct{ Status, Phase string }{"formal_vault_materials_refused", failure.Phase})
+			}
 			return 1
 		}
 		if json.NewEncoder(out).Encode(receipt) != nil {

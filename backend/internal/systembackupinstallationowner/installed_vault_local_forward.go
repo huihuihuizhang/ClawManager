@@ -16,12 +16,29 @@ import (
 // CA, cluster identity and persisted configuration remain unchanged. The caller
 // owns a bounded, authenticated kubectl forward to the selected provider Pod.
 func NewInstalledVaultDependencyObserverWithLocalForward(cfg InstalledVaultDependencyConfig, kube kubernetes.Interface, namespace, namespaceUID, address string) (*InstalledVaultDependencyObserver, error) {
+	if address != "" && cfg.IdentityMode != "original-owner-readonly" {
+		return nil, ErrOwner
+	}
+	return newInstalledVaultObserverWithLocalForward(cfg, kube, namespace, namespaceUID, address)
+}
+
+// NewInstalledVaultMetadataObserverWithLocalForward is installer-only readback
+// of the separately minted metadata identity. The route is not persisted into
+// workload inputs and cannot turn an original administrator into that identity.
+func NewInstalledVaultMetadataObserverWithLocalForward(cfg InstalledVaultDependencyConfig, kube kubernetes.Interface, namespace, namespaceUID, address string) (*InstalledVaultDependencyObserver, error) {
+	if cfg.IdentityMode != "metadata-only" {
+		return nil, ErrOwner
+	}
+	return newInstalledVaultObserverWithLocalForward(cfg, kube, namespace, namespaceUID, address)
+}
+
+func newInstalledVaultObserverWithLocalForward(cfg InstalledVaultDependencyConfig, kube kubernetes.Interface, namespace, namespaceUID, address string) (*InstalledVaultDependencyObserver, error) {
 	o, err := NewInstalledVaultDependencyObserver(cfg, kube, namespace, namespaceUID)
 	if err != nil || address == "" {
 		return o, err
 	}
 	dial, err := installedVaultLocalForwardDial(cfg.Endpoint, address)
-	if err != nil || cfg.IdentityMode != "original-owner-readonly" {
+	if err != nil {
 		o.Close()
 		return nil, ErrOwner
 	}

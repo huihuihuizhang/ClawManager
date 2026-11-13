@@ -21,8 +21,15 @@ import (
 // nonrenewable metadata-only service token, then repeats the real native census
 // through that identity. It issues no crypto/key/config/task authority.
 // Caller must also hold its genuine original installer/enrollment authority.
-func IssueInstalledVaultMetadataIdentity(ctx context.Context, original InstalledVaultDependencyConfig, kube kubernetes.Interface, namespace, namespaceUID, outputFile string) (_ InstalledVaultDependencyConfig, resultErr error) {
+func IssueInstalledVaultMetadataIdentity(ctx context.Context, original InstalledVaultDependencyConfig, kube kubernetes.Interface, namespace, namespaceUID, outputFile string, localForward ...string) (_ InstalledVaultDependencyConfig, resultErr error) {
 	var zero InstalledVaultDependencyConfig
+	if len(localForward) > 1 {
+		return zero, ErrOwner
+	}
+	address := ""
+	if len(localForward) == 1 {
+		address = localForward[0]
+	}
 	if ctx == nil || ctx.Err() != nil || original.IdentityMode != "original-owner-readonly" || !filepath.IsAbs(outputFile) || filepath.Clean(outputFile) != outputFile {
 		return zero, ErrOwner
 	}
@@ -43,7 +50,7 @@ func IssueInstalledVaultMetadataIdentity(ctx context.Context, original Installed
 	if _, e := root.Lstat(filepath.Base(outputFile)); !os.IsNotExist(e) {
 		return zero, ErrOwner
 	}
-	o, e := NewInstalledVaultDependencyObserver(original, kube, namespace, namespaceUID)
+	o, e := NewInstalledVaultDependencyObserverWithLocalForward(original, kube, namespace, namespaceUID, address)
 	if e != nil {
 		return zero, ErrOwner
 	}
@@ -158,7 +165,7 @@ func IssueInstalledVaultMetadataIdentity(ctx context.Context, original Installed
 	metadata.ObserverPolicy = policy
 	metadata.TokenFile = outputFile
 	metadata.TokenSHA256 = digest(token)
-	reader, e := NewInstalledVaultDependencyObserver(metadata, kube, namespace, namespaceUID)
+	reader, e := NewInstalledVaultMetadataObserverWithLocalForward(metadata, kube, namespace, namespaceUID, address)
 	if e != nil {
 		return zero, ErrOwner
 	}

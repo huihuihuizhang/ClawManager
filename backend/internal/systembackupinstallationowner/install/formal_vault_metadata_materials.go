@@ -22,8 +22,15 @@ type InstalledVaultMetadataMaterials struct {
 // local administrator/enrollment and pins the current authority before/after
 // native issuance. It consumes the original full-roster selection, never a
 // provider name filter, fake Installer or future task/config reference.
-func (i *Installer) ProduceInstalledVaultMetadataMaterials(ctx context.Context, password []byte, enrollment EnrollmentPin, writerPin BootstrapSourceFilePin, outputDirectory string) (InstalledVaultMetadataMaterials, error) {
+func (i *Installer) ProduceInstalledVaultMetadataMaterials(ctx context.Context, password []byte, enrollment EnrollmentPin, writerPin BootstrapSourceFilePin, outputDirectory string, localForward ...string) (InstalledVaultMetadataMaterials, error) {
 	var zero InstalledVaultMetadataMaterials
+	if len(localForward) > 1 {
+		return zero, ErrInstall
+	}
+	address := ""
+	if len(localForward) == 1 {
+		address = localForward[0]
+	}
 	if i == nil || ctx == nil || ctx.Err() != nil || privateDirectory(outputDirectory) != nil {
 		return zero, ErrInstall
 	}
@@ -104,11 +111,11 @@ func (i *Installer) ProduceInstalledVaultMetadataMaterials(ctx context.Context, 
 	if e != nil {
 		return zero, ErrInstall
 	}
-	metadata, e := owner.IssueInstalledVaultMetadataIdentity(ctx, original, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID, filepath.Join(outputDirectory, "provider-metadata.token"))
+	metadata, e := owner.IssueInstalledVaultMetadataIdentity(ctx, original, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID, filepath.Join(outputDirectory, "provider-metadata.token"), address)
 	if e != nil {
 		return zero, ErrInstall
 	}
-	observer, e := owner.NewInstalledVaultDependencyObserver(metadata, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID)
+	observer, e := owner.NewInstalledVaultMetadataObserverWithLocalForward(metadata, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID, address)
 	if e != nil {
 		return zero, ErrInstall
 	}

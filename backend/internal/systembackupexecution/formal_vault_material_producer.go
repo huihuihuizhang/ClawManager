@@ -24,13 +24,28 @@ type FormalVaultMaterialsReceipt struct {
 	Workload                                       install.VaultProviderWorkloadSelection
 }
 
+// Public phase only; original inputs and native errors stay private.
+type FormalVaultMaterialFailure struct {
+	Phase string
+	Cause error
+}
+
+func (e *FormalVaultMaterialFailure) Error() string { return "formal Vault material author refused" }
+func (e *FormalVaultMaterialFailure) Unwrap() error { return e.Cause }
+
 // Actual pre-signing installer action: native token issuance, complete original
 // roster correspondence, immutable Secret, guarded controller mount patch, and
 // an updated config/material/source-selection hash chain. No ready flag, fake
 // provider facts, policy supplied by a task, root mount or synthetic cold ack.
-func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA, writerFile, writerSHA, container, outputDirectory string) (FormalVaultMaterialsReceipt, error) {
+func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA, writerFile, writerSHA, container, outputDirectory string, localForward ...string) (_ FormalVaultMaterialsReceipt, resultErr error) {
 	var zero FormalVaultMaterialsReceipt
-	if ctx == nil || installer == nil || ctx.Err() != nil || container == "" {
+	phase := "inputs"
+	defer func() {
+		if resultErr != nil {
+			resultErr = &FormalVaultMaterialFailure{Phase: phase, Cause: resultErr}
+		}
+	}()
+	if ctx == nil || installer == nil || ctx.Err() != nil || container == "" || len(localForward) > 1 {
 		return zero, install.ErrInstall
 	}
 	if _, bounded := ctx.Deadline(); !bounded {
@@ -43,6 +58,7 @@ func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *insta
 	if len(selected.PreAdoptionVaultDependencies) != 1 || len(selected.VaultProviderDependencies) != 0 {
 		return zero, install.ErrInstall
 	}
+	phase = "source_authority"
 	authority, e := installer.PrepareBootstrapSourceRegistryAuthoring(ctx, password, enrollment, selectionFile, selectionSHA)
 	if e != nil {
 		return zero, install.ErrInstall
@@ -56,15 +72,18 @@ func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *insta
 	if e != nil || selected.ApplicationScope != selection.ApplicationScope || len(x.config.ProviderDependencies) != 0 {
 		return zero, install.ErrInstall
 	}
+	phase = "role_roster"
 	kept, e := formalVaultWriterRoster(x.config, selected, selection.Controller.Deployment, selection.Controller.DeploymentUID)
 	if e != nil {
 		return zero, install.ErrInstall
 	}
+	phase = "metadata_clients"
 	clients, e := x.openMetadataClients()
 	if e != nil {
 		return zero, install.ErrInstall
 	}
 	defer clients.Close()
+	phase = "controller_layout"
 	ref := selection.Controller
 	deployment, e := clients.API.AppsV1().Deployments(ref.Namespace).Get(x.physical, ref.Deployment, metav1.GetOptions{})
 	if e != nil || string(deployment.UID) != ref.DeploymentUID || deployment.ResourceVersion == "" || deployment.DeletionTimestamp != nil || deployment.Spec.Template.Spec.ServiceAccountName != ref.ServiceAccount {
@@ -127,6 +146,7 @@ func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *insta
 		}
 		return nil
 	}
+	phase = "output_preflight"
 	outputs := []string{"provider-deployment-config.json", "provider-materials-template.json", "provider-source-selection.json", "provider-secret.private.json", "provider-deployment-mount.patch.json"}
 	for _, name := range append(append([]string{}, outputs...), "provider-metadata.token", "provider-metadata-observer.private.json") {
 		file := filepath.Join(outputDirectory, name)
@@ -137,10 +157,12 @@ func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *insta
 	if guard() != nil {
 		return zero, install.ErrInstall
 	}
-	materials, e := installer.ProduceInstalledVaultMetadataMaterials(ctx, password, enrollment, install.BootstrapSourceFilePin{File: writerFile, SHA256: writerSHA}, outputDirectory)
+	phase = "native_metadata_identity"
+	materials, e := installer.ProduceInstalledVaultMetadataMaterials(ctx, password, enrollment, install.BootstrapSourceFilePin{File: writerFile, SHA256: writerSHA}, outputDirectory, localForward...)
 	if e != nil || !reflect.DeepEqual(materials.Workload, selected.PreAdoptionVaultDependencies[0].Workload) || guard() != nil {
 		return zero, install.ErrInstall
 	}
+	phase = "delivery_materials"
 	observer, e := readFormalVaultObserver(materials.Observer)
 	if e != nil {
 		return zero, install.ErrInstall
@@ -184,6 +206,7 @@ func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *insta
 	} else {
 		patch = append(patch, formalObserverPatchOperation{"add", position + "/volumeMounts/-", mount})
 	}
+	phase = "successor_config"
 	x.config.Writers = kept
 	x.config.ProviderDependencies = []FormalVaultProviderDependency{{Version: "formal-vault-provider-dependency.v1", Workload: materials.Workload, Observer: install.BootstrapSourceFilePin{File: path.Join(formalVaultDependencyMount, "observer.json"), SHA256: hash(observerRaw)}}}
 	if x.config.Validate() != nil {
@@ -213,6 +236,7 @@ func ProduceFormalVaultDependencyMaterials(ctx context.Context, installer *insta
 	if e != nil {
 		return zero, install.ErrInstall
 	}
+	phase = "successor_files"
 	bodies := [][]byte{configRaw, materialRaw, selectionRaw, secretRaw, patchRaw}
 	for n, name := range outputs {
 		if guard() != nil {
