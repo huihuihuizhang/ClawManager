@@ -49,13 +49,67 @@ def validate_successor(parent, selected, receipt, material):
          {k:v for k,v in parent.items() if k not in ['Deployment','MaterialsTemplate']},
          'native successor changed unrelated selection or mixed core/material identities')
 
-def main(redis_renewed=False, phase_readback=False, credential_encoding=False, pv_read_repaired=False):
+def release_pod_identity(pod):
+    name = 'sbk-app-tls-release-4e4c205c283a0486'
+    meta, spec, status = pod['metadata'], pod['spec'], pod['status']
+    need(meta['name'] == name and meta['namespace'] == 'clawmanager-sbk-validation-system' and
+         meta['uid'] == 'b1c9882d-4017-4f5b-90a7-69bcbad8732e' and
+         not meta.get('ownerReferences') and not meta.get('deletionTimestamp') and
+         status['phase'] == 'Succeeded', 'original completed release Pod required')
+    containers = spec['containers']; states = status['containerStatuses']
+    need(len(containers) == len(states) == 1 and containers[0]['name'] == states[0]['name'] == 'release' and
+         containers[0]['image'] == '10.130.14.23:5000/clawmanager@sha256:ae64fd8a1c0fd825c44722107894a0d60ce428e0daf5a66e9b2064d5b3c4335e' and
+         states[0]['state'].get('terminated',{}).get('exitCode') == 0 and
+         [v['persistentVolumeClaim']['claimName'] for v in spec['volumes'] if 'persistentVolumeClaim' in v] == [name],
+         'release Pod image, exit or PVC changed')
+    return name, meta['uid']
+
+def cleanup_release_pod(site, r, A):
+    name = 'sbk-app-tls-release-4e4c205c283a0486'
+    raw = site.call(['get','pod',name,'--ignore-not-found','-o','json'])
+    if not raw.strip():
+        print('P2_COMPLETED_RELEASE_POD_ABSENT',flush=True); return
+    pod = json.loads(raw); name, uid = release_pod_identity(pod)
+    claim = site.get('pvc',name)
+    need(not claim['metadata'].get('deletionTimestamp') and
+         not any(o.get('uid')==uid for o in claim['metadata'].get('ownerReferences',[])),
+         'release PVC deleting or owned by temporary Pod')
+    A.retain(r/'release-pod.before.private.json',pod)
+    A.retain(r/'release-pvc.before.private.json',claim)
+    marker = r/'release-pod-delete.sent.json'
+    need(not marker.exists(),'release Pod deletion already sent; reconcile original result')
+    options = {'apiVersion':'v1','kind':'DeleteOptions','propagationPolicy':'Orphan',
+               'preconditions':{'uid':uid,'resourceVersion':pod['metadata']['resourceVersion']}}
+    A.retain(marker,options)
+    site.call(['delete','--raw','/api/v1/namespaces/'+pod['metadata']['namespace']+'/pods/'+name,'-f','-'],options)
+    site.call(['wait','--for=delete','pod/'+name,'--timeout=60s'])
+    need(not site.call(['get','pod',name,'--ignore-not-found','-o','json']).strip(),'release Pod still present')
+    after = site.get('pvc',name)
+    need(after['metadata']['uid']==claim['metadata']['uid'] and not after['metadata'].get('deletionTimestamp') and
+         after['spec']==claim['spec'],'release PVC changed')
+    A.retain(r/'release-pod-cleaned.json',{'PodUID':uid,'PVCUID':after['metadata']['uid'],'PVCPreserved':True})
+    print('P2_COMPLETED_RELEASE_POD_CLEANED_PVC_PRESERVED',flush=True)
+
+def main(redis_renewed=False, phase_readback=False, credential_encoding=False, pv_read_repaired=False, november13=False):
     os.umask(0o077); need(os.name == 'posix','Linux operator required')
     directory = Path(__file__).resolve().parent
     A = load('longhorn_assembly',directory/'assemble-p2-installation-candidate.py')
     source_name = 'source-preparation-redis-renew7d' if redis_renewed else 'source-preparation-renew8h'
     output_name = 'longhorn-source-redis-renew7d' if redis_renewed else 'longhorn-source-renew8h'
     native, native_sha = BIN, BIN_SHA
+    if november13:
+        need(not any([redis_renewed,phase_readback,credential_encoding,pv_read_repaired]),'select one successor mode')
+        source_name, output_name = 'source-preparation-20261113-ca-alias', 'longhorn-source-20261113'
+        prior = ROOT/'longhorn-source-redis-renew7d-pv-read-repaired'
+        need(json.loads((prior/'native.exit.json').read_bytes()) == {'ExitCode':1} and
+             not (prior/'completed.json').exists(),'prior native failure required')
+        refusal = json.loads((prior/'native.stdout.private').read_bytes())
+        need(refusal['Status']=='original_mount_author_refused' and refusal['Phase']=='native_writers','prior writer refusal required')
+        old = json.loads((prior/'native.sent.private.json').read_bytes())['Argv']
+        old_out = Path(old[old.index('--output-directory')+1])
+        need(old_out.is_dir() and not list(old_out.iterdir()),'partial outputs require reconciliation')
+        native = Path('/root/sbk/p2-credential-encoding-8d0f5dfc/system-backup-source-registries')
+        native_sha = '2c786044554aa445c3789ab84756e988da56ea1b6f5df6f32d00571405eb08a1'
     need(sum([phase_readback, credential_encoding, pv_read_repaired]) <= 1, 'select one successor mode')
     if phase_readback or credential_encoding or pv_read_repaired:
         need(redis_renewed, 'phase readback requires observed Redis source successor')
@@ -85,7 +139,13 @@ def main(redis_renewed=False, phase_readback=False, credential_encoding=False, p
     need(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0,'private journal required')
     renewed = json.loads((ROOT/source_name/'completed.json').read_bytes())
     pin = renewed['SourceSelection']
-    if redis_renewed:
+    if november13:
+        need(renewed['Version']=='p2-source-ca-alias-reauthored.v1' and
+             renewed['Receipt']['SHA256']=='b6c38df3fc7cf42f461c7bdd693bda6eefe9ed22ba09bf913e9df10f676b10c8' and
+             pin['SHA256']=='bf23877e281b5b44669f285bee4943d26a100d713e1247884b3530c650ba5d62','observed November source required')
+        receipt = A.obj(renewed['Receipt'])
+        need(receipt['SourceSelection']==pin and receipt['GrantsIssued'] is False and receipt['BackupReady'] is False,'native source receipt differs')
+    elif redis_renewed:
         need(renewed['Version'] == 'p2-redis-source-reauthored.v1', 'Redis successor receipt required')
         receipt = A.obj(renewed['Receipt'])
         need(receipt['SourceSelection'] == pin and receipt['GrantsIssued'] is False, 'native Redis successor differs')
@@ -117,6 +177,7 @@ def main(redis_renewed=False, phase_readback=False, credential_encoding=False, p
     controller = parent['Controller']
     pod = site.get('pod',controller['Pod'])
     need(pod['metadata']['uid'] == controller['PodUID'],'source controller changed')
+    if november13: cleanup_release_pod(site,r,A)
     endpoints = [(c['Purpose'],c['Endpoint']) for c in parent['Connections']
         if (urlsplit(c['Endpoint']).hostname or '').endswith('.'+A.NS+'.svc')]
     dns = load('longhorn_dns',directory/'p2-source-dns.py').SourceDNS(site,r,pod,endpoints,A.retain)
@@ -158,7 +219,8 @@ if __name__ == '__main__':
         parser.add_argument('--phase-readback', action='store_true')
         parser.add_argument('--credential-encoding', action='store_true')
         parser.add_argument('--pv-read-repaired', action='store_true')
+        parser.add_argument('--november13', action='store_true')
         args = parser.parse_args()
-        main(args.redis_renewed_source, args.phase_readback, args.credential_encoding, args.pv_read_repaired)
+        main(args.redis_renewed_source, args.phase_readback, args.credential_encoding, args.pv_read_repaired, args.november13)
     except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as error:
         raise SystemExit('P2_LONGHORN_SOURCE_UNCONFIRMED '+(str(error) if type(error) is ValueError else type(error).__name__))
