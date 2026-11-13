@@ -59,6 +59,24 @@ def replace_pinned_values(value, replacements):
     return replacements.get(value,value) if isinstance(value,str) else value
 
 
+def replace_materialized_aliases(A, original, digest_paths, replacements):
+    # Materialized aliases can contain identical certificate bytes at another
+    # pinned path. Resolve only paths actually present in this source definition.
+    def aliases(value):
+        if isinstance(value,dict):
+            for v in value.values(): aliases(v)
+        elif isinstance(value,list):
+            for v in value: aliases(v)
+        elif isinstance(value,str) and value.startswith('/'):
+            path = Path(value)
+            if path.is_file() and not path.is_symlink() and path.resolve()==path and 0<path.stat().st_size<=262144:
+                digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                if digest in digest_paths:
+                    A.read({'File':value,'SHA256':digest},262144)
+                    replacements[value] = digest_paths[digest]
+    aliases(original)
+
+
 def november_trust(A, original):
     old = json.loads((ROOT/'observer.receipt.private.json').read_bytes())
     new = A.obj({'File':str(ROOT/'renewal-20261113/observer/receipt.private.json'),
@@ -69,8 +87,10 @@ def november_trust(A, original):
     rotation = json.loads((ROOT/'renewal-20261113/runtime-unique/runtime-rotation/completed.json').read_bytes())
     need(rotation['CA']==agent_new['CA'] and rotation['ImagesPreserved'] is True,'completed runtime rotation required')
     replacements = {}
+    digest_paths = {}
     def pair(a,b):
         A.read(a); A.read(b)
+        digest_paths[a['SHA256']] = b['File']
         for key in ('File','SHA256'):
             need(a[key] not in replacements or replacements[a[key]]==b[key],'ambiguous trust replacement')
             replacements[a[key]]=b[key]
@@ -83,6 +103,7 @@ def november_trust(A, original):
         for key in ('Certificate','PrivateKey','AnchorKey'):
             if e.get(key,{}).get('File'): pair(e[key],n[key])
     pair(agent_old['CA'],agent_new['CA'])
+    replace_materialized_aliases(A,original,digest_paths,replacements)
     return replace_pinned_values(original,replacements),new['NotAfter'],agent_new['NotAfter']
 
 

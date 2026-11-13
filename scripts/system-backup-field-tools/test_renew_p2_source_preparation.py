@@ -3,11 +3,48 @@ import datetime as dt
 import importlib.util
 from pathlib import Path, PurePosixPath
 import unittest
+import hashlib
+from unittest.mock import Mock, patch
 
 spec = importlib.util.spec_from_file_location('renew',Path(__file__).with_name('renew-p2-source-preparation.py'))
 R = importlib.util.module_from_spec(spec); spec.loader.exec_module(R)
 
 class RenewalTests(unittest.TestCase):
+    def test_materialized_alias_is_validated_and_redirected(self):
+        digest = hashlib.sha256(b'old-cert').hexdigest()
+        path = Mock()
+        path.is_file.return_value = True
+        path.is_symlink.return_value = False
+        path.resolve.return_value = path
+        path.stat.return_value.st_size = 8
+        path.read_bytes.return_value = b'old-cert'
+        assembly = Mock()
+        original = {'CA': {'File':'/alias.pem','SHA256':'new-digest'}}
+        replacements = {}
+        with patch.object(R,'Path',return_value=path):
+            R.replace_materialized_aliases(assembly,original,{digest:'/new.pem'},replacements)
+        assembly.read.assert_called_once_with({'File':'/alias.pem','SHA256':digest},262144)
+        self.assertEqual(R.replace_pinned_values(original,replacements),
+                         {'CA':{'File':'/new.pem','SHA256':'new-digest'}})
+        self.assertEqual(original['CA']['File'],'/alias.pem')
+        assembly.read.side_effect = ValueError('private pin refused')
+        with patch.object(R,'Path',return_value=path), self.assertRaises(ValueError):
+            R.replace_materialized_aliases(assembly,original,{digest:'/new.pem'},{})
+
+    def test_unknown_bytes_and_symlinks_are_not_redirected(self):
+        for symlink in (False,True):
+            path = Mock()
+            path.is_file.return_value = True
+            path.is_symlink.return_value = symlink
+            path.resolve.return_value = path
+            path.stat.return_value.st_size = 7
+            path.read_bytes.return_value = b'unknown'
+            assembly, replacements = Mock(), {}
+            with patch.object(R,'Path',return_value=path):
+                R.replace_materialized_aliases(assembly,{'File':'/alias.pem'},{'known':'/new.pem'},replacements)
+            self.assertEqual(replacements,{})
+            assembly.read.assert_not_called()
+
     def test_window_capped_by_each_real_dependency(self):
         now = dt.datetime(2026,11,12,10,tzinfo=dt.timezone.utc)
         later = now+dt.timedelta(hours=24)
