@@ -161,11 +161,15 @@ func observeOriginalLonghornSources(ctx context.Context, clients *productionMeta
 		if team.PVC == "" {
 			continue
 		}
-		if team.Namespace != cfg.Namespace {
-			return nil, install.ErrInstall
+		namespaceUID, err := observeTeamSourceNamespace(ctx, api, cfg, team)
+		if err != nil {
+			return nil, err
 		}
 		if err := add("team_"+strconv.Itoa(team.ID)+"_workspace", team.Namespace, team.PVC, nil, false); err != nil {
 			return nil, err
+		}
+		if source, ok := out["team_"+strconv.Itoa(team.ID)+"_workspace"]; ok && source.NamespaceUID != namespaceUID {
+			return nil, install.ErrInstall
 		}
 	}
 	if len(out) == 0 {

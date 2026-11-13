@@ -163,10 +163,9 @@ func checkOriginalMountAuthoringAliases(materialsFile, nextSelectionFile, select
 // DATA for the unchanged final A producer, never stop/adoption authorization.
 func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA, layoutsFile, layoutsSHA, outputDirectory string) (result OriginalInstanceMountMaterialsReceipt, resultErr error) {
 	phase := "inputs"
-	diagnosticContext := ctx
 	defer func() {
 		if resultErr != nil {
-			resultErr = &OriginalMountAuthorFailure{Phase: phase, cause: writerAPIReadFailure(resultErr, diagnosticContext, phase, "MountMaterials", resultErr)}
+			resultErr = &OriginalMountAuthorFailure{Phase: phase, cause: writerAPIReadFailure(resultErr, ctx, phase, "MountMaterials", resultErr)}
 		}
 	}()
 	var zero OriginalInstanceMountMaterialsReceipt
@@ -201,7 +200,11 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil {
 		return zero, install.ErrInstall
 	}
-	diagnosticContext = x.physical
+	// Classify before Close cancels the physical read context. The outer phase
+	// wrapper preserves this classification after cleanup.
+	defer func() {
+		resultErr = writerAPIReadFailure(resultErr, x.physical, phase, "MountMaterials", resultErr)
+	}()
 	selection, _, err := authority.Selection(ctx)
 	if err != nil {
 		return zero, install.ErrInstall

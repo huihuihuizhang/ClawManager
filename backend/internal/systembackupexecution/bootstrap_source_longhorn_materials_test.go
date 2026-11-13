@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"errors"
 	"math/big"
 	"net/url"
 	"os"
@@ -116,12 +117,17 @@ func TestOriginalLonghornHoldAuthorReadsRWOAndCompleteRWXClientsWithoutTask(t *t
 }
 
 func TestOriginalLonghornHoldAuthorRejectsSourceProviderAndClientDrift(t *testing.T) {
-	for _, fault := range []string{"node", "missing-node-endpoint", "tenant-pod", "claim", "pv", "provider-owner", "provider-process", "ambiguous-client-mount", "missing-tenant", "unknown-mode"} {
+	for _, fault := range []string{"node", "missing-node-endpoint", "tenant-pod", "claim", "pv", "provider-owner", "provider-process", "ambiguous-client-mount", "missing-tenant", "unknown-mode", "detached-share"} {
 		t.Run(fault, func(t *testing.T) {
 			clients, cfg, scope, sources := longhornAuthorFixture()
 			ctx := context.Background()
 			api := clients.API
 			switch fault {
+			case "detached-share":
+				resource := clients.Dynamic.Resource(schema.GroupVersionResource{Group: "longhorn.io", Version: "v1beta2", Resource: "volumes"}).Namespace("longhorn-system")
+				v, _ := resource.Get(ctx, "pvc-shared", metav1.GetOptions{})
+				v.Object["status"] = map[string]any{"state": "detached", "shareState": "stopped"}
+				_, _ = resource.Update(ctx, v, metav1.UpdateOptions{})
 			case "node":
 				v, _ := api.CoreV1().Nodes().Get(ctx, "node1", metav1.GetOptions{})
 				v.UID = "replacement"
@@ -161,8 +167,15 @@ func TestOriginalLonghornHoldAuthorRejectsSourceProviderAndClientDrift(t *testin
 				v.AccessMode = corev1.ReadOnlyMany
 				sources["instance_2_workspace"] = v
 			}
-			if _, err := observeOriginalLonghornHoldMaterials(ctx, clients, cfg, scope, sources, "spiffe://selected/recovery"); err == nil {
+			_, err := observeOriginalLonghornHoldMaterials(ctx, clients, cfg, scope, sources, "spiffe://selected/recovery")
+			if err == nil {
 				t.Fatal("changed native source accepted")
+			}
+			if fault == "detached-share" {
+				var failure *WriterAPIReadFailure
+				if !errors.As(err, &failure) || failure.Step != "longhorn_share_manager_state" || failure.Reason != "validation" {
+					t.Fatal("detached shared volume lacks a stable refusal reason")
+				}
 			}
 		})
 	}

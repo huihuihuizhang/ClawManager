@@ -31,3 +31,28 @@ func TestWriterAPIReadFailureClassificationAndPrivacy(t *testing.T) {
 		t.Fatal("success changed")
 	}
 }
+
+// The native author classifies before closing its read authority. The outer
+// phase wrapper must retain that reason after Close cancels the child context.
+func TestWriterFailureClassificationBeforeAuthorityCleanup(t *testing.T) {
+	for _, deadline := range []bool{false, true} {
+		ctx, cancel := context.WithCancel(context.Background())
+		observed := errors.New("private failure")
+		expected := "read_error"
+		if deadline {
+			observed = context.DeadlineExceeded
+			expected = "deadline"
+		}
+		run := func() (result error) {
+			defer func() { result = writerAPIReadFailure(result, ctx, "outer", "MountMaterials", result) }()
+			defer cancel()
+			defer func() { result = writerAPIReadFailure(result, ctx, "longhorn_sources", "MountMaterials", result) }()
+			return observed
+		}
+		err := run()
+		var failure *WriterAPIReadFailure
+		if ctx.Err() != context.Canceled || !errors.As(err, &failure) || failure.Reason != expected || failure.Step != "longhorn_sources" || !errors.Is(err, observed) {
+			t.Fatalf("cleanup hid original refusal: %v", err)
+		}
+	}
+}

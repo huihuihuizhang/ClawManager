@@ -185,7 +185,7 @@ func observeOriginalLonghornHoldMaterials(ctx context.Context, clients *producti
 			}
 			status, ok := volume.Object["status"].(map[string]any)
 			if !ok || status["shareState"] != "running" {
-				return out, install.ErrInstall
+				return out, writerAPIReadFailure(install.ErrInstall, ctx, "longhorn_share_manager_state", "LonghornVolume", nil)
 			}
 			share, _ := status["shareEndpoint"].(string)
 			u, e := url.Parse(share)

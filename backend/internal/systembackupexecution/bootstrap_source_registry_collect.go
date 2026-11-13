@@ -202,7 +202,7 @@ func (x *bootstrapSourceRegistryReader) deriveParts(f *bootstrapSourceSQLFacts, 
 		if team.PVC == "" {
 			continue
 		}
-		if team.Namespace != x.config.Namespace {
+		if _, err := observeTeamSourceNamespace(x.physical, clients.API, x.config, team); err != nil {
 			return nil, install.ErrInstall
 		}
 		claim, err := clients.API.CoreV1().PersistentVolumeClaims(team.Namespace).Get(x.physical, team.PVC, metav1.GetOptions{})

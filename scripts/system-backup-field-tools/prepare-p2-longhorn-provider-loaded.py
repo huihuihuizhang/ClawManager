@@ -115,9 +115,9 @@ def confirmed_mount_window_failure(exit_record, refusal, argv, selection_sha):
     return Path(argv[argv.index('--output-directory') + 1])
 
 
-def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False, tenant_workspace=False, recovered=False, recovered_window=False):
+def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False, tenant_workspace=False, recovered=False, recovered_window=False, tenant_team=False):
     os.umask(0o077); need(os.name == 'posix', 'Linux operator required')
-    need(sum((native_readback, pool_history, service_account, shared_protocol, tenant_workspace, recovered, recovered_window)) <= 1, 'select one successor mode')
+    need(sum((native_readback, pool_history, service_account, shared_protocol, tenant_workspace, recovered, recovered_window, tenant_team)) <= 1, 'select one successor mode')
     A, L, H, D, F = [load(name) for name in ('assemble-p2-installation-candidate', 'load-p2-formal-vault',
                                            'prepare-p2-longhorn-source', 'p2-source-dns', 'p2-vault-local-forward')]
     done = A.decode((PARENT / 'completed.json').read_bytes())
@@ -130,6 +130,16 @@ def main(native_readback=False, pool_history=False, service_account=False, share
     if recovered or recovered_window:
         refresh = load('resume-p2-recovered-source')
         done, source_author, recovery_native = refresh.prepare(A, L, done, receipt, selected, core)
+        receipt, selected = A.obj(done['Receipt']), A.obj(done['SourceSelection'])
+        core = A.obj(receipt['Deployment'])
+        definition_sha, selection_sha = done['Definition']['SHA256'], done['SourceSelection']['SHA256']
+    if tenant_team:
+        package = Path(__file__).resolve().parent
+        build = A.decode((package / 'BUILD_RECEIPT.json').read_bytes())
+        need(build['Diagnostic'] == 'tenant-team-source-namespace.v1' and
+             build['SourceRevision'] == (package / 'SOURCE_REVISION').read_text().strip(), 'reviewed tenant team build required')
+        A.read({'File': str(package / 'system-backup-source-registries'), 'SHA256': build['NativeSHA256']}, 128 << 20)
+        done, source_author = load('resume-p2-tenant-team-source').prepare(A, L)
         receipt, selected = A.obj(done['Receipt']), A.obj(done['SourceSelection'])
         core = A.obj(receipt['Deployment'])
         definition_sha, selection_sha = done['Definition']['SHA256'], done['SourceSelection']['SHA256']
@@ -185,6 +195,13 @@ def main(native_readback=False, pool_history=False, service_account=False, share
         native, native_sha = package / 'system-backup-source-registries', build['NativeSHA256']
         suffix = 'tenant-workspace-repair' if tenant_workspace else 'shared-protocol-repair' if shared_protocol else 'service-account-repair' if service_account else ('pool-history-repair' if pool_history else 'native-readback')
         journal = ROOT / ('longhorn-source-20261113-provider-loaded-' + suffix)
+    if tenant_team:
+        package = Path(__file__).resolve().parent
+        build = A.decode((package / 'BUILD_RECEIPT.json').read_bytes())
+        need(build['Diagnostic'] == 'tenant-team-source-namespace.v1' and
+             build['SourceRevision'] == (package / 'SOURCE_REVISION').read_text().strip(), 'reviewed tenant team build required')
+        native, native_sha = package / 'system-backup-source-registries', build['NativeSHA256']
+        journal = ROOT / 'longhorn-source-20261113-tenant-team-namespace'
     A.read({'File': str(native), 'SHA256': native_sha}, 128 << 20)
     journal.mkdir(mode=0o700, exist_ok=True)
     need(journal.resolve() == journal and journal.stat().st_mode & 0o077 == 0, 'private journal required')

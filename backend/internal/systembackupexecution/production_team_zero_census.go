@@ -50,7 +50,7 @@ func (x *bootstrapSourceRegistryReader) bindObservedTeamSource(f *bootstrapSourc
 		if fact.PVC == "" {
 			continue
 		}
-		if fact.Namespace != x.config.Namespace {
+		if _, err := observeTeamSourceNamespace(x.physical, clients.API, x.config, fact); err != nil {
 			return install.ErrInstall
 		}
 		claim, err := clients.API.CoreV1().PersistentVolumeClaims(fact.Namespace).Get(x.physical, fact.PVC, metav1.GetOptions{})

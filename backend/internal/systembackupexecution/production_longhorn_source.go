@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"clawreef/internal/systembackup/team"
+
 	"clawreef/internal/systembackup/kube"
 	d "clawreef/internal/systembackupdispatch"
 	corev1 "k8s.io/api/core/v1"
@@ -41,7 +43,7 @@ func (s originalLonghornSource) plan(a d.Authority, workerNamespace, workerUID s
 	return plan
 }
 
-func (x *originalSourceMetadataAuthority) freezeLonghornSources(ctx context.Context, mounts map[string]kube.MountIdentity) (map[string]plannedLonghornClone, error) {
+func (x *originalSourceMetadataAuthority) freezeLonghornSources(ctx context.Context, mounts map[string]kube.MountIdentity, facts *team.SourceFacts) (map[string]plannedLonghornClone, error) {
 	authored := x.service.captureMaterials.Discovery.LonghornSources
 	if len(authored) == 0 {
 		return nil, nil
@@ -54,7 +56,9 @@ func (x *originalSourceMetadataAuthority) freezeLonghornSources(ctx context.Cont
 		}
 		plan := source.plan(x.input.Authority, x.owner.Namespace, x.owner.NamespaceUID)
 		if source.Namespace != x.owner.Namespace && source.AccessMode != corev1.ReadWriteOnce {
-			return nil, d.ErrNotReady
+			if err := verifyTenantTeamLonghornSource(ctx, x.owner.Client, x.service.Config, part, source, facts); err != nil {
+				return nil, err
+			}
 		}
 		if err := kube.VerifyLonghornCaptureSource(ctx, x.owner.Client, x.owner.Dynamic, source.pin(), source.Namespace, plan.Target); err != nil {
 			return nil, err

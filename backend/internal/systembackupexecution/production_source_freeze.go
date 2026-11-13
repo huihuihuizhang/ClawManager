@@ -100,7 +100,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 		if fact.PVC == "" {
 			continue
 		}
-		if fact.Namespace != s.Config.Namespace {
+		if _, err := observeTeamSourceNamespace(ctx, owner.Client, s.Config, fact); err != nil {
 			return nil, nil, d.ErrNotReady
 		}
 		claim, err := owner.Client.CoreV1().PersistentVolumeClaims(fact.Namespace).Get(ctx, fact.PVC, metav1.GetOptions{})
@@ -163,7 +163,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	}
 	metadata := productionCaptureMetadata{TeamObjects: teamCensus, MinIOReadKeepers: s.Config.MinIOReadKeepers, Version: productionCaptureMetadataVersion, SQLSchema: sqlMetadata.Schema, Mounts: mounts, MountIdentities: mountIdentities, Skills: skills, Redis: s.captureMaterials.Discovery.Redis, Deployment: deployment, Secrets: secrets}
 	stage = "longhorn_sources"
-	metadata.LonghornClones, err = authority.freezeLonghornSources(ctx, mountIdentities)
+	metadata.LonghornClones, err = authority.freezeLonghornSources(ctx, mountIdentities, source.TeamFacts)
 	if err != nil || (saved != nil && !reflect.DeepEqual(metadata.LonghornClones, saved.LonghornClones)) {
 		return nil, nil, d.ErrNotReady
 	}

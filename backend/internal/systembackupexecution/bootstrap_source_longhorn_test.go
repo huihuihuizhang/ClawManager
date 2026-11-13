@@ -22,7 +22,7 @@ func TestOriginalLonghornStorageAuthorRechecksSelectedVolumes(t *testing.T) {
 	ctx := context.Background()
 	objects := []runtime.Object{}
 	for _, ns := range []string{"test-system", "test-user-1", "provider"} {
-		objects = append(objects, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns, UID: types.UID(ns + "-uid")}})
+		objects = append(objects, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns, UID: types.UID(ns + "-uid"), Labels: map[string]string{"app": "clawreef", "managed-by": "clawreef", "user-id": "1"}}})
 	}
 	pair := func(ns, name string, access corev1.PersistentVolumeAccessMode) kube.MountIdentity {
 		pvc := &corev1.PersistentVolumeClaim{
@@ -44,6 +44,7 @@ func TestOriginalLonghornStorageAuthorRechecksSelectedVolumes(t *testing.T) {
 	}
 	shared := pair("test-system", "workspace", corev1.ReadWriteMany)
 	tenant := pair("test-user-1", "pro", corev1.ReadWriteOnce)
+	teamClaim := pair("test-user-1", "team-shared", corev1.ReadWriteMany)
 	reclaim, binding := corev1.PersistentVolumeReclaimDelete, storagev1.VolumeBindingImmediate
 	objects = append(objects, &storagev1.StorageClass{
 		ObjectMeta:  metav1.ObjectMeta{Name: "longhorn", UID: "clone-class-uid"},
@@ -59,11 +60,11 @@ func TestOriginalLonghornStorageAuthorRechecksSelectedVolumes(t *testing.T) {
 		Workspace: WorkspaceCapture{Claim: shared.Name}, Security: kube.WorkerSecurity{Volumes: []kube.MountIdentity{shared}}}
 	pro := b.InstanceIdentity{ID: 2, UserID: 1, Mode: "pro", OS: "linux", Status: "running", Namespace: "test-user-1"}
 	source := b.SourceInventory{Instances: []b.InstanceIdentity{{ID: 1, Mode: "lite", Status: "running"}, pro},
-		TeamFacts: &team.SourceFacts{Teams: []team.TeamSQLFacts{{ID: 3, Namespace: cfg.Namespace, PVC: shared.Name}}}}
+		TeamFacts: &team.SourceFacts{Teams: []team.TeamSQLFacts{{ID: 3, Namespace: cfg.Namespace, PVC: shared.Name}, {ID: 4, UserID: 1, ResourceScope: "cm", Namespace: "test-user-1", PVC: teamClaim.Name}}}}
 	scope := &productionPersistentMountScope{RunningTenantPro: []runningTenantProMount{{Source: pro, Identity: tenant, NamespaceUID: "test-user-1-uid"}}}
 	selection := &OriginalLonghornStorageSelection{ProviderNamespace: "provider", SnapshotClass: "local", CloneClass: "longhorn"}
 	pins, err := observeOriginalLonghornSources(ctx, clients, cfg, source, scope, selection)
-	if err != nil || len(pins) != 3 || pins["instance_1_workspace"].Source != shared ||
+	if err != nil || len(pins) != 4 || pins["team_4_workspace"].Source != teamClaim || pins["team_4_workspace"].NamespaceUID != "test-user-1-uid" || pins["instance_1_workspace"].Source != shared ||
 		pins["team_3_workspace"] != pins["instance_1_workspace"] ||
 		pins["instance_2_workspace"].Source != tenant || pins["instance_2_workspace"].Handle != "pro-handle" {
 		t.Fatalf("author lost a shared or tenant capture part: %v", err)
