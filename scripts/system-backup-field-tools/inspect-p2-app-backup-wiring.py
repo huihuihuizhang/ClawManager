@@ -2,6 +2,7 @@
 """Read the actual app/SQL prerequisites together; never enable or issue anything."""
 import base64
 import datetime as dt
+import hashlib
 import importlib.util
 import json
 import os
@@ -43,6 +44,26 @@ def emit(label, value):
     print(label, json.dumps(value, ensure_ascii=True), flush=True)
 
 
+def installer_credentials(operation, connection):
+    """Use the existing finite installer role, never the participant observer."""
+    peer = urlsplit(connection['Endpoint'])
+    if (operation['Address'] != peer.netloc or operation['Database'] != connection['Database']
+            or operation['ServerUUID'] != connection['ServerUUID']):
+        raise ValueError('original SQL producer identity changed')
+    observers = [a for a in operation['Accounts'] if a['Role'] == 'control_sql']
+    installers = [a for a in operation['Accounts'] if a['Role'] == 'installer']
+    if (len(observers) != 1 or len(installers) != 1
+            or observers[0]['User'] + '@' + observers[0]['Host'] != connection['Account']):
+        raise ValueError('exact original participant and installer roles required')
+    account = installers[0]
+    readable = {p['Object'] for p in account['Privileges'] if p['Kind'] == 'table' and p['Verb'] == 'SELECT'}
+    if (account['Locked'] or account['User'].lower() == 'root'
+            or account['User'] == observers[0]['User'] or not set(TABLES) <= readable
+            or not account['Password'] or any(v in account['Password'] for v in '\r\n\0')):
+        raise ValueError('existing finite installer metadata-read privileges required')
+    return account['User'], account['Password'], account['User'] + '@' + account['Host']
+
+
 def main():
     if os.name != 'posix':
         raise ValueError('Linux operator required')
@@ -55,15 +76,17 @@ def main():
     A.need(len(connections) == 1, 'one pinned control SQL connection required')
     c = connections[0]
     ca = A.read(c['CA'])
-    dsn = A.read(c['Credential']).decode().strip()
-    creds, sep, address = dsn.rpartition('@tcp(')
-    user, colon, password = creds.partition(':')
-    host, end, tail = address.partition(')/')
-    database = tail.split('?', 1)[0]
+    # The control_sql role intentionally sees only system_backup_participants.
+    # Its information_schema visibility cannot establish that v2 tables are absent.
+    A.read(c['Credential'])
+    journal = ROOT / 'initial-source-author/configuration-data.result.json'
+    result = A.obj({'File': str(journal), 'SHA256': hashlib.sha256(journal.read_bytes()).hexdigest()})
+    inputs = A.obj(result['AssemblyInputs'])
+    A.need(inputs['ControlDSN'] == c['Credential'], 'same original SQL producer connection required')
+    operation = A.obj(inputs['SQLOperation'])
+    user, password, expected_account = installer_credentials(operation, c)
+    database = c['Database']
     peer = urlsplit(c['Endpoint'])
-    A.need(sep and colon and end and host == peer.netloc and database == c['Database']
-           and c['Account'].startswith(user + '@') and user.lower() != 'root'
-           and not any(v in password for v in '\r\n\0'), 'original control DSN shape required')
     records = Path(tempfile.mkdtemp(prefix='app-backup-wiring-', dir=ROOT))
     print('APP_BACKUP_WIRING_RECORDS', records, flush=True)
     now = dt.datetime.now(dt.timezone.utc)
@@ -111,26 +134,26 @@ def main():
 
     identity = query('identity', "SELECT JSON_OBJECT('Account',CURRENT_USER(),'Database',DATABASE(),'ServerUUID',@@server_uuid)")
     A.need(identity is not None and len(identity) == 1, 'control SQL identity unavailable')
-    matches = {k: identity[0][k] == c[k] for k in ('Account', 'Database', 'ServerUUID')}
+    matches = {k: identity[0][k] == c[k] for k in ('Database', 'ServerUUID')}
+    matches['Account'] = identity[0]['Account'] == expected_account
     emit('APP_BACKUP_SQL_IDENTITY', matches)
     A.need(all(matches.values()), 'control SQL identity changed')
     tables = query('tables', "SELECT JSON_OBJECT('Table',TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN (" + ','.join("'" + t + "'" for t in TABLES) + ') ORDER BY TABLE_NAME')
     A.need(tables is not None, 'control schema inventory unavailable')
     present = {r['Table'] for r in tables}
-    emit('APP_BACKUP_TABLES', {t: t in present for t in TABLES})
+    emit('APP_BACKUP_TABLE_VISIBILITY', {'Role': 'installer', 'Visible': {t: t in present for t in TABLES},
+         'AbsenceNotInferred': True})
     results = {}
     for label, sql in QUERIES.items():
-        required = {'installations': TABLES[:1], 'active_configs': TABLES[:2], 'execution': TABLES[2:]}[label]
-        if not all(t in present for t in required):
-            emit('APP_BACKUP_SQL_SKIPPED', {'Query': label, 'Reason': 'required_table_absent'})
-            continue
+        # Always attempt the fixed SELECT. Error 1142 (permission) is distinct
+        # from 1146 (table absent), even if information_schema omits the table.
         rows = query(label, sql)
         results[label] = rows
         if rows is not None:
             emit('APP_BACKUP_' + label.upper(), {'Count': len(rows), 'Rows': rows})
     after = get('deployment', 'clawmanager-app')
     A.need(after['metadata']['uid'] == APP_UID and after['spec'] == app['spec'], 'app changed during inventory; retain records')
-    A.retain(records / 'completed.json', {'Version': 'p2-app-backup-wiring-readback.v1', 'Source': SOURCE,
+    A.retain(records / 'completed.json', {'Version': 'p2-app-backup-wiring-readback.v2', 'Source': SOURCE,
              'SQL': results, 'Mutated': False, 'BackupSubmitted': False})
     print('APP_BACKUP_WIRING_READONLY_FINISHED', flush=True)
 
