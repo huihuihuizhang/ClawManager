@@ -33,6 +33,21 @@ class LoadedProviderLonghornTests(unittest.TestCase):
             with self.subTest(field=field):
                 with self.assertRaises(ValueError): P.confirmed_native_failure({'ExitCode': 1}, {**failure, field: 'different'}, argv, True)
 
+    def test_service_account_repair_requires_observed_instance_deployment_failure(self):
+        argv = ['/native', 'prepare-mount-materials', '--source-selection-sha256', P.SELECTION_SHA, '--output-directory', '/original/out']
+        failure = {'Status': 'original_mount_author_refused', 'Phase': 'native_writers', 'Step': 'native_instance_deployment',
+                   'Kind': 'Deployment', 'Reason': 'validation', 'InstanceID': 1}
+        self.assertEqual(P.confirmed_native_failure({'ExitCode': 1}, failure, argv, service_account=True), Path('/original/out'))
+        for field, value in [('Step', 'native_instance_account'), ('Kind', 'Pod'), ('Reason', 'forbidden'), ('InstanceID', 2),
+                             ('Phase', 'write_outputs'), ('Status', 'unknown')]:
+            with self.subTest(field=field):
+                with self.assertRaises(ValueError):
+                    P.confirmed_native_failure({'ExitCode': 1}, {**failure, field: value}, argv, service_account=True)
+        with self.assertRaises(ValueError):
+            P.confirmed_native_failure({'ExitCode': 0}, failure, argv, service_account=True)
+        with self.assertRaises(ValueError):
+            P.confirmed_native_failure({'ExitCode': 1}, failure, [x if x != P.SELECTION_SHA else 'other' for x in argv], service_account=True)
+
     def fixture(self):
         ref = {'Namespace': 'ns', 'Deployment': 'controller', 'DeploymentUID': 'e4e27f27-8f02-40ab-8c62-09f2ffa3fafa',
                'Pod': 'new-pod', 'PodUID': P.POD_UID, 'ReplicaSet': 'new-rs', 'ReplicaSetUID': P.RS_UID,

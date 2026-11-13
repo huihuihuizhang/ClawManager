@@ -228,7 +228,16 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 		step, kind, observed = "native_instance_deployment", "Deployment", nil
 		dep, err := clients.API.AppsV1().Deployments(row.Namespace).Get(x.physical, parent.Name, metav1.GetOptions{})
 		observed = err
-		if err != nil || dep.UID != parent.UID || dep.DeletionTimestamp != nil || dep.Spec.Template.Spec.ServiceAccountName != pod.Spec.ServiceAccountName || !matchesBootstrapWriterObject(api, "Deployment", dep) {
+		if err != nil || dep.UID != parent.UID || dep.DeletionTimestamp != nil || !matchesBootstrapWriterObject(api, "Deployment", dep) {
+			return nil, install.ErrInstall
+		}
+		// Pod admission selects the namespace's default account when the
+		// Deployment template omits it. Keep the original census unchanged.
+		templateAccount := dep.Spec.Template.Spec.ServiceAccountName
+		if templateAccount == "" {
+			templateAccount = "default"
+		}
+		if templateAccount != pod.Spec.ServiceAccountName {
 			return nil, install.ErrInstall
 		}
 		step, kind, observed = "native_instance_account", "ServiceAccount", nil
