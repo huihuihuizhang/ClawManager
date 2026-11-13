@@ -107,15 +107,24 @@ def confirmed_native_failure(exit_record, refusal, argv, pool_history=False, ser
     return Path(argv[argv.index('--output-directory') + 1])
 
 
-def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False, tenant_workspace=False):
+def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False, tenant_workspace=False, recovered=False):
     os.umask(0o077); need(os.name == 'posix', 'Linux operator required')
-    need(sum((native_readback, pool_history, service_account, shared_protocol, tenant_workspace)) <= 1, 'select one successor mode')
+    need(sum((native_readback, pool_history, service_account, shared_protocol, tenant_workspace, recovered)) <= 1, 'select one successor mode')
     A, L, H, D, F = [load(name) for name in ('assemble-p2-installation-candidate', 'load-p2-formal-vault',
                                            'prepare-p2-longhorn-source', 'p2-source-dns', 'p2-vault-local-forward')]
     done = A.decode((PARENT / 'completed.json').read_bytes())
     receipt, selected = A.obj(done['Receipt']), A.obj(done['SourceSelection'])
     core = A.obj(receipt['Deployment']); A.read(done['Definition'])
     validate_parent(done, receipt, selected, core)
+    source_author = PARENT / 'source-author/native.sent.private.json'
+    definition_sha, selection_sha = DEFINITION_SHA, SELECTION_SHA
+    recovery_native = None
+    if recovered:
+        refresh = load('resume-p2-recovered-source')
+        done, source_author, recovery_native = refresh.prepare(A, L, done, receipt, selected, core)
+        receipt, selected = A.obj(done['Receipt']), A.obj(done['SourceSelection'])
+        core = A.obj(receipt['Deployment'])
+        definition_sha, selection_sha = done['Definition']['SHA256'], done['SourceSelection']['SHA256']
     if shared_protocol or tenant_workspace:
         need(core['runtime_sources'].get('shared_runtime_protocol') == 'shared-container-freeze.v1' and
              core['runtime_sources'].get('shared_runtime_observer'), 'original shared protocol and observer required')
@@ -126,6 +135,9 @@ def main(native_readback=False, pool_history=False, service_account=False, share
         need(not selected.get(key) or not Path(selected[key]).exists(), 'source facts already exist')
     native, native_sha = BIN, BIN_SHA
     journal = ROOT / 'longhorn-source-20261113-provider-loaded'
+    if recovered:
+        native, native_sha = Path(recovery_native['File']), recovery_native['SHA256']
+        journal = ROOT / 'longhorn-source-20261113-runtime-recovered'
     if native_readback or pool_history or service_account or shared_protocol or tenant_workspace:
         if tenant_workspace:
             journal = ROOT / (journal.name + '-shared-protocol-repair')
@@ -184,11 +196,11 @@ def main(native_readback=False, pool_history=False, service_account=False, share
     dns = D.SourceDNS(site, journal, pod, endpoints, A.retain); dns.probe()
     out = Path(done['SourceSelection']['File']).parent.parent / journal.name
     need(not out.exists(), 'new native output directory required'); out.mkdir(mode=0o700)
-    old = A.decode((PARENT / 'source-author/native.sent.private.json').read_bytes())['Argv']
-    need(old[1] == 'author-initial-source-inputs' and old[old.index('--definition-sha256') + 1] == DEFINITION_SHA,
+    old = A.decode(source_author.read_bytes())['Argv']
+    need(old[1] == 'author-initial-source-inputs' and old[old.index('--definition-sha256') + 1] == definition_sha,
          'observed source author invocation required')
     argv = [str(native), 'prepare-mount-materials', *old[2:old.index('--definition-file')],
-            '--source-selection-file', done['SourceSelection']['File'], '--source-selection-sha256', SELECTION_SHA,
+            '--source-selection-file', done['SourceSelection']['File'], '--source-selection-sha256', selection_sha,
             '--mount-layouts-file', layouts['File'], '--mount-layouts-sha256', layouts['SHA256'], '--output-directory', str(out)]
     A.retain(journal / 'native.sent.private.json', {'Argv': argv, 'SourceSelection': done['SourceSelection'], 'Layouts': layouts})
     with (journal / 'native.stdout.private').open('xb') as stdout, (journal / 'native.stderr.private').open('xb') as stderr:
@@ -204,7 +216,7 @@ def main(native_readback=False, pool_history=False, service_account=False, share
             pass
         raise ValueError('native mount author refused; retain journal and partial outputs')
     value = A.decode(raw)
-    need(value['SelectionSHA256'] == SELECTION_SHA and value['LayoutSelectionSHA256'] == layouts['SHA256'], 'native input pins differ')
+    need(value['SelectionSHA256'] == selection_sha and value['LayoutSelectionSHA256'] == layouts['SHA256'], 'native input pins differ')
     for key in ('Deployment', 'MaterialsTemplate', 'SourceSelection', 'LonghornHoldMaterials'): A.read(value[key])
     H.validate_successor(selected, A.obj(value['SourceSelection']), value, A.obj(value['MaterialsTemplate']))
     successor = A.obj(value['Deployment'])
