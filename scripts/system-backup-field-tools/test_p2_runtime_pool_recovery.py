@@ -31,6 +31,24 @@ class RecoveryReadbackTests(unittest.TestCase):
             with self.subTest(key=key):
                 self.assertFalse(R.gateway_matches(dict(self.gateway, **{key:value}), self.row))
 
+    def test_extension_fields_match_production_go_decoder(self):
+        value = dict(self.gateway, workspace_path='private-fixture-path', runtime_details={'token':'private-fixture-token'})
+        self.assertTrue(R.gateway_matches(value, self.row))
+        report = R.gateway_summary(200, value, self.row)
+        self.assertEqual(report['AdditionalFieldCount'], 2)
+        self.assertTrue(all(report['Matches'].values()))
+        self.assertNotIn('private-fixture', str(report))
+
+    def test_missing_wrong_type_and_non_object_are_not_success(self):
+        for value in (None, [], {}, dict(self.gateway, generation=True), dict(self.gateway, gateway_pid='55')):
+            self.assertFalse(R.gateway_matches(value, self.row))
+            self.assertFalse(all(R.gateway_summary(200, value, self.row)['Matches'].values()))
+
+    def test_http_failure_is_public_without_body(self):
+        report = R.gateway_summary(404, None, self.row)
+        self.assertEqual(report['HTTPStatus'], 404)
+        self.assertFalse(report['JSONObject'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -51,8 +51,26 @@ def coherent(row):
 
 
 def gateway_matches(value, row):
-    return value == {'instance_id': row['id'], 'user_id': row['user'], 'generation': row['generation'],
-                     'gateway_id': row['gateway'], 'gateway_pid': row['pid'], 'gateway_port': row['port'], 'state': 'running'}
+    expected = gateway_expected(row)
+    # Production's Go GatewayState decoder ignores extension fields. Keep its
+    # required identity/state comparison without treating extensions as drift.
+    return isinstance(value, dict) and all(type(value.get(k)) is type(v) and value[k] == v for k,v in expected.items())
+
+
+def gateway_expected(row):
+    return {'instance_id': row['id'], 'user_id': row['user'], 'generation': row['generation'],
+            'gateway_id': row['gateway'], 'gateway_pid': row['pid'], 'gateway_port': row['port'], 'state': 'running'}
+
+
+def gateway_summary(status, value, row):
+    expected = gateway_expected(row)
+    obj = isinstance(value, dict)
+    return {'InstanceID': row['id'], 'HTTPStatus': status, 'JSONObject': obj,
+            'Matches': {k: obj and type(value.get(k)) is type(v) and value[k] == v for k,v in expected.items()},
+            'MissingFields': [k for k in expected if not obj or k not in value],
+            'AdditionalFieldCount': len(set(value)-set(expected)) if obj else 0,
+            'ExpectedNumbers': {k:v for k,v in expected.items() if type(v) is int},
+            'ObservedNumbers': {k:value[k] for k,v in expected.items() if type(v) is int and obj and type(value.get(k)) is int and abs(value[k]) < 2**53}}
 
 
 def main():
@@ -67,6 +85,9 @@ def main():
     records.mkdir(mode=0o700, exist_ok=True)
     need(records.resolve() == records and records.stat().st_mode & 0o077 == 0, 'private original records required')
     print('RUNTIME_POOL_RECOVERY_RECORDS', records, flush=True)
+    tool_revision = directory / 'TOOL_REVISION'
+    if tool_revision.exists():
+        print('RUNTIME_POOL_RECOVERY_TOOL_REVISION', tool_revision.read_text().strip(), flush=True)
     selected = A.obj(W.SOURCE)
     now = dt.datetime.now(dt.timezone.utc)
     need(dt.datetime.fromisoformat(selected['Until'].replace('Z', '+00:00')) > now + dt.timedelta(minutes=10), 'source observation window insufficient; renew before proceeding')
@@ -137,7 +158,10 @@ def main():
                 response = connection.getresponse()
                 raw = response.read(65537)
                 need(len(raw) <= 65536, 'bounded Gateway response required')
-                return response.status, json.loads(raw) if response.status == 200 else None
+                A.retain(records / ('gateway-' + str(time.time_ns()) + '.body.private'), raw or b'\n')
+                try: value = json.loads(raw) if response.status == 200 else None
+                except (ValueError, UnicodeError): value = None
+                return response.status, value
 
     app = get('deployment', 'clawmanager-app')
     need(app['metadata']['uid'] == W.APP_UID and not app['metadata'].get('deletionTimestamp'), 'original app identity required')
@@ -146,11 +170,15 @@ def main():
     initial = bindings()
     if not (records / 'deployment-patch.sent.json').exists():
         need(containers[0]['image'] == BASE, 'expected original app image required')
+        unaffected = []
         for row in initial:
             if row['id'] != 3:
                 need(coherent(row), 'another active Lite instance needs recovery')
                 status, state = gateway(row)
-                need(status == 200 and gateway_matches(state, row), 'unaffected Gateway is not verified')
+                summary = gateway_summary(status, state, row)
+                print('RUNTIME_POOL_GATEWAY_CHECK', json.dumps(summary), flush=True)
+                unaffected.append(status == 200 and gateway_matches(state, row))
+        need(all(unaffected), 'unaffected Gateway differs; see all RUNTIME_POOL_GATEWAY_CHECK records')
         old = initial[1]
         need(old['generation'] == old['binding_generation'] == 8 and old['pool'] == 5 and old['pod_uid'] == OLD_UID and
              old['instance_state'] == old['binding_state'] == 'running' and old['pool_state'] == 'unhealthy' and
@@ -209,6 +237,7 @@ def main():
         if all(coherent(v) for v in rows) and row['pod_uid'] == NEW_UID and row['generation'] > 8:
             for item in rows:
                 status, state = gateway(item)
+                print('RUNTIME_POOL_GATEWAY_CHECK', json.dumps(gateway_summary(status, state, item)), flush=True)
                 need(status == 200 and gateway_matches(state, item), 'actual Gateway differs from SQL binding')
             final = bindings()
             keys = ('id', 'generation', 'binding_generation', 'gateway', 'pid', 'port', 'pool', 'pod_uid')
