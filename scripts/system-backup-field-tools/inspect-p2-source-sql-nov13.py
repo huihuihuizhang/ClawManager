@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Bounded read-only diagnosis; never issues or changes backup materials."""
 import base64
+import copy
 import datetime as dt
 import hashlib
 import importlib.util
@@ -40,6 +41,24 @@ def census_spec(value):
     need(len(found)==1,'one pinned schema census required')
     return found[0]
 
+def scope_comparison(scope, rows):
+    if scope is None: return {'Present':False}
+    # ASCII, bounded integer records have identical sorted compact JSON/JCS.
+    need(all(isinstance(v,str) and v.isascii() or type(v) is int and abs(v)<2**53
+             for row in rows for v in row.values()),'scope digest requires ASCII bounded projection')
+    digest = lambda v: hashlib.sha256(json.dumps(v,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+    aliases = copy.deepcopy(rows)
+    changed = []
+    for row in aliases:
+        if row['OS']==row['Type']:
+            changed.append(row['ID']); row['OS']='linux'
+    deferred = scope['Deferred']
+    return {'Present':True,'Version':scope['Version'],'RawProjectionMatches':digest(rows)==scope['OriginalInstancesSHA256'],
+        'LinuxAliasCandidateMatches':digest(aliases)==scope['OriginalInstancesSHA256'],'AliasCandidateIDs':changed,
+        'DeferredIDs':[r['ID'] for r in deferred],
+        'DeferredCandidateMatches':all(any(r==v for r in aliases) for v in deferred),
+        'CurrentGenerations':[{'ID':r['ID'],'Generation':r['Generation'],'Status':r['Status']} for r in rows]}
+
 def tls_probe(connection):
     peer = urlsplit(connection['Endpoint'])
     context = ssl.create_default_context(cafile=connection['CA']['File'])
@@ -65,6 +84,7 @@ def main():
     matches = [c for c in selected['Connections'] if c['Purpose']=='source_sql']; need(len(matches)==1,'one selected source SQL required')
     c = matches[0]; ca = A.read(c['CA']); dsn = A.read(c['Credential']).decode().strip()
     census = census_spec(A.obj(selected['MaterialsTemplate']))
+    scope = A.obj(selected['Deployment'])['runtime_sources'].get('runtime_test_scope')
     records = Path(tempfile.mkdtemp(prefix='source-sql-diagnostic-',dir=ROOT))
     print('SOURCE_SQL_DIAGNOSTIC_RECORDS',records,flush=True)
     print('UTC_NOW',dt.datetime.now(dt.timezone.utc).isoformat(),flush=True)
@@ -91,6 +111,7 @@ mysql --protocol=TCP --connect-timeout=8 --ssl-mode=VERIFY_IDENTITY --tls-versio
         'identity': "SELECT JSON_OBJECT('account',CURRENT_USER(),'role_none',CURRENT_ROLE()='NONE','database',DATABASE(),'server',@@server_uuid,'clock',UTC_TIMESTAMP(6))",
         'grants': 'SHOW GRANTS FOR CURRENT_USER',
         'instances': "SET SESSION TRANSACTION READ ONLY; START TRANSACTION; SELECT JSON_OBJECT('id',id,'status',status,'generation',runtime_generation,'error_code',COALESCE(runtime_error_code,'')) FROM instances ORDER BY id; COMMIT;",
+        'runtime_scope': "SET SESSION TRANSACTION READ ONLY; START TRANSACTION; SELECT JSON_OBJECT('ID',id,'UserID',user_id,'Mode',instance_mode,'Type',type,'Backend',runtime_type,'Variant',COALESCE(runtime_variant,''),'OS',os_type,'Status',status,'Generation',runtime_generation,'Pod',COALESCE(pod_name,''),'Namespace',COALESCE(pod_namespace,''),'Workspace',COALESCE(workspace_path,'')) FROM instances ORDER BY id; COMMIT;",
         'census_identity': "SELECT JSON_OBJECT('Definer',DEFINER,'DefinitionSHA256',SHA2(ROUTINE_DEFINITION,256),'Security',SECURITY_TYPE,'Access',SQL_DATA_ACCESS,'PartialRevokes',@@GLOBAL.partial_revokes) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_NAME='system_backup_source_schema_census' AND ROUTINE_TYPE='PROCEDURE'",
         'census_objects': 'SET SESSION TRANSACTION READ ONLY; START TRANSACTION; CALL `system_backup_source_schema_census`(); COMMIT;'
     }
@@ -115,6 +136,8 @@ mysql --protocol=TCP --connect-timeout=8 --ssl-mode=VERIFY_IDENTITY --tls-versio
             grants = result.stdout.decode().splitlines()
             print('SOURCE_SQL_GRANTS',json.dumps({'Count':len(grants),'SHA256':hashlib.sha256(result.stdout).hexdigest(),
                 'Shapes':sorted(set(re.sub(r' TO .*','',g) for g in grants if not g.startswith('GRANT SELECT ON ')))}),flush=True)
+        elif label=='runtime_scope':
+            print('SOURCE_SQL_RUNTIME_SCOPE',json.dumps(scope_comparison(scope,[json.loads(line) for line in result.stdout.splitlines()])),flush=True)
         elif label=='census_identity':
             rows = result.stdout.splitlines()
             need(len(rows)==1,'exact census procedure metadata row required')
