@@ -325,6 +325,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			}
 			if errors.As(err, &apiFailure) {
 				v.Step, v.Kind, v.Reason = apiFailure.Step, apiFailure.Kind, apiFailure.Reason
+				v.InstanceID = apiFailure.InstanceID
 			}
 			if errors.As(err, &missing) {
 				v.Status, v.Code, v.InstanceID, v.MountID = "original_mount_materials_blocked", missing.Code, missing.InstanceID, missing.MountID

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Continue native mount authoring from the observed formal-provider source."""
 import datetime as dt
+import argparse
 import copy
 import importlib.util
 import json
@@ -83,7 +84,15 @@ def validate_core_successor(core, successor, hold_pin):
          'native successor changed unrelated configuration or Longhorn material binding')
 
 
-def main():
+def confirmed_native_failure(exit_record, refusal, argv):
+    need(exit_record == {'ExitCode': 1} and refusal.get('Status') == 'original_mount_author_refused' and
+         refusal.get('Phase') == 'native_writers' and argv[1] == 'prepare-mount-materials' and
+         argv[argv.index('--source-selection-sha256') + 1] == SELECTION_SHA,
+         'observed native writer refusal required; reconcile other outcomes')
+    return Path(argv[argv.index('--output-directory') + 1])
+
+
+def main(native_readback=False):
     os.umask(0o077); need(os.name == 'posix', 'Linux operator required')
     A, L, H, D, F = [load(name) for name in ('assemble-p2-installation-candidate', 'load-p2-formal-vault',
                                            'prepare-p2-longhorn-source', 'p2-source-dns', 'p2-vault-local-forward')]
@@ -96,8 +105,24 @@ def main():
          'source window insufficient; preserve records and renew source')
     for key in ('PartsFile', 'SourceWritersFile', 'RedisSourcesFile'):
         need(not selected.get(key) or not Path(selected[key]).exists(), 'source facts already exist')
-    A.read({'File': str(BIN), 'SHA256': BIN_SHA}, 128 << 20)
-    journal = ROOT / 'longhorn-source-20261113-provider-loaded'; journal.mkdir(mode=0o700, exist_ok=True)
+    native, native_sha = BIN, BIN_SHA
+    journal = ROOT / 'longhorn-source-20261113-provider-loaded'
+    if native_readback:
+        need(not (journal / 'completed.json').exists(), 'prior mount author already completed')
+        previous = A.decode((journal / 'native.sent.private.json').read_bytes())['Argv']
+        prior_out = confirmed_native_failure(A.decode((journal / 'native.exit.json').read_bytes()),
+                                            A.decode((journal / 'native.stdout.private').read_bytes()), previous)
+        expected_out = Path(done['SourceSelection']['File']).parent.parent / journal.name
+        need(prior_out == expected_out and prior_out.resolve(strict=True) == prior_out and prior_out.is_dir() and
+             not list(prior_out.iterdir()), 'partial mount outputs require reconciliation')
+        package = Path(__file__).resolve().parent
+        build = A.decode((package / 'BUILD_RECEIPT.json').read_bytes())
+        need(build['Diagnostic'] == 'native-writer-step.v1' and
+             build['SourceRevision'] == (package / 'SOURCE_REVISION').read_text().strip(), 'native writer diagnostic build required')
+        native, native_sha = package / 'system-backup-source-registries', build['NativeSHA256']
+        journal = ROOT / (journal.name + '-native-readback')
+    A.read({'File': str(native), 'SHA256': native_sha}, 128 << 20)
+    journal.mkdir(mode=0o700, exist_ok=True)
     need(journal.resolve() == journal and journal.stat().st_mode & 0o077 == 0, 'private journal required')
     print('P2_LONGHORN_PROVIDER_LOADED_RECORDS', journal, flush=True)
     if (journal / 'completed.json').exists():
@@ -133,7 +158,7 @@ def main():
     old = A.decode((PARENT / 'source-author/native.sent.private.json').read_bytes())['Argv']
     need(old[1] == 'author-initial-source-inputs' and old[old.index('--definition-sha256') + 1] == DEFINITION_SHA,
          'observed source author invocation required')
-    argv = [str(BIN), 'prepare-mount-materials', *old[2:old.index('--definition-file')],
+    argv = [str(native), 'prepare-mount-materials', *old[2:old.index('--definition-file')],
             '--source-selection-file', done['SourceSelection']['File'], '--source-selection-sha256', SELECTION_SHA,
             '--mount-layouts-file', layouts['File'], '--mount-layouts-sha256', layouts['SHA256'], '--output-directory', str(out)]
     A.retain(journal / 'native.sent.private.json', {'Argv': argv, 'SourceSelection': done['SourceSelection'], 'Layouts': layouts})
@@ -166,6 +191,8 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument('--native-writer-readback', action='store_true')
+        main(parser.parse_args().native_writer_readback)
     except Exception as error:
         raise SystemExit('P2_LONGHORN_PROVIDER_LOADED_UNCONFIRMED ' + (str(error) if type(error) is ValueError else type(error).__name__))

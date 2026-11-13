@@ -10,6 +10,20 @@ P = importlib.util.module_from_spec(spec); spec.loader.exec_module(P)
 
 
 class LoadedProviderLonghornTests(unittest.TestCase):
+    def test_only_confirmed_same_source_native_failure_allows_successor(self):
+        argv = ['/native', 'prepare-mount-materials', '--source-selection-sha256', P.SELECTION_SHA, '--output-directory', '/original/out']
+        refusal = {'Status': 'original_mount_author_refused', 'Phase': 'native_writers'}
+        self.assertEqual(P.confirmed_native_failure({'ExitCode': 1}, refusal, argv), Path('/original/out'))
+        for case in ('success', 'unknown', 'phase', 'status', 'source'):
+            with self.subTest(case=case):
+                exit_record, error, args = {'ExitCode': 1}, dict(refusal), list(argv)
+                if case == 'success': exit_record = {'ExitCode': 0}
+                if case == 'unknown': exit_record = {}
+                if case == 'phase': error['Phase'] = 'write_outputs'
+                if case == 'status': error['Status'] = 'unknown'
+                if case == 'source': args[3] = 'other-source'
+                with self.assertRaises(ValueError): P.confirmed_native_failure(exit_record, error, args)
+
     def fixture(self):
         ref = {'Namespace': 'ns', 'Deployment': 'controller', 'DeploymentUID': 'e4e27f27-8f02-40ab-8c62-09f2ffa3fafa',
                'Pod': 'new-pod', 'PodUID': P.POD_UID, 'ReplicaSet': 'new-rs', 'ReplicaSetUID': P.RS_UID,
