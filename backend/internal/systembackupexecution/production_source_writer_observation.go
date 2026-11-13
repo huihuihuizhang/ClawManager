@@ -284,6 +284,9 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 		return err
 	}
 	objects, rawPods, podCounts := map[string]observedWriterAPIObject{}, map[string]bool{}, map[string]int32{}
+	if err := admitTeamAttachments(s.Config, source, api, p.TeamAttachments, rawPods); err != nil {
+		return err
+	}
 	for _, instance := range source.Instances {
 		if deferredRuntimeTestInstance(s.Config, instance) {
 			continue

@@ -61,6 +61,9 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 	}
 	objects, rawPods, podCounts := map[string]observedWriterAPIObject{}, map[string]bool{}, map[string]int32{}
 	step, kind = "graph_instance_roots", "Pod"
+	if err := admitTeamAttachments(x.config, source, api, p.TeamAttachments, rawPods); err != nil {
+		return err
+	}
 	for _, instance := range source.Instances {
 		if deferredRuntimeTestInstance(x.config, instance) {
 			continue

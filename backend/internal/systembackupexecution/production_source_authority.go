@@ -25,6 +25,7 @@ const sourceMetadataGrantDomain = "system-backup-controller-source-metadata.v1\x
 // An independently source-owner-signed controller delegation. It has no
 // Invocation, future Job, key-use nonce or permission to Generate/Unwrap.
 type productionSourceDiscovery struct {
+	TeamAttachments                                       []originalTeamAttachment            `json:",omitempty"`
 	LonghornSources                                       map[string]originalLonghornSource   `json:",omitempty"`
 	PersistentMounts                                      *productionPersistentMountScope     `json:",omitempty"`
 	PublicationPolicy                                     *originalPublicationPolicyReference `json:",omitempty"`

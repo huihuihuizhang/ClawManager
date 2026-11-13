@@ -18,6 +18,11 @@ class TenantTeamRenewalTests(unittest.TestCase):
             limits[i] = now + dt.timedelta(minutes=19)
             with self.assertRaises(ValueError): R.window(now, *limits)
 
+    def test_attachment_window_is_thirty_minutes(self):
+        now = dt.datetime(2026, 11, 13, 9, tzinfo=dt.timezone.utc)
+        later = now + dt.timedelta(hours=8)
+        self.assertEqual(R.window(now, later, later, later, 30)[1], now + dt.timedelta(minutes=30))
+
     def test_renewal_requires_exact_authenticated_account(self):
         class Assembly:
             NS = 'system'

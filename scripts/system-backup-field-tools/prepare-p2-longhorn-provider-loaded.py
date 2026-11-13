@@ -115,7 +115,8 @@ def confirmed_mount_window_failure(exit_record, refusal, argv, selection_sha):
     return Path(argv[argv.index('--output-directory') + 1])
 
 
-def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False, tenant_workspace=False, recovered=False, recovered_window=False, tenant_team=False):
+def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False, tenant_workspace=False, recovered=False, recovered_window=False, tenant_team=False, team_attachment=False):
+    tenant_team = tenant_team or team_attachment
     os.umask(0o077); need(os.name == 'posix', 'Linux operator required')
     need(sum((native_readback, pool_history, service_account, shared_protocol, tenant_workspace, recovered, recovered_window, tenant_team)) <= 1, 'select one successor mode')
     A, L, H, D, F = [load(name) for name in ('assemble-p2-installation-candidate', 'load-p2-formal-vault',
@@ -139,7 +140,7 @@ def main(native_readback=False, pool_history=False, service_account=False, share
         need(build['Diagnostic'] == 'tenant-team-source-namespace.v1' and
              build['SourceRevision'] == (package / 'SOURCE_REVISION').read_text().strip(), 'reviewed tenant team build required')
         A.read({'File': str(package / 'system-backup-source-registries'), 'SHA256': build['NativeSHA256']}, 128 << 20)
-        done, source_author = load('resume-p2-tenant-team-source').prepare(A, L)
+        done, source_author = load('resume-p2-tenant-team-source').prepare(A, L, attachment=team_attachment)
         receipt, selected = A.obj(done['Receipt']), A.obj(done['SourceSelection'])
         core = A.obj(receipt['Deployment'])
         definition_sha, selection_sha = done['Definition']['SHA256'], done['SourceSelection']['SHA256']
@@ -201,7 +202,7 @@ def main(native_readback=False, pool_history=False, service_account=False, share
         need(build['Diagnostic'] == 'tenant-team-source-namespace.v1' and
              build['SourceRevision'] == (package / 'SOURCE_REVISION').read_text().strip(), 'reviewed tenant team build required')
         native, native_sha = package / 'system-backup-source-registries', build['NativeSHA256']
-        journal = ROOT / 'longhorn-source-20261113-tenant-team-namespace'
+        journal = ROOT / ('longhorn-source-20261113-team-attachment' if team_attachment else 'longhorn-source-20261113-tenant-team-namespace')
     A.read({'File': str(native), 'SHA256': native_sha}, 128 << 20)
     journal.mkdir(mode=0o700, exist_ok=True)
     need(journal.resolve() == journal and journal.stat().st_mode & 0o077 == 0, 'private journal required')
@@ -230,7 +231,10 @@ def main(native_readback=False, pool_history=False, service_account=False, share
     # Its native workload graph still authenticates the formal provider role.
     snapshot = site.get('volumesnapshotclass', 'sbk-validation-longhorn-local')
     clone = site.get('storageclass', 'longhorn')
-    layouts = A.retain(journal / 'mount-layouts.json', H.storage_selection(snapshot, clone))
+    layout_value = H.storage_selection(snapshot, clone)
+    if team_attachment:
+        layout_value['TeamAttachments'] = load('prepare-p2-team-attachment').prepare(A, L, core, selected, journal)
+    layouts = A.retain(journal / 'mount-layouts.json', layout_value)
     endpoints = [(c['Purpose'], c['Endpoint']) for c in selected['Connections']
                  if (urlsplit(c['Endpoint']).hostname or '').endswith('.' + A.NS + '.svc')]
     dns = D.SourceDNS(site, journal, pod, endpoints, A.retain); dns.probe()

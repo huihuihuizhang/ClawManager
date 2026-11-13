@@ -18,6 +18,7 @@ import (
 // This selection contains owner-selected directories, never observed identities
 // or authority. The original authenticated reader derives all identity fields.
 type OriginalInstanceMountLayoutSelection struct {
+	TeamAttachments    []OriginalTeamAttachmentSelection `json:",omitempty"`
 	Version            string
 	Layouts            []InstancePersistentMountLayout
 	Longhorn           *OriginalLonghornStorageSelection `json:",omitempty"`
@@ -230,6 +231,12 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 		return zero, err
 	}
 	defer clients.Close()
+	phase = "team_attachment_observation"
+	attachments, err := observeOriginalTeamAttachments(x.physical, clients.API, x.config, firstSQL.inventory, layouts.TeamAttachments)
+	if err != nil {
+		return zero, err
+	}
+	x.materials.Discovery.TeamAttachments = attachments
 	phase = "writer_api"
 	firstAPI, err := x.readWriterAPI(x.physical, clients, firstSQL.inventory.Instances)
 	if err != nil {

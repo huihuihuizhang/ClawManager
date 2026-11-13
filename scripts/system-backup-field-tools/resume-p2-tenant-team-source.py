@@ -28,16 +28,16 @@ def identity(A, status, account, uid):
            'renewed source identity differs')
 
 
-def window(now, token_until, observer_until, agent_until):
+def window(now, token_until, observer_until, agent_until, minutes=120):
     # Existing Vault metadata credential is independently checked below. Never
     # extend its lifetime or reuse the expired Kubernetes credential.
-    until = min(now + dt.timedelta(hours=2), token_until, observer_until, agent_until)
+    until = min(now + dt.timedelta(minutes=minutes), token_until, observer_until, agent_until)
     if until < now + dt.timedelta(minutes=20):
         raise ValueError('credentials leave less than twenty minutes; renew certificates first')
     return now - dt.timedelta(seconds=5), until
 
 
-def prepare(A, L):
+def prepare(A, L, attachment=False):
     H, R, N, D, F = [load(n) for n in ('prepare-p2-longhorn-provider-loaded', 'resume-p2-recovered-source',
         'renew-p2-source-preparation', 'p2-source-dns', 'p2-vault-local-forward')]
     parent = A.decode((PARENT / 'completed.json').read_bytes())
@@ -59,7 +59,7 @@ def prepare(A, L):
            failed_out == Path(parent['SourceSelection']['File']).parent.parent / prior.name and
            failed_out.resolve(strict=True) == failed_out and not list(failed_out.iterdir()) and
            not (prior / 'completed.json').exists(), 'observed refusal without source outputs required')
-    journal = ROOT / 'source-preparation-20261113-tenant-team-renewed'
+    journal = ROOT / ('source-preparation-20261113-team-attachment-renewed' if attachment else 'source-preparation-20261113-tenant-team-renewed')
     journal.mkdir(mode=0o700, exist_ok=True)
     A.need(journal.resolve() == journal and journal.stat().st_mode & 0o077 == 0, 'private renewal journal required')
     print('P2_TENANT_TEAM_RENEWAL_RECORDS', journal, flush=True)
@@ -77,7 +77,7 @@ def prepare(A, L):
     agent = A.obj({'File': str(ROOT / 'renewal-20261113/runtime-unique/runtime-agent.receipt.private.json'),
         'SHA256': '1d61b1d11b3427fd46d9d2eab3bd04f19daf74ae3a674a9f2275269c1810f149'})
     now = dt.datetime.now(dt.timezone.utc)
-    _, tentative_until = window(now, now + dt.timedelta(hours=8), N.moment(observer['NotAfter']), N.moment(agent['NotAfter']))
+    _, tentative_until = window(now, now + dt.timedelta(hours=8), N.moment(observer['NotAfter']), N.moment(agent['NotAfter']), 30 if attachment else 120)
     formal = A.obj({'File': str(L.PARENT / 'receipt.private.json'), 'SHA256': L.RECEIPT_SHA})
     secret = A.obj(formal['SecretManifest']); L.verify_secret(site.get('secret', secret['metadata']['name']), secret)
     provider, token = [base64.b64decode(secret['data'][k], validate=True) for k in ('observer.json', 'token')]
@@ -100,14 +100,14 @@ def prepare(A, L):
     review = A.decode(site.call(['create', '--raw', '/apis/authentication.k8s.io/v1/tokenreviews', '-f', '-'],
         json.dumps({'apiVersion': 'authentication.k8s.io/v1', 'kind': 'TokenReview', 'spec': {'token': token}}).encode()))
     identity(A, review['status'], account, uid)
-    before, until = window(now, N.moment(response['status']['expirationTimestamp']), N.moment(observer['NotAfter']), N.moment(agent['NotAfter']))
+    before, until = window(now, N.moment(response['status']['expirationTimestamp']), N.moment(observer['NotAfter']), N.moment(agent['NotAfter']), 30 if attachment else 120)
     new_connection = copy.deepcopy(connection)
     new_connection['Credential'] = A.retain(journal / 'source-api.jwt', token.encode('ascii'))
     refreshed = copy.deepcopy(api); refreshed['connection'] = new_connection
     refreshed['token_expires_unix'] = int(N.moment(response['status']['expirationTimestamp']).timestamp())
     api_pin = A.retain(journal / 'source-api-fragment.json', refreshed)
     old_out = Path(parent['SourceSelection']['File']).parent
-    out = old_out.parent / 'initial-source-20261113-tenant-team-renewed'
+    out = old_out.parent / ('initial-source-20261113-team-attachment-renewed' if attachment else 'initial-source-20261113-tenant-team-renewed')
     definition = N.successor_definition(original, connection, new_connection, old_out, out, before, until)
     definition_pin = A.retain(journal / 'definition.private.json', definition)
     A.need(not out.exists(), 'new native source output directory required'); out.mkdir(mode=0o700)

@@ -15,6 +15,7 @@ import (
 )
 
 type observedWriterAPIObject struct {
+	pod                                                     *corev1.Pod
 	Hostname                                                string `json:",omitempty"`
 	Kind, Namespace, Name, UID, ResourceVersion, SpecSHA256 string
 	Generation, ObservedGeneration                          int64
@@ -180,6 +181,7 @@ func projectWriterAPIObject(kind string, object runtime.Object) (observedWriterA
 	case *batchv1.CronJob:
 		spec = value.Spec
 	case *corev1.Pod:
+		out.pod = value.DeepCopy()
 		out.Hostname = value.Spec.Hostname
 		spec = value.Spec
 		out.Node, out.Phase = value.Spec.NodeName, string(value.Status.Phase)
