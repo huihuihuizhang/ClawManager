@@ -33,10 +33,55 @@ func validTenantProNamespace(systemNamespace string, source b.InstanceIdentity) 
 
 func (m runningTenantProMount) valid() bool {
 	s := m.Source
-	return isRunningTenantPro(s) && s.ID > 0 && s.UserID > 0 && s.ValidRuntimeGeneration() && s.Namespace != "" && s.Pod != "" && cleanMountRoot(s.Workspace) &&
+	return isRunningTenantPro(s) && s.ID > 0 && s.UserID > 0 && s.ValidRuntimeGeneration() && s.Namespace != "" && s.Pod != "" && (cleanMountRoot(s.Workspace) || s.Workspace == "" && s.Backend == "desktop") &&
 		m.NamespaceUID != "" && m.PodUID != "" && formalCandidateDigest(m.PodSpecSHA256) && m.ReplicaSetUID != "" && m.Deployment != "" && m.DeploymentUID != "" &&
 		m.Identity.Volume == "workspace" && m.Identity.Kind == "PersistentVolumeClaim" && m.Identity.Name != "" && m.Identity.UID != "" &&
 		m.Identity.PVName != "" && m.Identity.PVUID != "" && formalCandidateDigest(m.Identity.SHA256) && validTenantMountSubPath(m.SubPath)
+}
+
+// Desktop PVC instances need not have a server-side workspace_path in SQL.
+// Preserve the SQL source exactly; derive a local mount coordinate only from
+// the original Pod spec, whose UID/hash/owners and PVC/PV are checked below.
+// Only a single complete writable PVC mapping is unambiguous without a path.
+func tenantProWorkspace(source b.InstanceIdentity, pod *corev1.Pod) (string, bool) {
+	if pod == nil {
+		return "", false
+	}
+	if source.Workspace != "" {
+		return source.Workspace, cleanMountRoot(source.Workspace)
+	}
+	if !isRunningTenantPro(source) || source.Backend != "desktop" {
+		return "", false
+	}
+	volumes := map[string]corev1.Volume{}
+	for _, v := range pod.Spec.Volumes {
+		if v.Name == "" || volumes[v.Name].Name != "" {
+			return "", false
+		}
+		volumes[v.Name] = v
+	}
+	workspace, claim, regular := "", "", false
+	containers := append(append([]corev1.Container{}, pod.Spec.Containers...), pod.Spec.InitContainers...)
+	for i, c := range containers {
+		for _, mount := range c.VolumeMounts {
+			v, exists := volumes[mount.Name]
+			if !exists {
+				return "", false
+			}
+			if transientSource(v) {
+				continue
+			}
+			if v.PersistentVolumeClaim == nil || v.PersistentVolumeClaim.ClaimName == "" || v.PersistentVolumeClaim.ReadOnly || mount.ReadOnly || mount.SubPath != "" || mount.SubPathExpr != "" || !cleanMountRoot(mount.MountPath) {
+				return "", false
+			}
+			if workspace != "" && (workspace != mount.MountPath || claim != v.PersistentVolumeClaim.ClaimName) {
+				return "", false
+			}
+			workspace, claim = mount.MountPath, v.PersistentVolumeClaim.ClaimName
+			regular = regular || i < len(pod.Spec.Containers)
+		}
+	}
+	return workspace, regular && workspace != ""
 }
 
 func validTenantMountSubPath(value string) bool {
@@ -103,10 +148,14 @@ func observeRunningTenantProMount(ctx context.Context, client kubernetes.Interfa
 	if !m.matchesWriter(spec) {
 		return empty, d.ErrNotReady
 	}
+	workspace, ok := tenantProWorkspace(source, pod)
+	if !ok {
+		return empty, d.ErrNotReady
+	}
 	claimName := ""
 	for _, container := range pod.Spec.Containers {
 		for _, mount := range container.VolumeMounts {
-			subPath, ok := tenantWorkspaceSubPath(mount, source.Workspace)
+			subPath, ok := tenantWorkspaceSubPath(mount, workspace)
 			if !ok {
 				continue
 			}
@@ -157,8 +206,11 @@ func (m runningTenantProMount) check(ctx context.Context, client kubernetes.Inte
 		return values["app"] == "clawreef" && values["managed-by"] == "clawreef" && values["user-id"] == user && values["instance-id"] == instance
 	}
 	pod, err := client.CoreV1().Pods(s.Namespace).Get(ctx, s.Pod, metav1.GetOptions{})
+	workspace, workspaceOK := tenantProWorkspace(s, pod)
+	coverageSource := s
+	coverageSource.Workspace = workspace
 	if err != nil || pod.DeletionTimestamp != nil || pod.Status.Phase != corev1.PodRunning || !labels(pod.Labels) ||
-		string(pod.UID) != m.PodUID || kube.ContentHash(pod.Spec) != m.PodSpecSHA256 || checkPersistentMountCoverage(s, pod, nil) != nil || !m.matchesPodMount(pod) {
+		string(pod.UID) != m.PodUID || kube.ContentHash(pod.Spec) != m.PodSpecSHA256 || !workspaceOK || checkPersistentMountCoverage(coverageSource, pod, nil) != nil || !m.matchesPodMount(pod) {
 		return d.ErrNotReady
 	}
 	ref := metav1.GetControllerOf(pod)
@@ -191,6 +243,10 @@ func (m runningTenantProMount) check(ctx context.Context, client kubernetes.Inte
 }
 
 func (m runningTenantProMount) matchesPodMount(pod *corev1.Pod) bool {
+	workspace, ok := tenantProWorkspace(m.Source, pod)
+	if !ok {
+		return false
+	}
 	volumes := map[string]corev1.Volume{}
 	for _, volume := range pod.Spec.Volumes {
 		volumes[volume.Name] = volume
@@ -202,7 +258,7 @@ func (m runningTenantProMount) matchesPodMount(pod *corev1.Pod) bool {
 			if !persistentSource(volume) {
 				continue
 			}
-			subPath, ok := tenantWorkspaceSubPath(mount, m.Source.Workspace)
+			subPath, ok := tenantWorkspaceSubPath(mount, workspace)
 			if !ok || volume.PersistentVolumeClaim == nil || volume.PersistentVolumeClaim.ClaimName != m.Identity.Name {
 				return false
 			}

@@ -192,6 +192,108 @@ func TestRunningTenantProUsesOriginalPodClaim(t *testing.T) {
 			t.Fatal("unresolved subPathExpr accepted for root workspace")
 		}
 	})
+	t.Run("desktop missing SQL path uses full original PVC without changing source", func(t *testing.T) {
+		for _, name := range []string{"valid", "same-init-mount", "bad-explicit-path", "non-desktop", "subpath", "subpath-expr", "readonly-mount", "readonly-claim", "second-path", "second-claim", "init-side-mount", "config-overlay", "block-device", "ephemeral", "hostpath", "wrong-label", "wrong-owner", "wrong-pv-binding", "wrong-access-mode"} {
+			t.Run(name, func(t *testing.T) {
+				src := source
+				src.Workspace, src.Backend, src.Generation = "", "desktop", 0
+				p, claimCopy, pvCopy := pod.DeepCopy(), claim.DeepCopy(), pv.DeepCopy()
+				dep := deployment.DeepCopy()
+				one := int32(1)
+				dep.Spec.Replicas = &one
+				p.Status.Conditions = []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}}
+				p.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: "runtime", Ready: true, ContainerID: "containerd://original", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}
+				p.Spec.Containers[0].VolumeMounts[0].SubPath = ""
+				switch name {
+				case "same-init-mount":
+					p.Spec.InitContainers = []corev1.Container{{Name: "init", VolumeMounts: append([]corev1.VolumeMount{}, p.Spec.Containers[0].VolumeMounts...)}}
+				case "bad-explicit-path":
+					src.Workspace = "relative"
+				case "non-desktop":
+					src.Backend = "gateway"
+				case "subpath":
+					p.Spec.Containers[0].VolumeMounts[0].SubPath = "payload"
+				case "subpath-expr":
+					p.Spec.Containers[0].VolumeMounts[0].SubPathExpr = "$(POD)"
+				case "readonly-mount":
+					p.Spec.Containers[0].VolumeMounts[0].ReadOnly = true
+				case "readonly-claim":
+					p.Spec.Volumes[0].PersistentVolumeClaim.ReadOnly = true
+				case "second-path":
+					p.Spec.Containers[0].VolumeMounts = append(p.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "data", MountPath: "/other"})
+				case "second-claim":
+					p.Spec.Volumes = append(p.Spec.Volumes, corev1.Volume{Name: "other", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "other"}}})
+					p.Spec.Containers = append(p.Spec.Containers, corev1.Container{Name: "sidecar", VolumeMounts: []corev1.VolumeMount{{Name: "other", MountPath: "/srv/workspace"}}})
+				case "init-side-mount":
+					p.Spec.InitContainers = []corev1.Container{{Name: "init", VolumeMounts: []corev1.VolumeMount{{Name: "data", MountPath: "/other"}}}}
+				case "config-overlay":
+					p.Spec.Volumes = append(p.Spec.Volumes, corev1.Volume{Name: "config", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "config"}}})
+					p.Spec.Containers[0].VolumeMounts = append(p.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "config", MountPath: "/srv/workspace/masked"})
+				case "block-device":
+					p.Spec.Containers[0].VolumeDevices = []corev1.VolumeDevice{{Name: "data", DevicePath: "/dev/volume"}}
+				case "ephemeral":
+					p.Spec.EphemeralContainers = []corev1.EphemeralContainer{{EphemeralContainerCommon: corev1.EphemeralContainerCommon{Name: "debug"}}}
+				case "hostpath":
+					p.Spec.Volumes[0].VolumeSource = corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/data"}}
+				case "wrong-label":
+					p.Labels["instance-id"] = "999"
+				case "wrong-owner":
+					p.OwnerReferences[0].UID = "replacement"
+				case "wrong-pv-binding":
+					pvCopy.Spec.ClaimRef.UID = "replacement"
+				case "wrong-access-mode":
+					claimCopy.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany}
+				}
+				original := src
+				apiClient := fake.NewSimpleClientset(ns.DeepCopy(), p, rs.DeepCopy(), dep, claimCopy, pvCopy,
+					&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: cfg.Namespace, UID: "system-uid"}},
+					&corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node", UID: "node-uid", Labels: map[string]string{corev1.LabelOSStable: "linux"}}})
+				spec := b.RuntimeWriterSpec{Source: src, Kind: "deployment", Name: deployment.Name, UID: string(deployment.UID)}
+				raw, err := BuildOriginalInstanceMountScope(ctx, apiClient, cfg, []b.InstanceIdentity{src}, []b.RuntimeWriterSpec{spec}, nil)
+				if name != "valid" && name != "same-init-mount" {
+					if err == nil {
+						t.Fatal("unsafe or ambiguous desktop source accepted")
+					}
+					return
+				}
+				var got productionPersistentMountScope
+				if err != nil || json.Unmarshal(raw, &got) != nil || len(got.RunningTenantPro) != 1 {
+					t.Fatalf("desktop mount author failed: %v", err)
+				}
+				m := got.RunningTenantPro[0]
+				if src != original || m.Source != original || m.SubPath != "" || m.Identity.Name != claim.Name || !m.valid() || m.check(ctx, apiClient, cfg.Namespace) != nil {
+					t.Fatal("original SQL source or full PVC mapping changed")
+				}
+				if _, err := persistentMountsForInstances(&got, []b.InstanceIdentity{src}); err != nil {
+					t.Fatal(err)
+				}
+				api := &observedWriterAPI{objects: []observedWriterAPIObject{{Kind: "Namespace", Name: src.Namespace, UID: string(ns.UID)}}}
+				for kind, obj := range map[string]runtime.Object{"Pod": p, "ReplicaSet": rs, "Deployment": dep} {
+					value, err := projectWriterAPIObject(kind, obj)
+					if err != nil {
+						t.Fatal(err)
+					}
+					api.objects = append(api.objects, value)
+				}
+				actual, err := observeTenantProMountFromCensus(ctx, apiClient, cfg, src, api)
+				if err != nil || actual != m {
+					t.Fatalf("native census differs: %v", err)
+				}
+				for _, action := range apiClient.Actions() {
+					if action.GetVerb() != "get" {
+						t.Fatal("author mutated API")
+					}
+				}
+				p.Spec.Containers[0].VolumeMounts[0].MountPath = "/replaced"
+				if _, err := apiClient.CoreV1().Pods(src.Namespace).Update(ctx, p, metav1.UpdateOptions{}); err != nil {
+					t.Fatal(err)
+				}
+				if m.check(ctx, apiClient, cfg.Namespace) == nil {
+					t.Fatal("changed Pod mount inherited original pin")
+				}
+			})
+		}
+	})
 	changed := mount
 	changed.SubPath = "other/user"
 	if err := changed.check(ctx, client, "test-system"); err == nil {

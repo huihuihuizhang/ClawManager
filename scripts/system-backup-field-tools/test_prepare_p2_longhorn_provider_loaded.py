@@ -10,6 +10,14 @@ P = importlib.util.module_from_spec(spec); spec.loader.exec_module(P)
 
 
 class LoadedProviderLonghornTests(unittest.TestCase):
+    def test_tenant_workspace_successor_requires_exact_instance_refusal(self):
+        argv = ['native', 'prepare-mount-materials', '--source-selection-sha256', P.SELECTION_SHA, '--output-directory', '/original/out']
+        failure = {'Status': 'original_mount_author_refused', 'Phase': 'native_writers', 'Step': 'native_tenant_pro', 'Kind': 'Instance', 'Reason': 'read_error', 'InstanceID': 2}
+        self.assertEqual(P.confirmed_native_failure({'ExitCode': 1}, failure, argv, tenant_workspace=True), Path('/original/out'))
+        for field, value in [('InstanceID', 1), ('Step', 'native_agent_capabilities'), ('Reason', 'validation'), ('Kind', 'RuntimeAgent')]:
+            with self.assertRaises(ValueError):
+                P.confirmed_native_failure({'ExitCode': 1}, {**failure, field: value}, argv, tenant_workspace=True)
+
     def test_only_confirmed_same_source_native_failure_allows_successor(self):
         argv = ['/native', 'prepare-mount-materials', '--source-selection-sha256', P.SELECTION_SHA, '--output-directory', '/original/out']
         refusal = {'Status': 'original_mount_author_refused', 'Phase': 'native_writers'}
