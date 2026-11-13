@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Renew this original source reader and reauthor preparation DATA, no task grant."""
 import copy
+import argparse
 import datetime as dt
 import hashlib
 import importlib.util
@@ -52,12 +53,45 @@ def successor_definition(original, old_connection, new_connection, old_out, new_
     value['NotBefore'], value['Until'] = (x.isoformat().replace('+00:00','Z') for x in (before,until))
     return value
 
-def main():
+def replace_pinned_values(value, replacements):
+    if isinstance(value, dict): return {k:replace_pinned_values(v,replacements) for k,v in value.items()}
+    if isinstance(value, list): return [replace_pinned_values(v,replacements) for v in value]
+    return replacements.get(value,value) if isinstance(value,str) else value
+
+
+def november_trust(A, original):
+    old = json.loads((ROOT/'observer.receipt.private.json').read_bytes())
+    new = A.obj({'File':str(ROOT/'renewal-20261113/observer/receipt.private.json'),
+        'SHA256':'c0d69a9d9d1254a40993fb5516ed936325f265a74b0dde4b3823ea52fdd010f5'})
+    agent_old = json.loads((ROOT/'runtime-agent.receipt.private.json').read_bytes())
+    agent_new = A.obj({'File':str(ROOT/'renewal-20261113/runtime-unique/runtime-agent.receipt.private.json'),
+        'SHA256':'1d61b1d11b3427fd46d9d2eab3bd04f19daf74ae3a674a9f2275269c1810f149'})
+    rotation = json.loads((ROOT/'renewal-20261113/runtime-unique/runtime-rotation/completed.json').read_bytes())
+    need(rotation['CA']==agent_new['CA'] and rotation['ImagesPreserved'] is True,'completed runtime rotation required')
+    replacements = {}
+    def pair(a,b):
+        A.read(a); A.read(b)
+        for key in ('File','SHA256'):
+            need(a[key] not in replacements or replacements[a[key]]==b[key],'ambiguous trust replacement')
+            replacements[a[key]]=b[key]
+    for key in ('CA','ClientCertificate','ClientKey'): pair(old[key],new[key])
+    endpoints = {(e['Node'],e['Kind']):e for e in new['Endpoints']}
+    need(len(endpoints)==len(old['Endpoints'])==8,'complete observer endpoint set required')
+    for e in old['Endpoints']:
+        n = endpoints[(e['Node'],e['Kind'])]
+        need(e['NodeUID']==n['NodeUID'] and e['Endpoint']==n['Endpoint'],'observer identity changed')
+        for key in ('Certificate','PrivateKey','AnchorKey'):
+            if e.get(key,{}).get('File'): pair(e[key],n[key])
+    pair(agent_old['CA'],agent_new['CA'])
+    return replace_pinned_values(original,replacements),new['NotAfter'],agent_new['NotAfter']
+
+
+def main(november=False):
     os.umask(0o077)
     need(os.name == 'posix', 'Linux operator required')
     spec = importlib.util.spec_from_file_location('renew_assembly', Path(__file__).with_name('assemble-p2-installation-candidate.py'))
     A = importlib.util.module_from_spec(spec); spec.loader.exec_module(A)
-    r = ROOT/'source-preparation-renew8h'
+    r = ROOT/('source-preparation-20261113' if november else 'source-preparation-renew8h')
     r.mkdir(mode=0o700, exist_ok=True)
     need(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0, 'private original records directory required')
     save = A.retain
@@ -71,14 +105,20 @@ def main():
         need(status.get('authenticated',True) is True and not status.get('error') and
              user.get('username') == 'system:serviceaccount:'+NS+':'+account and user.get('uid') == uid,
              'authenticated source account mismatch')
-    previous = json.loads((ROOT/'initial-source-author/completed.json').read_bytes())
+    previous = json.loads((ROOT/('source-preparation-redis-renew7d' if november else 'initial-source-author')/'completed.json').read_bytes())
     receipt = A.obj(previous['Receipt'])
-    need(receipt['SourceSelection']['SHA256'] == '2bc613fa44cb80632f75a5189c8242a935c57cfea6e6ea46b5688e650a889577', 'exact expired source selection required')
+    expected = 'c23fd1b6654b93c71e0c68725faa5e613f771db3c137d7c8a7f06092c441b344' if november else '2bc613fa44cb80632f75a5189c8242a935c57cfea6e6ea46b5688e650a889577'
+    need(receipt['SourceSelection']['SHA256'] == expected, 'exact expired source selection required')
     selected = A.obj(receipt['SourceSelection'])
-    original = A.obj(previous['Definition'])
+    definition_pin = (json.loads((ROOT/'source-preparation-redis-renew7d/author.sent.private.json').read_bytes())['Definition']
+                      if november else previous['Definition'])
+    original = A.obj(definition_pin)
+    observer_until = json.loads((ROOT/'observer.receipt.private.json').read_bytes())['NotAfter']
+    agent_until = json.loads((ROOT/'runtime-agent.receipt.private.json').read_bytes())['NotAfter']
+    if november: original,observer_until,agent_until = november_trust(A,original)
     for key in ['PartsFile','SourceWritersFile','RedisSourcesFile']:
         need(not selected.get(key) or not Path(selected[key]).exists(), 'source facts already exist; reconcile before reauthoring')
-    api = A.obj({'File':str(API),'SHA256':API_SHA})
+    api = A.obj(previous['SourceAPI'] if november else {'File':str(API),'SHA256':API_SHA})
     A.read({'File':str(BIN),'SHA256':BIN_SHA},128<<20)
     vault = json.loads((ROOT/'vault-dependency/completed.json').read_bytes())
     for key in ['Receipt','WriterSelection','InstalledObserver']: A.read(vault[key])
@@ -103,8 +143,7 @@ def main():
     token = response['status']['token']
     token_until = moment(response['status']['expirationTimestamp'])
     before, until = preparation_window(dt.datetime.now(dt.timezone.utc),token_until,
-        moment(json.loads((ROOT/'observer.receipt.private.json').read_bytes())['NotAfter']),
-        moment(json.loads((ROOT/'runtime-agent.receipt.private.json').read_bytes())['NotAfter']))
+        moment(observer_until),moment(agent_until))
     review = call(['create','--raw','/apis/authentication.k8s.io/v1/tokenreviews','-f','-'],
         {'apiVersion':'authentication.k8s.io/v1','kind':'TokenReview','spec':{'token':token}})
     identity(review['status'],account,uid)
@@ -128,7 +167,7 @@ def main():
     refreshed = copy.deepcopy(api); refreshed['connection'] = connection; refreshed['token_expires_unix'] = int(token_until.timestamp())
     api_pin = save(r/'source-api-fragment.json',refreshed)
     old_out = Path(receipt['SourceSelection']['File']).parent
-    out = old_out.parent/'initial-source-renew8h'
+    out = old_out.parent/('initial-source-20261113' if november else 'initial-source-renew8h')
     out.mkdir(mode=0o700,exist_ok=True)
     need(out.resolve(strict=True) == out and out.stat().st_mode & 0o077 == 0 and not list(out.iterdir()), 'new empty native output directory required')
     definition = successor_definition(original,api['connection'],connection,old_out,out,before,until)
@@ -155,6 +194,9 @@ def main():
     print('P2_SOURCE_PREPARATION_REAUTHORED_NO_HOLD',json.dumps(done),flush=True)
 
 if __name__ == '__main__':
-    try: main()
+    try:
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument('--november13',action='store_true')
+        main(parser.parse_args().november13)
     except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as error:
         raise SystemExit('P2_SOURCE_RENEWAL_UNCONFIRMED '+(str(error) if type(error) is ValueError else type(error).__name__))
