@@ -28,6 +28,18 @@ def receive(sock, size):
         chunk = sock.recv(size-len(raw)); need(chunk,'MySQL greeting EOF'); raw += chunk
     return raw
 
+def census_spec(value):
+    found = []
+    def visit(v):
+        if isinstance(v,dict):
+            if v.get('schema_version')=='mysql-full-schema-census.v1': found.append(v)
+            for item in v.values(): visit(item)
+        elif isinstance(v,list):
+            for item in v: visit(item)
+    visit(value)
+    need(len(found)==1,'one pinned schema census required')
+    return found[0]
+
 def tls_probe(connection):
     peer = urlsplit(connection['Endpoint'])
     context = ssl.create_default_context(cafile=connection['CA']['File'])
@@ -52,6 +64,7 @@ def main():
         'SHA256':'bf23877e281b5b44669f285bee4943d26a100d713e1247884b3530c650ba5d62'})
     matches = [c for c in selected['Connections'] if c['Purpose']=='source_sql']; need(len(matches)==1,'one selected source SQL required')
     c = matches[0]; ca = A.read(c['CA']); dsn = A.read(c['Credential']).decode().strip()
+    census = census_spec(A.obj(selected['MaterialsTemplate']))
     records = Path(tempfile.mkdtemp(prefix='source-sql-diagnostic-',dir=ROOT))
     print('SOURCE_SQL_DIAGNOSTIC_RECORDS',records,flush=True)
     print('UTC_NOW',dt.datetime.now(dt.timezone.utc).isoformat(),flush=True)
@@ -75,11 +88,16 @@ printf '%s' "$ca" | base64 -d > "$f"
 mysql --protocol=TCP --connect-timeout=8 --ssl-mode=VERIFY_IDENTITY --tls-version=TLSv1.3 --ssl-ca="$f" -h "$1" -P "$2" -u "$3" --database="$4" --batch --skip-column-names --raw -e "$5"
 '''
     queries = {
-        'identity': "SELECT JSON_OBJECT('account',CURRENT_USER(),'role',CURRENT_ROLE(),'database',DATABASE(),'server',@@server_uuid,'clock',UTC_TIMESTAMP(6))",
+        'identity': "SELECT JSON_OBJECT('account',CURRENT_USER(),'role_none',CURRENT_ROLE()='NONE','database',DATABASE(),'server',@@server_uuid,'clock',UTC_TIMESTAMP(6))",
         'grants': 'SHOW GRANTS FOR CURRENT_USER',
-        'instances': "SET SESSION TRANSACTION READ ONLY; START TRANSACTION; SELECT JSON_OBJECT('id',id,'status',status,'generation',runtime_generation,'error_code',COALESCE(runtime_error_code,'')) FROM instances ORDER BY id; COMMIT;"
+        'instances': "SET SESSION TRANSACTION READ ONLY; START TRANSACTION; SELECT JSON_OBJECT('id',id,'status',status,'generation',runtime_generation,'error_code',COALESCE(runtime_error_code,'')) FROM instances ORDER BY id; COMMIT;",
+        'census_identity': "SELECT JSON_OBJECT('Definer',DEFINER,'DefinitionSHA256',SHA2(ROUTINE_DEFINITION,256),'Security',SECURITY_TYPE,'Access',SQL_DATA_ACCESS,'PartialRevokes',@@GLOBAL.partial_revokes) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_NAME='system_backup_source_schema_census' AND ROUTINE_TYPE='PROCEDURE'",
+        'census_objects': 'SET SESSION TRANSACTION READ ONLY; START TRANSACTION; CALL `system_backup_source_schema_census`(); COMMIT;'
     }
+    census_verified = False
     for label, query in queries.items():
+        if label=='census_objects' and not census_verified:
+            print('SOURCE_SQL_CENSUS_CALL_SKIPPED_UNVERIFIED',flush=True); continue
         args = ['kubectl','--kubeconfig',KUBE,'--request-timeout=20s','-n',NS,'exec','-i','deployment/mysql','-c','mysql','--',
             'sh','-c',shell,'sbk-source-readonly',peer.hostname,str(peer.port or 3306),user,database,query]
         result = subprocess.run(args,input=password.encode()+b'\n'+base64.b64encode(ca)+b'\n',capture_output=True,timeout=45)
@@ -91,10 +109,24 @@ mysql --protocol=TCP --connect-timeout=8 --ssl-mode=VERIFY_IDENTITY --tls-versio
             continue
         if label=='identity':
             row = json.loads(result.stdout)
-            print('SOURCE_SQL_IDENTITY',json.dumps({'AccountMatches':row['account']==c['Account'],'RoleNone':row['role']=='NONE',
+            print('SOURCE_SQL_IDENTITY',json.dumps({'AccountMatches':row['account']==c['Account'],'RoleNone':row['role_none']==1,
                 'DatabaseMatches':row['database']==c['Database'],'ServerMatches':row['server']==c['ServerUUID'],'DatabaseUTC':row['clock']}),flush=True)
         elif label=='grants':
-            print('SOURCE_SQL_GRANTS',json.dumps({'Count':len(result.stdout.splitlines()),'SHA256':hashlib.sha256(result.stdout).hexdigest()}),flush=True)
+            grants = result.stdout.decode().splitlines()
+            print('SOURCE_SQL_GRANTS',json.dumps({'Count':len(grants),'SHA256':hashlib.sha256(result.stdout).hexdigest(),
+                'Shapes':sorted(set(re.sub(r' TO .*','',g) for g in grants if not g.startswith('GRANT SELECT ON ')))}),flush=True)
+        elif label=='census_identity':
+            rows = result.stdout.splitlines()
+            need(len(rows)==1,'exact census procedure metadata row required')
+            row = json.loads(rows[0])
+            checks = {key:row[key]==census[key] for key in ('Definer','DefinitionSHA256','PartialRevokes')}
+            checks.update(Security=row['Security']=='DEFINER',Access=row['Access']=='READS SQL DATA')
+            census_verified = all(checks.values())
+            print('SOURCE_SQL_CENSUS_IDENTITY',json.dumps(checks),flush=True)
+        elif label=='census_objects':
+            rows = [line.split('\t') for line in result.stdout.decode().splitlines()]
+            need(all(len(row)==3 for row in rows),'census column count differs')
+            print('SOURCE_SQL_CENSUS_OBJECTS',json.dumps({'Count':len(rows),'Exceptions':[row for row in rows if row[1:]!=['BASE TABLE','InnoDB']]}),flush=True)
         else:
             for line in result.stdout.splitlines(): print('SOURCE_SQL_INSTANCE',json.dumps(json.loads(line)),flush=True)
     print('SOURCE_SQL_READONLY_DIAGNOSTIC_FINISHED',flush=True)
