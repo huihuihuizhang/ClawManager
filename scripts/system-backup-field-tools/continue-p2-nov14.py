@@ -55,8 +55,8 @@ def renewed_source(A,N,original,observer,agent):
     return N.replace_pinned_values(original,replacements)
 
 def renewed_scope(A,original):
-    receipt=A.obj({'File':str(ROOT/'p2-team-current-coordinates-20261114/receipt.private.json'),
-                   'SHA256':'0a3b018d94d9fc7d0dc5ab61501e172345bc2841b5404694d344915cf1a87eb7'})
+    receipt=A.obj({'File':str(ROOT/'p2-team-recovered-coordinates-20261114/receipt.private.json'),
+                   'SHA256':'3a85035dc2bf772d60cc95e49534def1a0f20b8a6dd623801a124ebc9a05bc9f'})
     A.need(receipt['Version']=='original-initial-source-data-authored.v1' and receipt['InstanceCount']==8 and
            receipt['WriterQualified'] is False and receipt['BackupReady'] is False,'native renewed coordinates required')
     coordinates=A.obj(receipt['Coordinates']);A.read(receipt['KubernetesSnapshot'])
