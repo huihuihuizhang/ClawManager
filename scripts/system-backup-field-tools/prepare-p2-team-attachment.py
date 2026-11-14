@@ -149,14 +149,18 @@ def prepare(A, L, core, selected, journal):
         time.sleep(3)
     # Independently re-read exact PVC/PV identity after the physical mount exists.
     check_binding(read('/api/v1/namespaces/'+NS),read(base+'/persistentvolumeclaims/'+CLAIM),read('/api/v1/persistentvolumes/'+PV))
-    A.retain(journal/'team-attachment.ready.private.json',current)
+    ready=journal/'team-attachment.ready.private.json'
+    if ready.exists():check_recorded_attachment(current,A.decode(ready.read_bytes()))
+    else:A.retain(ready,current)
     print('P2_TEAM_ATTACHMENT_READY_NO_HOLD',json.dumps({'Pod':POD,'UID':pod['metadata']['uid'],'Node':'node1','ReadOnly':True,'BackupReady':False}),flush=True)
     return [{'TeamID':1,'Namespace':NS,'Pod':POD,'Image':IMAGE}]
 
 
-def rollback_failed_preparation(nov14=False):
+def rollback_failed_preparation(nov14=False,attempt=1):
     A, L = load('assemble-p2-installation-candidate'), load('load-p2-formal-vault')
     journal=ROOT/('longhorn-source-20261114-team-attachment' if nov14 else 'longhorn-source-20261113-team-attachment')
+    need(1<=attempt<=99 and (nov14 or attempt==1),'numbered attempts require --nov14')
+    if attempt>1:journal=journal.with_name(journal.name+'-'+str(attempt))
     rollback_native_output(journal,A)
     original=A.decode((journal/'team-attachment.created.private.json').read_bytes())
     site=L.Site(journal,A); base='/api/v1/namespaces/'+NS
@@ -183,9 +187,10 @@ if __name__=='__main__':
         parser=argparse.ArgumentParser(description=__doc__)
         parser.add_argument('--rollback-failed-preparation',action='store_true')
         parser.add_argument('--nov14',action='store_true')
+        parser.add_argument('--source-attempt',type=int,default=1)
         args=parser.parse_args()
         os.umask(0o077)
-        if args.rollback_failed_preparation: rollback_failed_preparation(args.nov14)
+        if args.rollback_failed_preparation: rollback_failed_preparation(args.nov14,args.source_attempt)
         else: load('prepare-p2-longhorn-provider-loaded').main(team_attachment=True)
     except Exception as error:
         raise SystemExit('P2_TEAM_ATTACHMENT_UNCONFIRMED '+(str(error) if isinstance(error,ValueError) else type(error).__name__))

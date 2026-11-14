@@ -13,6 +13,9 @@ from urllib.parse import urlsplit
 ROOT=Path('/root/sbk/p2-cert-renewal.1KyqMtsd')
 JOURNAL=ROOT/'p2-team-continuation-20261114'
 MIRROR=Path('/run/system-backup/runtime/p2-renew-1048e373bfe0')
+SOURCE_JOURNAL=JOURNAL/'source'
+MOUNT_JOURNAL=ROOT/'longhorn-source-20261114-team-attachment'
+SOURCE_OUT=MIRROR/'initial-source-20261114-team'
 def load(name):
     spec=importlib.util.spec_from_file_location(name,Path(__file__).with_name(name+'.py'));m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
 
@@ -35,16 +38,81 @@ def controller_ref(A,site,L,selected,desired):
     ref.update(Pod=pod['metadata']['name'],PodUID=pod['metadata']['uid'],ReplicaSet=rs['metadata']['name'],ReplicaSetUID=rs['metadata']['uid'])
     return ref,pod
 
+def live_source(A, done, now=None):
+    selected=A.obj(done['SourceSelection'])
+    if 'Receipt' in done:A.need(A.obj(done['Receipt'])['SourceSelection']==done['SourceSelection'],'retained source receipt chain differs')
+    now=now or dt.datetime.now(dt.timezone.utc)
+    before=dt.datetime.fromisoformat(selected['NotBefore'].replace('Z','+00:00'))
+    until=dt.datetime.fromisoformat(selected['Until'].replace('Z','+00:00'))
+    A.need(done['Until']==selected['Until'] and before<=now<until-dt.timedelta(minutes=10),
+           'source expired or less than ten minutes remain; preserve this attempt and use --source-attempt N+1 after expiry; never replay old materials')
+    return selected
+
+
+def select_attempt(A, number):
+    global SOURCE_JOURNAL,MOUNT_JOURNAL,SOURCE_OUT
+    A.need(1<=number<=99,'source-attempt must be 1..99')
+    def paths(n):
+        suffix='' if n==1 else '-'+str(n)
+        return JOURNAL/('source'+suffix),ROOT/('longhorn-source-20261114-team-attachment'+suffix),MIRROR/('initial-source-20261114-team'+suffix)
+    SOURCE_JOURNAL,MOUNT_JOURNAL,SOURCE_OUT=paths(number)
+    if number>1:
+        previous,oldmount,_=paths(number-1)
+        A.need(not (oldmount/'team-attachment.retired.json').exists(),'previous source retired; do not recreate attachment')
+        if (previous/'completed.json').exists():
+            done=A.decode((previous/'completed.json').read_bytes());receipt=A.obj(done['Receipt'])
+            A.need(receipt['SourceSelection']==done['SourceSelection'],'previous source receipt chain differs')
+        else:
+            A.need(A.decode((previous/'author.exit.json').read_bytes())=={'ExitCode':0},'previous source outcome unknown; reconcile before successor')
+            receipt=A.decode((previous/'author.receipt.private.json').read_bytes())
+        A.need(receipt['GrantsIssued'] is False and receipt['BackupReady'] is False,'previous source must remain unissued')
+        selected=A.obj(receipt['SourceSelection'])
+        A.need(dt.datetime.now(dt.timezone.utc)>=dt.datetime.fromisoformat(selected['Until'].replace('Z','+00:00')),'previous source must expire before a successor attempt')
+        selections=[selected]
+        if (oldmount/'completed.json').exists():
+            old=A.decode((oldmount/'completed.json').read_bytes());A.read(old['Receipt']);selections.append(A.obj(old['SourceSelection']))
+        elif (oldmount/'native.receipt.private.json').exists():
+            A.need(A.decode((oldmount/'native.exit.json').read_bytes())=={'ExitCode':0},'previous mount outcome differs')
+            native=A.decode((oldmount/'native.receipt.private.json').read_bytes())
+            A.need(native['SelectionSHA256']==receipt['SourceSelection']['SHA256'],'previous mount parent differs')
+            selections.append(A.obj(native['SourceSelection']))
+        elif (oldmount/'native.sent.private.json').exists():
+            load('prepare-p2-team-attachment').rollback_native_output(oldmount,A)
+        for selection in selections:
+            for k in ('PartsFile','SourceWritersFile','RedisSourcesFile'):
+                A.need(not selection.get(k) or not Path(selection[k]).exists(),'source facts already produced; retire actual task/source before renewal')
+        record=oldmount/'team-attachment.created.private.json'
+        if record.exists():
+            MOUNT_JOURNAL.mkdir(mode=0o700,exist_ok=True)
+            # prepare re-observes and validates this exact UID/spec before reuse.
+            A.retain(MOUNT_JOURNAL/record.name,record.read_bytes())
+    if (SOURCE_JOURNAL/'completed.json').exists():
+        live_source(A,A.decode((SOURCE_JOURNAL/'completed.json').read_bytes()))
+    A.need(not (MOUNT_JOURNAL/'team-attachment.retired.json').exists(),'this source was retired; do not resume')
+
+
+def private_journal(A):
+    JOURNAL.mkdir(mode=0o700,exist_ok=True)
+    A.need(JOURNAL.resolve()==JOURNAL and JOURNAL.stat().st_mode&0o077==0,'private continuation journal required')
+
+
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--image-receipt',required=True);parser.add_argument('--image-sha256',required=True);args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--image-receipt',required=True);parser.add_argument('--image-sha256',required=True)
+    parser.add_argument('--source-attempt',type=int,default=1)
+    run(parser.parse_args())
+
+
+def run(args, package=None):
     os.umask(0o077)
     A,L,H,R,N,D,F,T,P=[load(n) for n in ('assemble-p2-installation-candidate','load-p2-formal-vault','prepare-p2-longhorn-provider-loaded','resume-p2-recovered-source','renew-p2-source-preparation','p2-source-dns','p2-vault-local-forward','resume-p2-tenant-team-source','p2-nov14-delivery')]
-    package=Path(__file__).resolve().parent; build=A.decode((package/'BUILD_RECEIPT.json').read_bytes())
+    package=package or Path(__file__).resolve().parent; build=A.decode((package/'BUILD_RECEIPT.json').read_bytes())
     A.need(build['SourceRevision']==(package/'SOURCE_REVISION').read_text().strip(),'package revision mismatch')
     for name in ('system-backup-source-registries','system-backup-first-install-materials','system-backup-v2-controller'):
         A.read({'File':str(package/name),'SHA256':build['Binaries'][name]['SHA256']},256<<20)
     image=A.obj({'File':args.image_receipt,'SHA256':args.image_sha256})
     A.need(image['Version']=='p2-controller-image.v1' and image['SourceRevision']==build['SourceRevision'] and image['Binaries']==build['Binaries'],'image/binary revision mismatch')
+    select_attempt(A,args.source_attempt)
     # The already confirmed, unsigned recovered source remains the source of business scope.
     parent=A.decode((T.PARENT/'completed.json').read_bytes())
     A.need(parent['Receipt']['SHA256']==T.RECEIPT_SHA and parent['Definition']['SHA256']==T.DEFINITION_SHA and parent['SourceSelection']['SHA256']==T.SELECTION_SHA and parent['GrantsIssued'] is False,'recovered parent differs')
@@ -53,7 +121,7 @@ def main():
     observer=A.obj({'File':str(ROOT/'renewal-20261113/observer/receipt.private.json'),'SHA256':'c0d69a9d9d1254a40993fb5516ed936325f265a74b0dde4b3823ea52fdd010f5'})
     agent=A.obj({'File':str(ROOT/'renewal-20261113/runtime-unique/runtime-agent.receipt.private.json'),'SHA256':'1d61b1d11b3427fd46d9d2eab3bd04f19daf74ae3a674a9f2275269c1810f149'})
     now=dt.datetime.now(dt.timezone.utc);before,until=T.window(now,now+dt.timedelta(hours=8),N.moment(observer['NotAfter']),N.moment(agent['NotAfter']),30)
-    JOURNAL.mkdir(mode=0o700,exist_ok=True);A.need(JOURNAL.resolve()==JOURNAL and JOURNAL.stat().st_mode&0o077==0,'private continuation journal required')
+    private_journal(A)
     print('P2_NOV14_RECORDS',JOURNAL,flush=True);site=L.Site(JOURNAL,A)
     R.verify_app(A,site)
     prior=A.obj({'File':str(L.PARENT/'receipt.private.json'),'SHA256':L.RECEIPT_SHA});old_secret=A.obj(prior['SecretManifest'])
@@ -113,48 +181,65 @@ def main():
 
 
 def refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desired,secret,plan,minted,observer,agent):
-    journal=JOURNAL/'source';journal.mkdir(mode=0o700,exist_ok=True)
+    journal=SOURCE_JOURNAL;journal.mkdir(mode=0o700,exist_ok=True)
     donefile=journal/'completed.json'
     if donefile.exists():
-        done=A.decode(donefile.read_bytes());A.read(done['Receipt']);return done
+        done=A.decode(donefile.read_bytes());A.read(done['Receipt']);live_source(A,done);A.need(done['Controller']==fresh,'source controller changed');return done
     api=A.obj(parent['SourceAPI']);connection=api['connection'];sa=site.get('serviceaccount',api['service_account'])
     A.need(sa['metadata']['uid']==api['service_account_uid']==connection['Account'] and not sa['metadata'].get('deletionTimestamp'),'source account changed')
     tokenfile=journal/'token.private.json'
     if tokenfile.exists():response=A.decode(tokenfile.read_bytes())
     else:
-        raw=site.send('source-token',['create','--raw','/api/v1/namespaces/'+A.NS+'/serviceaccounts/'+api['service_account']+'/token','-f','-'],json.dumps({'apiVersion':'authentication.k8s.io/v1','kind':'TokenRequest','spec':{'expirationSeconds':28800}}).encode())
+        raw=L.Site(journal,A).send('source-token',['create','--raw','/api/v1/namespaces/'+A.NS+'/serviceaccounts/'+api['service_account']+'/token','-f','-'],json.dumps({'apiVersion':'authentication.k8s.io/v1','kind':'TokenRequest','spec':{'expirationSeconds':28800}}).encode())
         A.retain(tokenfile,raw);response=A.decode(raw)
     token=response['status']['token']
     review=A.decode(site.call(['create','--raw','/apis/authentication.k8s.io/v1/tokenreviews','-f','-'],json.dumps({'apiVersion':'authentication.k8s.io/v1','kind':'TokenReview','spec':{'token':token}}).encode()))
     T.identity(A,review['status'],api['service_account'],api['service_account_uid'])
     now=dt.datetime.now(dt.timezone.utc);before,until=T.window(now,N.moment(response['status']['expirationTimestamp']),N.moment(observer['NotAfter']),N.moment(agent['NotAfter']),30)
     new=copy.deepcopy(connection);new['Credential']=A.retain(journal/'source-api.jwt',token.encode())
-    out=MIRROR/'initial-source-20261114-team';definition=N.successor_definition(original,connection,new,Path(parent['SourceSelection']['File']).parent,out,before,until)
+    out=SOURCE_OUT;definition=N.successor_definition(original,connection,new,Path(parent['SourceSelection']['File']).parent,out,before,until)
     definition['Controller']=fresh
     providers=definition['Deployment']['provider_dependencies'];A.need(len(providers)==1 and providers[0]['workload']==minted['Workload'],'source provider role changed')
     providers[0]['observer']={'File':L.MOUNT+'/observer.json','SHA256':plan['ObserverSHA256']}
+    if (journal/'definition.private.json').exists():
+        retained=A.decode((journal/'definition.private.json').read_bytes())
+        expected=copy.deepcopy(definition);expected['NotBefore']=retained['NotBefore'];expected['Until']=retained['Until']
+        A.need(retained==expected,'retained source definition changed')
+        definition=retained
+        A.need(dt.datetime.now(dt.timezone.utc)<N.moment(definition['Until'])-dt.timedelta(minutes=10),'retained source definition expired; reconcile this attempt')
     pin=A.retain(journal/'definition.private.json',definition)
     old=A.decode((T.PARENT/'author.sent.private.json').read_bytes())['Argv']
     endpoints=[(c['Purpose'],c['Endpoint']) for c in selected['Connections'] if (urlsplit(c['Endpoint']).hostname or '').endswith('.'+A.NS+'.svc')]
     dns=D.SourceDNS(site,journal,pod,endpoints,A.retain);dns.probe()
-    A.need(not out.exists(),'source output exists; reconcile original author outcome');out.mkdir(mode=0o700)
+    if not out.exists():out.mkdir(mode=0o700)
+    else:A.need((journal/'author.receipt.private.json').exists(),'source output exists without successful receipt; reconcile outcome')
     result=R.once(A,dns,journal,'author',[str(package/'system-backup-first-install-materials'),'author-initial-source-inputs',*old[2:old.index('--definition-file')],'--definition-file',pin['File'],'--definition-sha256',pin['SHA256'],'--output-directory',str(out)])
-    A.need(result['GrantsIssued'] is False and result['BackupReady'] is False and A.obj(result['SourceSelection'])['Controller']==fresh and A.obj(result['Deployment'])==definition['Deployment'],'native refreshed source differs')
+    actual=A.obj(result['SourceSelection'])
+    A.need(result['Version']=='original-initial-source-inputs-authored.v1' and result['GrantsIssued'] is False and result['BackupReady'] is False and actual['Controller']==fresh and
+           actual['Connections']==definition['Connections'] and actual['Until']==definition['Until'] and actual['NotBefore']==definition['NotBefore'] and
+           A.obj(result['Deployment'])==definition['Deployment'],'native refreshed source differs')
     changed=copy.deepcopy(api);changed['connection']=new;changed['token_expires_unix']=int(N.moment(response['status']['expirationTimestamp']).timestamp())
     done={'Version':'p2-nov14-source.v1','Receipt':A.retain(journal/'receipt.private.json',(journal/'author.receipt.private.json').read_bytes()),'Definition':pin,'SourceSelection':result['SourceSelection'],'SourceAPI':A.retain(journal/'source-api-fragment.json',changed),'Controller':fresh,'VaultWriterSelection':parent['VaultWriterSelection'],'Until':definition['Until'],'GrantsIssued':False,'BackupReady':False}
     controller_ref(A,site,L,{'Controller':fresh},desired)
+    live_source(A,done)
     A.retain(donefile,done);print('P2_NOV14_SOURCE_REFRESHED_NO_HOLD',json.dumps(done),flush=True)
 
     return done
 
 def mount(A,L,H,R,D,site,package,done,fresh,pod,desired):
-    journal=ROOT/'longhorn-source-20261114-team-attachment';journal.mkdir(mode=0o700,exist_ok=True)
+    journal=MOUNT_JOURNAL;journal.mkdir(mode=0o700,exist_ok=True)
     saved=journal/'completed.json'
     if saved.exists():
-        complete=A.decode(saved.read_bytes());A.read(complete['Receipt'])
+        complete=A.decode(saved.read_bytes());A.read(complete['Receipt']);live_source(A,complete)
+        A.need(complete['ParentSelection']==done['SourceSelection'],'retained mount parent changed')
+        controller_ref(A,site,L,{'Controller':fresh},desired)
+        for key in ('Deployment','MaterialsTemplate','LonghornHoldMaterials'):A.read(complete[key])
+        parent_selected=live_source(A,done);parent_core=A.obj(A.obj(done['Receipt'])['Deployment'])
+        load('prepare-p2-team-attachment').prepare(A,L,parent_core,parent_selected,journal)
+        live_source(A,complete)
         print('P2_LONGHORN_SOURCE_ALREADY_AUTHORED_NO_HOLD',json.dumps(complete),flush=True);return
-    A.need(not (journal/'native.sent.private.json').exists(),'mount author already attempted; retain outputs')
-    selected=A.obj(done['SourceSelection']);core=A.obj(A.obj(done['Receipt'])['Deployment'])
+    A.need(not (journal/'native.sent.private.json').exists() or (journal/'native.receipt.private.json').exists(),'mount author outcome unknown; retain outputs')
+    selected=live_source(A,done);core=A.obj(A.obj(done['Receipt'])['Deployment'])
     until=dt.datetime.fromisoformat(selected['Until'].replace('Z','+00:00'))
     A.need(dt.datetime.now(dt.timezone.utc)<until-dt.timedelta(minutes=10),'source window insufficient')
     storage=load('prepare-p2-longhorn-source')
@@ -163,8 +248,10 @@ def mount(A,L,H,R,D,site,package,done,fresh,pod,desired):
     layouts=A.retain(journal/'mount-layouts.json',layout)
     endpoints=[(c['Purpose'],c['Endpoint']) for c in selected['Connections'] if (urlsplit(c['Endpoint']).hostname or '').endswith('.'+A.NS+'.svc')]
     dns=D.SourceDNS(site,journal,pod,endpoints,A.retain);dns.probe()
-    out=MIRROR/journal.name;A.need(not out.exists(),'mount output exists; reconcile outcome');out.mkdir(mode=0o700)
-    old=A.decode((JOURNAL/'source/author.sent.private.json').read_bytes())['Argv']
+    out=MIRROR/journal.name
+    if not out.exists():out.mkdir(mode=0o700)
+    else:A.need((journal/'native.receipt.private.json').exists(),'mount output exists without successful receipt; reconcile outcome')
+    old=A.decode((SOURCE_JOURNAL/'author.sent.private.json').read_bytes())['Argv']
     value=R.once(A,dns,journal,'native',[str(package/'system-backup-source-registries'),'prepare-mount-materials',*old[2:old.index('--definition-file')],
         '--source-selection-file',done['SourceSelection']['File'],'--source-selection-sha256',done['SourceSelection']['SHA256'],
         '--mount-layouts-file',layouts['File'],'--mount-layouts-sha256',layouts['SHA256'],'--output-directory',str(out)])
@@ -176,6 +263,7 @@ def mount(A,L,H,R,D,site,package,done,fresh,pod,desired):
     complete={'Version':'p2-longhorn-source-materials-authored.v1','Receipt':A.retain(journal/'native.receipt.private.json',(journal/'native.stdout.private').read_bytes()),
         'ParentSelection':done['SourceSelection'],**{k:value[k] for k in ('Deployment','MaterialsTemplate','SourceSelection','LonghornHoldMaterials')},
         'VaultWriterSelection':done['VaultWriterSelection'],'Until':selected['Until'],'NativeHoldClaim':False,'GrantsIssued':False,'BackupReady':False}
+    live_source(A,complete)
     A.retain(saved,complete);print('P2_LONGHORN_SOURCE_MATERIALS_AUTHORED_NO_HOLD',json.dumps(complete),flush=True)
 
 if __name__=='__main__':

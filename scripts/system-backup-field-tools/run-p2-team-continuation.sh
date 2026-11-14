@@ -9,4 +9,4 @@ if [ ! -f "$image_dir/image.json" ]; then
   python3 -B build-p2-controller-overlay.py --directory "$image_dir"
 fi
 image_sha=$(sha256sum "$image_dir/image.json")
-python3 -B continue-p2-nov14.py --image-receipt "$image_dir/image.json" --image-sha256 "${image_sha%% *}"
+python3 -B continue-p2-nov14.py --image-receipt "$image_dir/image.json" --image-sha256 "${image_sha%% *}" "$@"
