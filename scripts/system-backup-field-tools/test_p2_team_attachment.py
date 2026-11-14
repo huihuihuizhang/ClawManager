@@ -1,5 +1,8 @@
 import importlib.util
 import unittest
+import copy
+import json
+from unittest.mock import MagicMock
 from pathlib import Path
 
 path=Path(__file__).with_name('prepare-p2-team-attachment.py')
@@ -23,6 +26,38 @@ class AttachmentTest(unittest.TestCase):
         actual=M.manifest(); actual["spec"]["automountServiceAccountToken"]=True
         with self.assertRaises(ValueError): M.check_admission(actual,M.manifest())
     def test_admission_accepts_exact_manifest(self): M.check_admission(M.manifest(),M.manifest())
+    def test_paginated_census_refuses_before_mutation(self):
+        with self.assertRaises(ValueError): M.complete_items({'metadata':{'continue':'next'},'items':[]})
+        with self.assertRaises(ValueError): M.complete_items({'metadata':{}})
+        self.assertEqual(M.complete_items({'metadata':{},'items':[]}),[])
+    def test_recorded_attachment_rejects_replacement_and_foreign_coordinates(self):
+        original=M.manifest();original['metadata']['uid']='original'
+        M.check_recorded_attachment(copy.deepcopy(original),original)
+        for key,value in [('uid','replaced'),('namespace','other'),('name','other')]:
+            current=copy.deepcopy(original);current['metadata'][key]=value
+            with self.assertRaises(ValueError): M.check_recorded_attachment(current,original)
+    def test_recorded_attachment_rejects_new_owner_or_finalizer(self):
+        original=M.manifest();original['metadata']['uid']='original'
+        for key,value in [('ownerReferences',[{'uid':'foreign'}]),('finalizers',['foreign'])]:
+            current=copy.deepcopy(original);current['metadata'][key]=value
+            with self.assertRaises(ValueError): M.check_recorded_attachment(current,original)
+    def test_recorded_attachment_rejects_same_spec_with_writable_volume(self):
+        original=M.manifest();original['metadata']['uid']='original'
+        original['spec']['volumes'][0]['persistentVolumeClaim']['readOnly']=False
+        with self.assertRaises(ValueError): M.check_recorded_attachment(copy.deepcopy(original),original)
+    def test_rollback_rejects_success_and_unknown_native_outcome(self):
+        for complete,sent,exited,code in [(True,True,True,1),(False,True,False,1),(False,True,True,0)]:
+            paths={}
+            for name,exists in [('completed.json',complete),('native.sent.private.json',sent),('native.exit.json',exited)]:
+                f=MagicMock();f.exists.return_value=exists;paths[name]=f
+            paths['native.exit.json'].read_bytes.return_value=json.dumps({'ExitCode':code}).encode()
+            journal=MagicMock();journal.__truediv__.side_effect=paths.__getitem__
+            A=MagicMock();A.decode.side_effect=json.loads
+            with self.assertRaises(ValueError): M.rollback_native_output(journal,A)
+    def test_rollback_allows_pre_native_failure(self):
+        f=MagicMock();f.exists.return_value=False
+        journal=MagicMock();journal.__truediv__.return_value=f
+        M.rollback_native_output(journal,MagicMock())
     def binding(self):
         return ({'metadata':{'uid':'ns','labels':{'app':'clawreef','managed-by':'clawreef','user-id':'1'}}},
                 {'metadata':{'uid':M.PVC_UID},'spec':{'volumeName':M.PV,'accessModes':['ReadWriteMany']},'status':{'phase':'Bound'}},

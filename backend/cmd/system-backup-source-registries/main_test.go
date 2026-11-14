@@ -102,3 +102,19 @@ func TestSourceRegistryCLIFrozenOutputPreflight(t *testing.T) {
 		}
 	}
 }
+
+func TestMetadataReissueUsesOriginalInstallerWithoutExpiredSourceSelection(t *testing.T) {
+	args := []string{"issue-provider-metadata"}
+	for _, name := range []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "writer-selection-file", "writer-selection-sha256", "output-directory"} {
+		args = append(args, "--"+name, "missing-authority")
+	}
+	var out bytes.Buffer
+	if code := run(context.Background(), args, &out); code != 1 || out.Len() != 0 {
+		t.Fatal("absent original authority admitted", code)
+	}
+	for _, extra := range []string{"source-selection-file", "issuer-private-file", "controller-container"} {
+		if code := run(context.Background(), append(append([]string{}, args...), "--"+extra, "forbidden"), &out); code != 2 {
+			t.Fatal("cross-action authority admitted", extra, code)
+		}
+	}
+}

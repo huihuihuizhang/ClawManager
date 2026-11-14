@@ -166,6 +166,8 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	required := []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256"}
 	switch action {
+	case "issue-provider-metadata":
+		required = append(required, "writer-selection-file", "writer-selection-sha256", "output-directory")
 	case "prepare-minio-materials":
 		required = append(required, "source-selection-file", "source-selection-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "output-directory", "definition-file", "definition-sha256")
 	case "produce-facts":
@@ -195,7 +197,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			return 2
 		}
 	}
-	if action == "prepare-provider-materials" {
+	if action == "prepare-provider-materials" || action == "issue-provider-metadata" {
 		allowed["provider-local-forward"] = true
 	}
 	for name, v := range values {
@@ -260,6 +262,21 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
+	if action == "issue-provider-metadata" {
+		entries, err := os.ReadDir(get("output-directory"))
+		if err != nil || len(entries) != 0 {
+			return 1
+		}
+		receipt, err := installer.ProduceInstalledVaultMetadataMaterials(active, password, enrollment,
+			install.BootstrapSourceFilePin{File: get("writer-selection-file"), SHA256: get("writer-selection-sha256")}, get("output-directory"), get("provider-local-forward"))
+		if err != nil {
+			return 1
+		}
+		if json.NewEncoder(out).Encode(receipt) != nil {
+			return 4
+		}
+		return 0
+	}
 	if action == "prepare-minio-materials" {
 		var options execution.FormalMinIOMaterialDeliveryOptions
 		if pinnedJSON(get("definition-file"), get("definition-sha256"), &options) != nil {

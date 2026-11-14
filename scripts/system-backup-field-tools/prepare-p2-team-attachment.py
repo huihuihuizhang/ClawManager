@@ -53,6 +53,36 @@ def check_admission(actual, requested):
     need(not any(c.get(k) for k in ('env','envFrom','lifecycle','livenessProbe','readinessProbe','startupProbe','volumeDevices','ports')), 'admission added attachment behavior')
 
 
+def complete_items(value):
+    need(isinstance(value,dict) and isinstance(value.get('items'),list) and
+         not value.get('metadata',{}).get('continue'), 'incomplete Kubernetes list; retain state and do not mutate')
+    return value['items']
+
+
+def check_recorded_attachment(current, original):
+    expected={'name':POD,'namespace':NS}
+    need(all(original.get('metadata',{}).get(k)==v and current.get('metadata',{}).get(k)==v for k,v in expected.items()),
+         'attachment coordinates changed')
+    need(original['metadata'].get('uid') and current['metadata'].get('uid')==original['metadata']['uid'] and
+         current.get('spec')==original.get('spec') and not current['metadata'].get('ownerReferences') and
+         not current['metadata'].get('finalizers'), 'attachment identity/specification changed')
+    check_admission(current,manifest())
+
+
+def rollback_native_output(journal,A):
+    need(not (journal/'completed.json').exists(),'successful source material requires source retirement; rollback refused')
+    sent=journal/'native.sent.private.json'
+    if not sent.exists(): return
+    need((journal/'native.exit.json').exists() and A.decode((journal/'native.exit.json').read_bytes())=={'ExitCode':1},
+         'native outcome unknown or successful; rollback refused')
+    argv=A.decode(sent.read_bytes())['Argv']
+    need(argv.count('--output-directory')==1,'ambiguous native output directory')
+    output=Path(argv[argv.index('--output-directory')+1])
+    expected=Path('/run/system-backup/runtime/p2-renew-1048e373bfe0')/journal.name
+    need(output==expected and output.resolve(strict=True)==output and output.is_dir() and not list(output.iterdir()),
+         'native partial or foreign outputs require reconciliation')
+
+
 def check_binding(ns, pvc, pv):
     need(ns['metadata'].get('uid') and not ns['metadata'].get('deletionTimestamp') and
          all(ns['metadata'].get('labels',{}).get(k)==v for k,v in {'app':'clawreef','managed-by':'clawreef','user-id':'1'}.items()), 'tenant identity changed')
@@ -81,7 +111,7 @@ def prepare(A, L, core, selected, journal):
     need(output==Path('/run/system-backup/runtime/p2-renew-1048e373bfe0')/prior.name and output.resolve(strict=True)==output and not list(output.iterdir()), 'prior partial native outputs require reconciliation')
     sa=read(base+'/serviceaccounts/default'); need(sa['metadata'].get('uid') and not sa['metadata'].get('deletionTimestamp'),'default account unavailable')
     request=manifest()
-    existing=read(base+'/pods')['items']
+    existing=complete_items(read(base+'/pods'))
     mine=[p for p in existing if p['metadata']['name']==POD]
     other=[p for p in existing if p['metadata']['name']!=POD and any(v.get('persistentVolumeClaim',{}).get('claimName')==CLAIM for v in p['spec'].get('volumes',[]))]
     need(not other,'team volume acquired another consumer; reconcile before preparation')
@@ -89,11 +119,11 @@ def prepare(A, L, core, selected, journal):
     if mine:
         need(record.exists(),'same-name Pod lacks this preparation receipt; do not adopt')
         original=A.decode(record.read_bytes())
-        need(mine[0]['metadata']['uid']==original['metadata']['uid'] and mine[0]['spec']==original['spec'],'recorded attachment replaced or changed')
+        check_recorded_attachment(mine[0],original)
         pod=mine[0]
     else:
         need(not record.exists(),'recorded attachment disappeared; do not recreate')
-        nodes=read('/api/v1/nodes')['items']; allpods=read('/api/v1/pods')['items']
+        nodes=complete_items(read('/api/v1/nodes')); allpods=complete_items(read('/api/v1/pods'))
         for n in nodes:
             if n['metadata']['name'] not in ('node1','k8s-master'): continue
             used=sum(p['spec'].get('nodeName')==n['metadata']['name'] and p.get('status',{}).get('phase') not in ('Succeeded','Failed') for p in allpods)
@@ -124,27 +154,22 @@ def prepare(A, L, core, selected, journal):
     return [{'TeamID':1,'Namespace':NS,'Pod':POD,'Image':IMAGE}]
 
 
-def rollback_failed_preparation():
+def rollback_failed_preparation(nov14=False):
     A, L = load('assemble-p2-installation-candidate'), load('load-p2-formal-vault')
-    journal=ROOT/'longhorn-source-20261113-team-attachment'
-    need(not (journal/'completed.json').exists(),'successful source material must be retired through the later installation/task cleanup; rollback refused')
-    sent=journal/'native.sent.private.json'
-    if sent.exists():
-        need((journal/'native.exit.json').exists() and A.decode((journal/'native.exit.json').read_bytes())=={'ExitCode':1},'native outcome unknown; rollback refused')
-        argv=A.decode(sent.read_bytes())['Argv']; output=Path(argv[argv.index('--output-directory')+1])
-        need(output.resolve(strict=True)==output and not list(output.iterdir()),'native partial outputs require reconciliation')
+    journal=ROOT/('longhorn-source-20261114-team-attachment' if nov14 else 'longhorn-source-20261113-team-attachment')
+    rollback_native_output(journal,A)
     original=A.decode((journal/'team-attachment.created.private.json').read_bytes())
     site=L.Site(journal,A); base='/api/v1/namespaces/'+NS
-    pods=A.decode(site.call(['get','--raw',base+'/pods']))['items']
+    pods=complete_items(A.decode(site.call(['get','--raw',base+'/pods'])))
     matches=[p for p in pods if p['metadata']['name']==POD]
     if matches:
         current=matches[0]
-        need(current['metadata']['uid']==original['metadata']['uid'] and current['spec']==original['spec'],'attachment changed; deletion refused')
+        check_recorded_attachment(current,original)
         options={'apiVersion':'v1','kind':'DeleteOptions','propagationPolicy':'Orphan',
                  'preconditions':{'uid':current['metadata']['uid'],'resourceVersion':current['metadata']['resourceVersion']}}
         site.send('team-attachment-delete',['delete','--raw',base+'/pods/'+POD,'-f','-'],json.dumps(options).encode())
         deadline=time.monotonic()+90
-        while any(p['metadata']['name']==POD for p in A.decode(site.call(['get','--raw',base+'/pods']))['items']):
+        while any(p['metadata']['name']==POD for p in complete_items(A.decode(site.call(['get','--raw',base+'/pods'])))):
             need(time.monotonic()<deadline,'attachment deletion unconfirmed'); time.sleep(2)
     def read(path): return A.decode(site.call(['get','--raw',path]))
     check_binding(read('/api/v1/namespaces/'+NS),read(base+'/persistentvolumeclaims/'+CLAIM),read('/api/v1/persistentvolumes/'+PV))
@@ -157,9 +182,10 @@ if __name__=='__main__':
         import argparse
         parser=argparse.ArgumentParser(description=__doc__)
         parser.add_argument('--rollback-failed-preparation',action='store_true')
+        parser.add_argument('--nov14',action='store_true')
         args=parser.parse_args()
         os.umask(0o077)
-        if args.rollback_failed_preparation: rollback_failed_preparation()
+        if args.rollback_failed_preparation: rollback_failed_preparation(args.nov14)
         else: load('prepare-p2-longhorn-provider-loaded').main(team_attachment=True)
     except Exception as error:
         raise SystemExit('P2_TEAM_ATTACHMENT_UNCONFIRMED '+(str(error) if isinstance(error,ValueError) else type(error).__name__))
