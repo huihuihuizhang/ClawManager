@@ -209,6 +209,42 @@ func sameBootstrapSourceSQL(a, b *bootstrapSourceSQLFacts) bool {
 	return a != nil && b != nil && !b.clock.Before(a.clock) && reflect.DeepEqual(a.inventory, b.inventory) && reflect.DeepEqual(a.metadata, b.metadata) && reflect.DeepEqual(a.bindings, b.bindings) && reflect.DeepEqual(a.pods, b.pods)
 }
 
+// Diagnostic category only: the exact comparison and refusal remain unchanged.
+// Never include source values, identifiers, credentials or private rows.
+func bootstrapSourceSQLChange(a, b *bootstrapSourceSQLFacts) string {
+	if a == nil || b == nil {
+		return "missing"
+	}
+	if b.clock.Before(a.clock) {
+		return "clock"
+	}
+	if !reflect.DeepEqual(a.inventory.Users, b.inventory.Users) {
+		return "users"
+	}
+	if !reflect.DeepEqual(a.inventory.Instances, b.inventory.Instances) {
+		return "instances"
+	}
+	if !reflect.DeepEqual(a.inventory.TeamFacts, b.inventory.TeamFacts) {
+		return "team"
+	}
+	if !reflect.DeepEqual(a.inventory.Skills, b.inventory.Skills) {
+		return "skills"
+	}
+	if !reflect.DeepEqual(a.inventory, b.inventory) {
+		return "inventory_other"
+	}
+	if !reflect.DeepEqual(a.metadata, b.metadata) {
+		return "metadata"
+	}
+	if !reflect.DeepEqual(a.bindings, b.bindings) {
+		return "bindings"
+	}
+	if !reflect.DeepEqual(a.pods, b.pods) {
+		return "pods"
+	}
+	return "none"
+}
+
 // Policy selection is a runtime requirement. The whole original SQL projection
 // and every image/owner fact remain intact. Only the original explicitly signed
 // two-source test scope may defer these runtime policy matches.

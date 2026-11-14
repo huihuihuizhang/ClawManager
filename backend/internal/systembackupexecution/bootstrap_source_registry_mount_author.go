@@ -289,7 +289,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 		return zero, writerAPIReadFailure(install.ErrInstall, x.physical, "mount_sql_recheck_read", "SourceSQL", err)
 	}
 	if !sameBootstrapSourceSQL(firstSQL, lastSQL) {
-		return zero, writerAPIReadFailure(install.ErrInstall, x.physical, "mount_sql_recheck_changed", "SourceSQL", nil)
+		return zero, writerAPIReadFailure(install.ErrInstall, x.physical, "mount_sql_recheck_changed_"+bootstrapSourceSQLChange(firstSQL, lastSQL), "SourceSQL", nil)
 	}
 	phase = "writer_api_recheck"
 	lastAPI, err := x.readWriterAPI(x.physical, clients, lastSQL.inventory.Instances)
