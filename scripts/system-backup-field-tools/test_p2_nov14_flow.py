@@ -34,6 +34,7 @@ class FlowTest(unittest.TestCase):
         self.M.renewed_scope=lambda A,original:original
         self.M.renewed_relay=lambda A,N,original:original
         self.M.renewed_team_writer=lambda A,original:original
+        self.M.capture_resource_types=lambda A,original:original
         def put(path,value):path.parent.mkdir(parents=True,exist_ok=True);return self.A.retain(path,value)
         self.put=put
         self.binaries={n:{'SHA256':self.A.sha(n.encode())} for n in ('system-backup-source-registries','system-backup-first-install-materials','system-backup-v2-controller')}
@@ -126,7 +127,7 @@ class FlowTest(unittest.TestCase):
         self.run_flow()
         previous=(self.journal/'delivery-plan.private.json').read_bytes()
         source=(self.M.SOURCE_JOURNAL/'completed.json').read_bytes()
-        self.put(self.journal/'delivery-plan.release.private.json',self.A.decode(previous))
+        self.put(self.journal/'delivery-plan.resource-rules.private.json',self.A.decode(previous))
         build=self.A.decode((self.package/'BUILD_RECEIPT.json').read_bytes());build['LinkedBuildIdentity']={'Version':'release','Commit':'a'*40}
         (self.package/'BUILD_RECEIPT.json').write_bytes(self.A.encode(build))
         self.image='10.130.14.23:5000/clawmanager@sha256:'+'b'*64
@@ -138,9 +139,9 @@ class FlowTest(unittest.TestCase):
         self.run_flow();self.run_flow()
         self.assertEqual(len(self.native_calls),3)
         self.assertEqual((self.journal/'delivery-plan.private.json').read_bytes(),previous)
-        self.assertEqual((self.journal/'delivery-plan.release.private.json').read_bytes(),previous)
+        self.assertEqual((self.journal/'delivery-plan.resource-rules.private.json').read_bytes(),previous)
         self.assertEqual((self.M.SOURCE_JOURNAL/'completed.json').read_bytes(),source)
-        self.assertTrue((self.journal/'loaded.resource-rules.json').exists())
+        self.assertTrue((self.journal/'loaded.resource-selections.json').exists())
         self.assertEqual(self.dep['spec']['template']['spec']['containers'][0]['image'],self.image)
     def test_native_window_serialization_is_equivalent_but_extension_is_rejected(self):
         self.fail='normalized-window';now=self.now.replace(microsecond=81450)

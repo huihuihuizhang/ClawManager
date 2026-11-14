@@ -73,7 +73,7 @@ func sourceInventoryRuleProjection(types []productionResourceType, status authzv
 	}
 	// Exact read-only roster provisioned for the source graph; no wildcard,
 	// stream, subresource, write, impersonation or foreign review permission.
-	extra := map[string]bool{"/endpoints": true, "apps/statefulsets": true, "apps/daemonsets": true,
+	extra := map[string]bool{"/endpoints": true, "apps/statefulsets": true, "apps/daemonsets": true, "apps/replicasets": true,
 		"batch/jobs": true, "batch/cronjobs": true, "autoscaling/horizontalpodautoscalers": true,
 		"networking.k8s.io/ingresses": true, "coordination.k8s.io/leases": true,
 		"storage.k8s.io/storageclasses": true, "snapshot.storage.k8s.io/volumesnapshots": true,

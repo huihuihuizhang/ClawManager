@@ -55,6 +55,19 @@ class CredentialsTest(unittest.TestCase):
             old[key]=self.pin('relay-old-'+key);new[key]=self.pin('relay-new-'+key)
         return old,new
 
+    def test_capture_keeps_deployment_and_replica_set_writer_discovery(self):
+        dep={'Part':'deployment_resources','Group':'apps','Version':'v1','Resource':'deployments','LabelSelector':''}
+        rs=dict(dep,Resource='replicasets')
+        original={'Materials':{'ResourceTypes':[dep,rs],'Discovery':{'ReplicaSets':'unchanged'}},'Scope':[1,2,3,7,8]}
+        before=copy.deepcopy(original)
+        actual=self.C.capture_resource_types(self.A,original)
+        self.assertEqual(actual['Materials']['ResourceTypes'],[dep])
+        self.assertEqual(actual['Materials']['Discovery'],original['Materials']['Discovery'])
+        self.assertEqual(actual['Scope'],original['Scope']);self.assertEqual(original,before)
+        self.assertEqual(self.C.capture_resource_types(self.A,actual),actual)
+        original['Materials']['ResourceTypes'][1]['LabelSelector']='unexpected'
+        with self.assertRaises(ValueError):self.C.capture_resource_types(self.A,original)
+
     def test_team_writer_uses_real_publication_and_refuses_unrelated_image(self):
         manifest=self.pin('business-manifest');config=self.pin('business-config')
         image='registry/app@sha256:'+manifest['SHA256']

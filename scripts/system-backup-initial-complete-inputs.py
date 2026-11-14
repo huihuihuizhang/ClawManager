@@ -550,7 +550,7 @@ def material_template(m, stages, assembly, core, directory, host, app, data, red
                 "StagingClaim": core["staging_claim"], "NodeName": core["workspace"]["node"], "DeadlineSeconds": 300,
                 "WorkerControl": {"URL": core["control_url"], "BoundPodIdentity": True}}}
     resources = [{"Part": "deployment_resources", "Group": group, "Version": version, "Resource": resource, "LabelSelector": ""}
-        for group, version, resource in (("apps", "v1", "deployments"), ("apps", "v1", "replicasets"), ("", "v1", "pods"), ("", "v1", "services"), ("", "v1", "configmaps"), ("", "v1", "persistentvolumeclaims"),
+        for group, version, resource in (("apps", "v1", "deployments"), ("", "v1", "pods"), ("", "v1", "services"), ("", "v1", "configmaps"), ("", "v1", "persistentvolumeclaims"),
             ("rbac.authorization.k8s.io", "v1", "roles"), ("rbac.authorization.k8s.io", "v1", "rolebindings"), ("", "v1", "serviceaccounts"), ("networking.k8s.io", "v1", "networkpolicies"))]
     resources.append({"Part": "secret_bundle", "Group": "", "Version": "v1", "Resource": "secrets", "LabelSelector": ""})
     return {"Version": "original-six-part-capture-materials.v1", "Revision": "original-first-source.v1", "InstallationID": core["installation_id"], "ControllerOwner": core["controller_owner"],

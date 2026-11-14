@@ -22,7 +22,7 @@ func TestSourceInventoryRulesKeepCapturedCoverageAndFiniteTopology(t *testing.T)
 				{Verbs: []string{"get"}, APIGroups: []string{""}, Resources: []string{"nodes"}, ResourceNames: []string{"node1"}},
 				{Verbs: []string{"get"}, APIGroups: []string{""}, Resources: []string{"persistentvolumes"}, ResourceNames: []string{"source-pv"}},
 				{Verbs: []string{"get"}, APIGroups: []string{""}, Resources: []string{"namespaces"}, ResourceNames: []string{"source"}},
-				{Verbs: []string{"get", "list"}, APIGroups: []string{"apps"}, Resources: []string{"statefulsets", "daemonsets"}},
+				{Verbs: []string{"get", "list"}, APIGroups: []string{"apps"}, Resources: []string{"statefulsets", "daemonsets", "replicasets"}},
 				{Verbs: []string{"create"}, APIGroups: []string{"authorization.k8s.io"}, Resources: []string{"selfsubjectrulesreviews"}},
 			}}
 			switch fault {
