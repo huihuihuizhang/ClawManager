@@ -54,7 +54,7 @@ def set_replicas(name,count):
         # Each attempt has a distinct, durable request; never overwrite an unknown send.
         attempts=ROOT/'deployment-requests';attempts.mkdir(mode=0o700,exist_ok=True)
         record=attempts/(name+'-'+str(time.time_ns())+'.json');retain(record,patch)
-        kube(['patch','deployment',name,'--type=json','-p',json.dumps(patch)])
+        kube(['patch','deployment',name,'--type=json','-p',json.dumps(patch),'-o','json'])
     return original
 
 def drained():

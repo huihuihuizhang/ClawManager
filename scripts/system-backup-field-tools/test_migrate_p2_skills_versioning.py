@@ -71,5 +71,12 @@ class MigrationTest(unittest.TestCase):
         self.assertEqual(M.guarded_spec(original,current,count)[-1]['value'],count)
         current['spec']['template']['image']='foreign'
         with self.assertRaisesRegex(ValueError,'specification changed'):M.guarded_spec(original,current,count)
+    def test_scale_request_explicitly_reads_json_response(self):
+        name='clawmanager-app';uid,count=M.WRITERS[name]
+        original={'metadata':{'name':name,'uid':uid,'resourceVersion':'7'},'spec':{'replicas':count,'template':{'image':'original'}}}
+        M.retain(self.root/(name+'.before.private.json'),original)
+        with patch.object(M,'get',return_value=original),patch.object(M,'kube',return_value={}) as call:
+            M.set_replicas(name,0)
+            self.assertEqual(call.call_args.args[0][-2:],['-o','json'])
 
 if __name__=='__main__':unittest.main()
