@@ -68,7 +68,7 @@ def owner_ttl(A,F,site,records,owner,token,workload,until):
         finally:connection.close()
 
 def run(package,attempt):
-    A,C,L,H,R,T,N,F,O=[load(n) for n in ('assemble-p2-installation-candidate','continue-p2-nov14','load-p2-formal-vault','prepare-p2-longhorn-provider-loaded','resume-p2-recovered-source','resume-p2-tenant-team-source','renew-p2-source-preparation','p2-vault-local-forward','build-p2-controller-overlay')]
+    A,C,L,H,R,T,N,F,O,D=[load(n) for n in ('assemble-p2-installation-candidate','continue-p2-nov14','load-p2-formal-vault','prepare-p2-longhorn-provider-loaded','resume-p2-recovered-source','resume-p2-tenant-team-source','renew-p2-source-preparation','p2-vault-local-forward','build-p2-controller-overlay','p2-source-dns')]
     for name in ('kubectl','ctr','unshare','mount','python3'):A.need(shutil.which(name),'required executable missing: '+name)
     build=A.decode((package/'BUILD_RECEIPT.json').read_bytes());A.need(build['SourceRevision']==(package/'SOURCE_REVISION').read_text().strip(),'package revision mismatch')
     for name in O.TOOLS:A.read({'File':str(package/name),'SHA256':build['Binaries'][name]['SHA256']},256<<20)
@@ -112,6 +112,9 @@ def run(package,attempt):
         L.verify_metadata(A,F,site,records,observer,token,minted['Workload'],until)
     else:
         A.need(not (C.JOURNAL/'mint/native.sent.private.json').exists(),'metadata mint outcome unknown; reconcile before image build')
+        pod=H.current_controller(site,A,L,selected,allowed[0])
+        endpoints=[(c['Purpose'],c['Endpoint']) for c in selected['Connections'] if (urlsplit(c['Endpoint']).hostname or '').endswith('.'+A.NS+'.svc')]
+        dns=D.SourceDNS(site,records,pod,endpoints,A.retain);dns.probe()
         writer=A.obj(parent['VaultWriterSelection']);dep=writer['PreAdoptionVaultDependencies'][0];owner=A.obj(dep['InstalledObserver'])
         owner_ttl(A,F,site,records,owner,A.read({'File':owner['TokenFile'],'SHA256':owner['TokenSHA256']}),dep['Workload'],until)
     space=registry_and_space(A,O,package,build)

@@ -160,6 +160,21 @@ class FlowTest(unittest.TestCase):
         self.args.source_attempt=2
         with self.expire(),self.assertRaisesRegex(ValueError,'facts already produced'):self.run_flow()
         self.assertEqual(len(self.native_calls),3)
+    def test_collected_live_source_cannot_report_prepared(self):
+        self.run_flow();done=self.A.decode((self.M.SOURCE_JOURNAL/'completed.json').read_bytes())
+        Path(self.A.obj(done['SourceSelection'])['PartsFile']).write_bytes(b'collected')
+        with self.assertRaisesRegex(ValueError,'facts already produced'):self.run_flow()
+        self.assertEqual(len(self.native_calls),3)
+    def test_expired_unissued_draft_can_continue_in_new_attempt(self):
+        original_probe=DNS.probe
+        def fail_source(dns):
+            if (self.M.SOURCE_JOURNAL/'definition.private.json').exists():raise ValueError('DNS failed before source invocation')
+        with patch.object(DNS,'probe',fail_source):
+            with self.assertRaisesRegex(ValueError,'DNS failed'):self.run_flow()
+        self.assertFalse((self.M.SOURCE_JOURNAL/'author.sent.private.json').exists())
+        self.args.source_attempt=2
+        with self.expire():self.run_flow()
+        self.assertEqual(self.native_calls.count('author-initial-source-inputs'),1)
     def test_successor_refuses_unexpired_source(self):
         self.run_flow();self.args.source_attempt=2
         with self.assertRaisesRegex(ValueError,'must expire'):self.run_flow()

@@ -2,12 +2,13 @@ import contextlib
 import importlib.util
 import io
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
 from types import SimpleNamespace as NS
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 HERE=Path(__file__).parent
 def load(name):
@@ -98,6 +99,15 @@ class PreflightTest(unittest.TestCase):
         self.P.owner_ttl.side_effect=ValueError('owner expired')
         with self.assertRaisesRegex(ValueError,'owner expired'):self.run_preflight()
         self.assertFalse(self.space_checks)
+    def test_source_dns_failure_stops_before_image_and_issuance(self):
+        def refused():raise ValueError('source DNS failed')
+        self.f.modules['p2-source-dns']=NS(SourceDNS=lambda *a:NS(probe=refused))
+        with self.assertRaisesRegex(ValueError,'source DNS failed'):self.run_preflight()
+        self.assertFalse(self.owner_checks or self.space_checks)
+    def test_original_controller_drift_stops_before_vault_and_image(self):
+        self.f.H.current_controller=lambda *a:(_ for _ in ()).throw(ValueError('controller changed'))
+        with self.assertRaisesRegex(ValueError,'controller changed'):self.run_preflight()
+        self.assertFalse(self.owner_checks or self.space_checks)
     def test_registry_failure_stops_without_image_or_mutation(self):
         self.P.registry_and_space.side_effect=ValueError('registry unavailable')
         with self.assertRaisesRegex(ValueError,'registry unavailable'):self.run_preflight()
@@ -106,6 +116,17 @@ class PreflightTest(unittest.TestCase):
         script=(HERE/'run-p2-team-continuation.sh').read_text()
         self.assertLess(script.index('preflight-p2-team-continuation.py'),script.index('build-p2-controller-overlay.py'))
         self.assertIn('preflight-p2-team-continuation.py "$@"',script)
+
+class PrivateExecutableTest(unittest.TestCase):
+    def test_shell_executable_mode_passes_actual_posix_pin_policy(self):
+        A=load('assemble-p2-installation-candidate');raw=b'executable';file=MagicMock()
+        file.is_absolute.return_value=True;file.is_symlink.return_value=False;file.is_file.return_value=True;file.resolve.return_value=file;file.read_bytes.return_value=raw
+        mode=int(re.search(r'chmod ([0-7]+)',(HERE/'run-p2-team-continuation.sh').read_text()).group(1),8)
+        with patch.object(A,'os',NS(name='posix')),patch.object(A,'Path',return_value=file):
+            file.stat.return_value=NS(st_mode=mode,st_size=len(raw))
+            self.assertEqual(A.read({'File':'/tool','SHA256':A.sha(raw)}),raw)
+            file.stat.return_value.st_mode=0o755
+            with self.assertRaisesRegex(ValueError,'private runtime input'):A.read({'File':'/tool','SHA256':A.sha(raw)})
 
 class SpaceTest(unittest.TestCase):
     def test_owner_zero_ttl_only_accepts_nonexpiring_identity(self):

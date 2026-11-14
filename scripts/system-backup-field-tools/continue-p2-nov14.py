@@ -41,6 +41,8 @@ def controller_ref(A,site,L,selected,desired):
 def live_source(A, done, now=None):
     selected=A.obj(done['SourceSelection'])
     if 'Receipt' in done:A.need(A.obj(done['Receipt'])['SourceSelection']==done['SourceSelection'],'retained source receipt chain differs')
+    for key in ('PartsFile','SourceWritersFile','RedisSourcesFile'):
+        A.need(not selected.get(key) or not Path(selected[key]).exists(),'source facts already produced; use actual task recovery/retirement instead of replay')
     now=now or dt.datetime.now(dt.timezone.utc)
     before=dt.datetime.fromisoformat(selected['NotBefore'].replace('Z','+00:00'))
     until=dt.datetime.fromisoformat(selected['Until'].replace('Z','+00:00'))
@@ -62,11 +64,21 @@ def select_attempt(A, number, stage_attachment=True):
         if (previous/'completed.json').exists():
             done=A.decode((previous/'completed.json').read_bytes());receipt=A.obj(done['Receipt'])
             A.need(receipt['SourceSelection']==done['SourceSelection'],'previous source receipt chain differs')
-        else:
+        elif (previous/'author.sent.private.json').exists():
             A.need(A.decode((previous/'author.exit.json').read_bytes())=={'ExitCode':0},'previous source outcome unknown; reconcile before successor')
             receipt=A.decode((previous/'author.receipt.private.json').read_bytes())
-        A.need(receipt['GrantsIssued'] is False and receipt['BackupReady'] is False,'previous source must remain unissued')
-        selected=A.obj(receipt['SourceSelection'])
+        else:
+            # A retained draft with no native sent marker cannot have issued source material.
+            draft=A.decode((previous/'definition.private.json').read_bytes())
+            oldout=paths(number-1)[2]
+            A.need((not oldout.exists() or (oldout.resolve()==oldout and oldout.is_dir() and not list(oldout.iterdir()))) and
+                   not (oldmount/'native.sent.private.json').exists() and not (oldmount/'completed.json').exists(),
+                   'unissued draft has unexpected outputs; reconcile before successor')
+            receipt=None
+        if receipt is not None:
+            A.need(receipt['GrantsIssued'] is False and receipt['BackupReady'] is False,'previous source must remain unissued')
+            selected=A.obj(receipt['SourceSelection'])
+        else:selected={'Until':draft['Until']}
         A.need(dt.datetime.now(dt.timezone.utc)>=dt.datetime.fromisoformat(selected['Until'].replace('Z','+00:00')),'previous source must expire before a successor attempt')
         selections=[selected]
         if (oldmount/'completed.json').exists():
