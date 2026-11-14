@@ -24,7 +24,7 @@ func (x sourceMetadataReadAccess) resourceMetadata(ctx context.Context, clients 
 	}
 	s, m := x.service, x.service.captureMaterials
 	rules, err := clients.API.AuthorizationV1().SelfSubjectRulesReviews().Create(ctx, &authzv1.SelfSubjectRulesReview{Spec: authzv1.SelfSubjectRulesReviewSpec{Namespace: s.Config.Namespace}}, metav1.CreateOptions{})
-	if err != nil || !sourceMetadataResourceRules(m.ResourceTypes, rules.Status) {
+	if err != nil || !sourceInventoryResourceRules(ctx, clients.API, s.Config, *m, rules.Status) {
 		return zero, zero, d.ErrNotReady
 	}
 	parts := map[string]*worker.ResourceCaptureSpec{}

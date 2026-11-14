@@ -20,7 +20,7 @@ func (x *bootstrapSourceRegistryReader) readResourceMetadata(ctx context.Context
 	}
 	m := &x.materials
 	rules, err := clients.API.AuthorizationV1().SelfSubjectRulesReviews().Create(ctx, &authzv1.SelfSubjectRulesReview{Spec: authzv1.SelfSubjectRulesReviewSpec{Namespace: x.config.Namespace}}, metav1.CreateOptions{})
-	if err != nil || !sourceMetadataResourceRules(m.ResourceTypes, rules.Status) {
+	if err != nil || !sourceInventoryResourceRules(ctx, clients.API, x.config, *m, rules.Status) {
 		return zero, zero, install.ErrInstall
 	}
 	parts := map[string]*worker.ResourceCaptureSpec{}

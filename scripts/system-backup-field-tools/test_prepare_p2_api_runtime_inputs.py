@@ -56,7 +56,7 @@ class ActualAPIAndInstalledOwner(unittest.TestCase):
     def test_metadata_permissions_never_allow_source_or_task_mutation(self):
         for provider in [False, True]:
             for rule in m.readonly_rules(provider):
-                self.assertLessEqual(set(rule['verbs']), {'get', 'list', 'watch'})
+                self.assertEqual(set(rule['verbs']), {'get', 'list'})
                 self.assertNotIn('*', rule['resources'])
                 self.assertNotIn('*', rule['apiGroups'])
                 self.assertNotIn('pods/exec', rule['resources'])

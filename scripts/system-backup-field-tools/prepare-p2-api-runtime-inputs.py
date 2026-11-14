@@ -45,7 +45,7 @@ def load(directory, name):
 def readonly_rules(provider=False):
     if provider:
         return [dict(apiGroups=['longhorn.io'], resources=['volumes', 'engines', 'replicas', 'nodes', 'sharemanagers'], verbs=['get', 'list'])]
-    return [dict(apiGroups=[group], resources=resources, verbs=['get', 'list', 'watch']) for group, resources in (
+    return [dict(apiGroups=[group], resources=resources, verbs=['get', 'list']) for group, resources in (
         ('', ['pods', 'services', 'serviceaccounts', 'configmaps', 'secrets', 'persistentvolumeclaims', 'endpoints']),
         ('apps', ['deployments', 'replicasets', 'statefulsets', 'daemonsets']),
         ('batch', ['jobs', 'cronjobs']), ('autoscaling', ['horizontalpodautoscalers']),
