@@ -28,61 +28,76 @@ func (x *bootstrapSourceRegistryReader) observeRegistries() (time.Time, time.Tim
 // Shared real collection only. The Installer producer exports the resulting
 // DATA before final config/grant signing; the enrolled consumer independently
 // repeats this collection and compares exact signed file pins afterwards.
-func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstrapSourceRegistryFacts, error) {
+func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (_ *bootstrapSourceRegistryFacts, resultErr error) {
+	phase := "facts_authority"
+	defer func() { resultErr = writerAPIReadFailure(resultErr, x.physical, phase, "SourceFacts", nil) }()
 	if p, ok := x.access.(*install.BootstrapSourceRegistryAuthoring); ok && p.RecheckAuthority(x.ctx) != nil {
 		return nil, install.ErrInstall
 	}
 	f := &bootstrapSourceRegistryFacts{}
 	var err error
+	phase = "facts_sql"
 	f.firstSQL, err = x.readSourceSQL()
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_clients"
 	clients, err := x.openMetadataClients()
 	if err != nil {
 		return nil, err
 	}
 	defer clients.Close()
+	phase = "facts_team_census"
 	teamFirst, err := readTeamZeroCensus(x.physical, x.materials, f.firstSQL.inventory.TeamFacts.SharedFiles, bootstrapTeamSourceAuthority{x}, x.config, clients, nil)
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_skills"
 	skills, err := x.readSkillObjectMetadata(x.physical, clients, f.firstSQL.inventory.Skills)
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_resources"
 	deployment, secrets, err := x.readResourceMetadata(x.physical, clients)
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_redis_binding"
 	redisBinding, err := x.connection("source_redis")
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_redis"
 	redis, err := root.ObserveSourceRedisMetadata(x.physical, clients.Redis, x.materials.Discovery.Redis, redisBinding.Account, x.checkPhysical)
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_writer_api"
 	f.firstAPI, err = x.readWriterAPI(x.physical, clients, f.firstSQL.inventory.Instances)
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_vault"
 	dependencies, err := x.observeBootstrapVaultDependencies(clients)
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_native"
 	native, err := x.readNativeWriters(f.firstSQL, f.firstAPI, clients)
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_participants"
 	participants, err := x.readControlParticipants()
 	if err != nil {
 		return nil, err
 	}
+	phase = "facts_workspace_longhorn"
 	if x.checkRuntimeWorkspace(x.physical, clients.API, f.firstSQL.inventory.Instances, native) != nil ||
 		x.checkOriginalLonghornSources(x.physical, clients, f.firstSQL.inventory) != nil {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_parts"
 	firstParts, err := x.deriveParts(f.firstSQL, clients)
 	if err != nil {
 		return nil, err
@@ -90,54 +105,66 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	if p, ok := x.access.(*install.BootstrapSourceRegistryAuthoring); ok && p.RecheckAuthority(x.ctx) != nil {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_sql_recheck"
 	f.lastSQL, err = x.readSourceSQL()
 	if err != nil || !sameBootstrapSourceSQL(f.firstSQL, f.lastSQL) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_team_recheck"
 	teamLast, err := readTeamZeroCensus(x.physical, x.materials, f.lastSQL.inventory.TeamFacts.SharedFiles, bootstrapTeamSourceAuthority{x}, x.config, clients, nil)
 	if err != nil || !reflect.DeepEqual(teamFirst, teamLast) {
 		return nil, install.ErrInstall
 	}
 	f.teamObjects = teamLast
+	phase = "facts_skills_recheck"
 	lastSkills, err := x.readSkillObjectMetadata(x.physical, clients, f.lastSQL.inventory.Skills)
 	if err != nil || !reflect.DeepEqual(skills, lastSkills) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_resources_recheck"
 	lastDeployment, lastSecrets, err := x.readResourceMetadata(x.physical, clients)
 	if err != nil || !reflect.DeepEqual(deployment, lastDeployment) || !reflect.DeepEqual(secrets, lastSecrets) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_redis_recheck"
 	lastRedis, err := root.ObserveSourceRedisMetadata(x.physical, clients.Redis, x.materials.Discovery.Redis, redisBinding.Account, x.checkPhysical)
 	if err != nil || !reflect.DeepEqual(redis, lastRedis) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_writer_api_recheck"
 	f.lastAPI, err = x.readWriterAPI(x.physical, clients, f.lastSQL.inventory.Instances)
 	if err != nil || !reflect.DeepEqual(f.firstAPI.objects, f.lastAPI.objects) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_vault_recheck"
 	lastDependencies, err := x.observeBootstrapVaultDependencies(clients)
 	if err != nil || !reflect.DeepEqual(dependencies, lastDependencies) {
 		return nil, install.ErrInstall
 	}
 	f.dependencies = lastDependencies
+	phase = "facts_native_recheck"
 	lastNative, err := x.readNativeWriters(f.lastSQL, f.lastAPI, clients)
 	if err != nil || !reflect.DeepEqual(native, lastNative) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_participants_recheck"
 	lastParticipants, err := x.readControlParticipants()
 	if err != nil || !reflect.DeepEqual(participants, lastParticipants) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_parts_workspace_recheck"
 	lastParts, err := x.deriveParts(f.lastSQL, clients)
 	if err != nil || !reflect.DeepEqual(firstParts, lastParts) || x.checkRuntimeWorkspace(x.physical, clients.API, f.lastSQL.inventory.Instances, lastNative) != nil ||
 		x.checkOriginalLonghornSources(x.physical, clients, f.lastSQL.inventory) != nil {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_participant_scope"
 	wantParticipants := append([]string{}, x.config.RuntimeSources.LeaseParticipants...)
 	sort.Strings(wantParticipants)
 	if !reflect.DeepEqual(lastParticipants, wantParticipants) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_team_binding"
 	if err := x.bindObservedTeamSource(f.firstSQL, clients, teamFirst); err != nil {
 		return nil, err
 	}
@@ -147,6 +174,7 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	if !sameBootstrapSourceSQL(f.firstSQL, f.lastSQL) {
 		return nil, install.ErrInstall
 	}
+	phase = "facts_final_authority"
 	f.parts, f.native, f.participants, f.redis, f.skills, f.deployment, f.secrets = lastParts, lastNative, lastParticipants, lastRedis, lastSkills, lastDeployment, lastSecrets
 	if p, ok := x.access.(*install.BootstrapSourceRegistryAuthoring); ok && p.RecheckAuthority(x.ctx) != nil {
 		return nil, install.ErrInstall

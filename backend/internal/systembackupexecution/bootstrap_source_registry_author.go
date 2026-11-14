@@ -27,6 +27,8 @@ type BootstrapSourceRegistryFactsReceipt struct {
 // enabled Forward, fake V2 identity, worker credential, task or success bit.
 func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA string) (_ BootstrapSourceRegistryFactsReceipt, resultErr error) {
 	var zero BootstrapSourceRegistryFactsReceipt
+	phase := "facts_selection"
+	defer func() { resultErr = writerAPIReadFailure(resultErr, ctx, phase, "SourceFacts", nil) }()
 	raw, err := install.ReadPrivateFile(selectionFile, 262144)
 	var selected install.BootstrapSourceAuthoringSelection
 	if err != nil || hash(raw) != selectionSHA || strictBootstrapSourceJSON(raw, &selected) != nil {
@@ -34,31 +36,38 @@ func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *in
 	}
 	// Reject existing/aliased outputs BEFORE original authentication/SQL/native
 	// reads. Writes below remain create-only even after this nonauthorizing check.
+	phase = "facts_outputs"
 	if checkBootstrapSourceFactOutputs(selected.PartsFile, selected.SourceWritersFile) != nil {
 		return zero, install.ErrInstall
 	}
 	if selected.RedisSourcesFile != "" && checkBootstrapSourceRedisOutput(selected.PartsFile, selected.SourceWritersFile, selected.RedisSourcesFile) != nil {
 		return zero, install.ErrInstall
 	}
+	phase = "facts_authority"
 	authority, err := installer.PrepareBootstrapSourceRegistryAuthoring(ctx, password, enrollment, selectionFile, selectionSHA)
 	if err != nil {
 		return zero, install.ErrInstall
 	}
 	defer authority.Close()
+	defer func() { resultErr = writerAPIReadFailure(resultErr, ctx, phase, "SourceFacts", nil) }()
+	phase = "facts_reader"
 	x, err := newBootstrapSourceAuthoringReader(ctx, authority)
 	if err != nil {
 		return zero, install.ErrInstall
 	}
+	phase = "facts_collect"
 	facts, err := x.collectBootstrapSourceFacts()
 	if err != nil {
-		return zero, install.ErrInstall
+		return zero, err
 	}
+	phase = "facts_authority_recheck"
 	selection, target, err := authority.Selection(ctx)
 	if err != nil {
 		return zero, install.ErrInstall
 	}
 	parts := bootstrapSourcePartsRegistry{TeamObjects: facts.teamObjects, SchemaVersion: bootstrapSourcePartsVersion, Installation: target.InstallationID, Version: selection.PartsVersion, Parts: facts.parts, Source: facts.lastSQL.inventory, SQL: facts.lastSQL.metadata, Redis: facts.redis, Skills: facts.skills, Deployment: facts.deployment, Secrets: facts.secrets}
 	writers := bootstrapSourceWritersRegistry{RuntimeTestScope: configuredRuntimeTestScope(x.config).Clone(), SchemaVersion: bootstrapSourceWritersVersion, Installation: target.InstallationID, Version: selection.SourceWritersVersion, ApplicationScope: selection.ApplicationScope, Participants: facts.participants, API: facts.lastAPI.objects, Bindings: facts.lastSQL.bindings, Pods: facts.lastSQL.pods, Native: facts.native, ProviderDependencies: facts.dependencies}
+	phase = "facts_encode"
 	partsRaw, err := ce.Canonical(parts)
 	if err != nil || len(partsRaw) > 262144 {
 		return zero, install.ErrInstall
@@ -72,6 +81,7 @@ func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *in
 		raw  []byte
 	}{{selection.PartsFile, partsRaw}, {selection.SourceWritersFile, writersRaw}}
 	var nativeFiles *BootstrapSourceNativeRegistryFiles
+	phase = "facts_native_registries"
 	if selection.RedisSourcesFile != "" {
 		if x.materials.Discovery.SecretPolicy == nil {
 			return zero, install.ErrInstall
@@ -98,6 +108,7 @@ func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *in
 	// No final metadata/config/grant/scope/self digest appears inside either
 	// fact document. The dependency direction is facts -> final config/grants ->
 	// V2 signature; there is no SHA fixed-point and no provisional V2 grant.
+	phase = "facts_write"
 	for _, file := range outputs {
 		if nativeFiles != nil {
 			raw, err := x.nativeRegistryFile(nativeFiles.SecretAllowlist)

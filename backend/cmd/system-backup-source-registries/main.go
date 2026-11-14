@@ -358,6 +358,13 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if action == "produce-facts" {
 		receipt, err := execution.ProduceOriginalBootstrapSourceRegistries(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"))
 		if err != nil {
+			var failure *execution.WriterAPIReadFailure
+			if errors.As(err, &failure) {
+				_ = json.NewEncoder(out).Encode(struct {
+					Status, Step, Kind, Reason string
+					InstanceID                 int
+				}{"original_source_facts_refused", failure.Step, failure.Kind, failure.Reason, failure.InstanceID})
+			}
 			return 1
 		}
 		if json.NewEncoder(out).Encode(receipt) != nil {
