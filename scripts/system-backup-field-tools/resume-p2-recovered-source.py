@@ -77,8 +77,14 @@ def verify_app(A, site):
 def once(A, dns, directory, label, argv):
     receipt, marker = directory / (label + '.receipt.private.json'), directory / (label + '.sent.private.json')
     if receipt.exists():
-        need(A.decode(marker.read_bytes())['Argv'] == argv and
-             A.decode((directory / (label + '.exit.json')).read_bytes()) == {'ExitCode': 0}, 'retained native invocation differs')
+        sent = A.decode(marker.read_bytes())['Argv']
+        need(sent[1:] == argv[1:] and A.decode((directory / (label + '.exit.json')).read_bytes()) == {'ExitCode': 0}, 'retained native invocation differs')
+        if sent[0] != argv[0]:
+            # A tool-only package repair may relocate the exact same native ELF.
+            # Keep every original argument/output and never resend its success.
+            need(Path(sent[0]).name == Path(argv[0]).name, 'retained native executable differs')
+            digest = A.sha(Path(argv[0]).read_bytes())
+            A.read({'File': sent[0], 'SHA256': digest}, 256 << 20)
         return A.decode(receipt.read_bytes())
     need(not marker.exists(), 'native operation already attempted; retain partial outputs')
     A.retain(marker, {'Argv': argv})

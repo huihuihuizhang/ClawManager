@@ -124,8 +124,8 @@ def live_source(A, done, now=None):
     for key in ('PartsFile','SourceWritersFile','RedisSourcesFile'):
         A.need(not selected.get(key) or not Path(selected[key]).exists(),'source facts already produced; use actual task recovery/retirement instead of replay')
     now=now or dt.datetime.now(dt.timezone.utc)
-    before=dt.datetime.fromisoformat(selected['NotBefore'].replace('Z','+00:00'))
-    until=dt.datetime.fromisoformat(selected['Until'].replace('Z','+00:00'))
+    before=load('renew-p2-source-preparation').moment(selected['NotBefore'])
+    until=load('renew-p2-source-preparation').moment(selected['Until'])
     A.need(done['Until']==selected['Until'] and before<=now<until-dt.timedelta(minutes=10),
            'source expired or less than ten minutes remain; preserve this attempt and use --source-attempt N+1 after expiry; never replay old materials')
     return selected
@@ -159,7 +159,7 @@ def select_attempt(A, number, stage_attachment=True):
             A.need(receipt['GrantsIssued'] is False and receipt['BackupReady'] is False,'previous source must remain unissued')
             selected=A.obj(receipt['SourceSelection'])
         else:selected={'Until':draft['Until']}
-        A.need(dt.datetime.now(dt.timezone.utc)>=dt.datetime.fromisoformat(selected['Until'].replace('Z','+00:00')),'previous source must expire before a successor attempt')
+        A.need(dt.datetime.now(dt.timezone.utc)>=load('renew-p2-source-preparation').moment(selected['Until']),'previous source must expire before a successor attempt')
         selections=[selected]
         if (oldmount/'completed.json').exists():
             old=A.decode((oldmount/'completed.json').read_bytes());A.read(old['Receipt']);selections.append(A.obj(old['SourceSelection']))
@@ -321,10 +321,10 @@ def refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desi
     result=R.once(A,dns,journal,'author',[str(package/'system-backup-first-install-materials'),'author-initial-source-inputs',*old[2:old.index('--definition-file')],'--definition-file',pin['File'],'--definition-sha256',pin['SHA256'],'--output-directory',str(out)])
     actual=A.obj(result['SourceSelection'])
     A.need(result['Version']=='original-initial-source-inputs-authored.v1' and result['GrantsIssued'] is False and result['BackupReady'] is False and actual['Controller']==fresh and
-           actual['Connections']==definition['Connections'] and actual['Until']==definition['Until'] and actual['NotBefore']==definition['NotBefore'] and
+           actual['Connections']==definition['Connections'] and N.moment(actual['Until'])==N.moment(definition['Until']) and N.moment(actual['NotBefore'])==N.moment(definition['NotBefore']) and
            A.obj(result['Deployment'])==definition['Deployment'],'native refreshed source differs')
     changed=copy.deepcopy(api);changed['connection']=new;changed['token_expires_unix']=int(N.moment(response['status']['expirationTimestamp']).timestamp())
-    done={'Version':'p2-nov14-source.v1','Receipt':A.retain(journal/'receipt.private.json',(journal/'author.receipt.private.json').read_bytes()),'Definition':pin,'SourceSelection':result['SourceSelection'],'SourceAPI':A.retain(journal/'source-api-fragment.json',changed),'Controller':fresh,'VaultWriterSelection':parent['VaultWriterSelection'],'Until':definition['Until'],'GrantsIssued':False,'BackupReady':False}
+    done={'Version':'p2-nov14-source.v1','Receipt':A.retain(journal/'receipt.private.json',(journal/'author.receipt.private.json').read_bytes()),'Definition':pin,'SourceSelection':result['SourceSelection'],'SourceAPI':A.retain(journal/'source-api-fragment.json',changed),'Controller':fresh,'VaultWriterSelection':parent['VaultWriterSelection'],'Until':actual['Until'],'GrantsIssued':False,'BackupReady':False}
     controller_ref(A,site,L,{'Controller':fresh},desired)
     live_source(A,done)
     A.retain(donefile,done);print('P2_NOV14_SOURCE_REFRESHED_NO_HOLD',json.dumps(done),flush=True)
@@ -345,7 +345,7 @@ def mount(A,L,H,R,D,site,package,done,fresh,pod,desired):
         print('P2_LONGHORN_SOURCE_ALREADY_AUTHORED_NO_HOLD',json.dumps(complete),flush=True);return
     A.need(not (journal/'native.sent.private.json').exists() or (journal/'native.receipt.private.json').exists(),'mount author outcome unknown; retain outputs')
     selected=live_source(A,done);core=A.obj(A.obj(done['Receipt'])['Deployment'])
-    until=dt.datetime.fromisoformat(selected['Until'].replace('Z','+00:00'))
+    until=load('renew-p2-source-preparation').moment(selected['Until'])
     A.need(dt.datetime.now(dt.timezone.utc)<until-dt.timedelta(minutes=10),'source window insufficient')
     storage=load('prepare-p2-longhorn-source')
     layout=storage.storage_selection(site.get('volumesnapshotclass','sbk-validation-longhorn-local'),site.get('storageclass','longhorn'))

@@ -6,6 +6,7 @@ import datetime as dt
 import importlib.util
 import io
 import json
+import shutil
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace as NS
@@ -100,6 +101,12 @@ class FlowTest(unittest.TestCase):
             self.assertEqual(definition['Controller']['Pod'],'newpod');self.assertNotEqual(definition['Connections'][0]['Credential'],self.A.obj(self.parent['SourceAPI'])['connection']['Credential'])
             core=self.put(out/'deployment.json',definition['Deployment']);material=self.put(out/'materials.json',{**definition['Materials'],'DeploymentConfigSHA256':core['SHA256']})
             selected={k:definition[k] for k in ('Controller','Connections','NotBefore','Until')};selected.update(Deployment=core,MaterialsTemplate=material,PartsFile=str(out/'parts.json'),SourceWritersFile=str(out/'writers.json'),RedisSourcesFile=str(out/'redis.json'))
+            if self.fail in ('normalized-window','changed-window'):
+                for key in ('NotBefore','Until'):
+                    value=selected[key]
+                    if '.' in value:value=value[:-1].rstrip('0')+'Z'
+                    selected[key]=value.replace('Z','+00:00')
+                if self.fail=='changed-window':selected['Until']=(self.N.moment(selected['Until'])+dt.timedelta(microseconds=1)).isoformat()
             if self.fail=='wrong-source-token':selected['Connections']=[]
             return {'Version':'original-initial-source-inputs-authored.v1','GrantsIssued':False,'BackupReady':False,'Deployment':core,'SourceSelection':self.put(out/'source-selection.json',selected)}
         self.assertEqual(action,'prepare-mount-materials');self.assertTrue(self.created)
@@ -130,6 +137,30 @@ class FlowTest(unittest.TestCase):
         self.assertEqual((self.M.SOURCE_JOURNAL/'completed.json').read_bytes(),source)
         self.assertTrue((self.journal/'loaded.release.json').exists())
         self.assertEqual(self.dep['spec']['template']['spec']['containers'][0]['image'],self.image)
+    def test_native_window_serialization_is_equivalent_but_extension_is_rejected(self):
+        self.fail='normalized-window';now=self.now.replace(microsecond=81450)
+        with patch.object(self.T,'window',return_value=(now-dt.timedelta(seconds=5),now+dt.timedelta(minutes=30))):
+            self.run_flow();self.run_flow()
+        self.assertEqual(len(self.native_calls),3)
+
+    def test_native_window_extension_is_rejected(self):
+        self.fail='changed-window'
+        with self.assertRaisesRegex(ValueError,'native refreshed source differs'):self.run_flow()
+        self.assertFalse(self.created)
+
+    def test_repaired_package_reuses_identical_native_success_without_resending(self):
+        self.run_flow();(self.M.SOURCE_JOURNAL/'completed.json').unlink();(self.M.MOUNT_JOURNAL/'completed.json').unlink()
+        successor=self.root/'repaired-package';shutil.copytree(self.package,successor);self.package=successor
+        self.run_flow();self.assertEqual(len(self.native_calls),3)
+
+    def test_relocated_different_native_tool_cannot_reuse_success(self):
+        self.run_flow();journal=self.M.SOURCE_JOURNAL
+        argv=self.A.decode((journal/'author.sent.private.json').read_bytes())['Argv']
+        replacement=self.root/'changed-package'/Path(argv[0]).name;replacement.parent.mkdir();replacement.write_bytes(b'changed native tool')
+        argv[0]=str(replacement)
+        with self.assertRaises(ValueError):self.R.once(self.A,None,journal,'author',argv)
+        self.assertEqual(len(self.native_calls),3)
+
     def test_rollout_failure_resumes_from_live_deployment(self):
         self.fail='rollout'
         with self.assertRaisesRegex(ValueError,'rollout'):self.run_flow()

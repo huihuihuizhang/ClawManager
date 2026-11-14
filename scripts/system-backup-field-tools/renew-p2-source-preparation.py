@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 
@@ -23,6 +24,8 @@ def need(ok, why):
         raise ValueError(why)
 
 def moment(value):
+    # Python 3.10 accepts only 3/6 fractional digits; Go removes trailing zeros.
+    value=re.sub(r'\.(\d{1,6})(?=Z$|[+-]\d{2}:\d{2}$)',lambda m:'.'+m.group(1).ljust(6,'0'),value)
     return dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
 
 def preparation_window(now, token_until, observer_until, agent_until):
