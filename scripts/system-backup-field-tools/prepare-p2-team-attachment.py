@@ -94,6 +94,12 @@ def check_binding(ns, pvc, pv):
          pv['spec']['csi']['driver']=='driver.longhorn.io' and pv['spec']['csi']['volumeHandle']==PV, 'team PV binding changed')
 
 
+def check_attachment_capacity(node, allpods):
+    need(node['metadata']['name']=='node1','exact attachment node required')
+    used=sum(p['spec'].get('nodeName')=='node1' and p.get('status',{}).get('phase') not in ('Succeeded','Failed') for p in allpods)
+    need(int(node['status']['allocatable']['pods'])-used>=2,'insufficient node1 Pod capacity for attachment and share manager')
+
+
 def prepare(A, L, core, selected, journal):
     site = L.Site(journal,A)
     def read(path): return A.decode(site.call(['get','--raw',path]))
@@ -124,12 +130,11 @@ def prepare(A, L, core, selected, journal):
     else:
         need(not record.exists(),'recorded attachment disappeared; do not recreate')
         nodes=complete_items(read('/api/v1/nodes')); allpods=complete_items(read('/api/v1/pods'))
-        for n in nodes:
-            if n['metadata']['name'] not in ('node1','k8s-master'): continue
-            used=sum(p['spec'].get('nodeName')==n['metadata']['name'] and p.get('status',{}).get('phase') not in ('Succeeded','Failed') for p in allpods)
-            need(int(n['status']['allocatable']['pods'])-used>=2,'insufficient Pod capacity for attachment and share manager')
         node=next(n for n in nodes if n['metadata']['name']=='node1')
         need(node['metadata']['uid']==core['worker_security']['node_uids']['node1'],'installed node identity changed')
+        # This consumer is pinned to node1. Reserve both required Pod slots there;
+        # a full unrelated node must not prevent the scheduler using node1.
+        check_attachment_capacity(node,allpods)
         A.retain(journal/'team-attachment.binding.private.json',{'Namespace':ns,'PVC':pvc,'PV':pv,'ServiceAccount':sa})
         raw=json.dumps(request).encode()
         dry=A.decode(site.call(['-n',NS,'create','--dry-run=server','-f','-','-o','json'],raw))

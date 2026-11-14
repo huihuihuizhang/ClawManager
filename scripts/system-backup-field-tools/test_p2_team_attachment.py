@@ -9,6 +9,17 @@ path=Path(__file__).with_name('prepare-p2-team-attachment.py')
 spec=importlib.util.spec_from_file_location('attachment',path)
 M=importlib.util.module_from_spec(spec);spec.loader.exec_module(M)
 class AttachmentTest(unittest.TestCase):
+    def test_full_master_does_not_block_node1_with_two_slots(self):
+        node={'metadata':{'name':'node1'},'status':{'allocatable':{'pods':'110'}}}
+        pods=[{'spec':{'nodeName':n},'status':{'phase':'Running'}} for n,count in [('k8s-master',110),('node1',108)] for _ in range(count)]
+        M.check_attachment_capacity(node,pods)
+        pods.append({'spec':{'nodeName':'node1'},'status':{'phase':'Running'}})
+        with self.assertRaisesRegex(ValueError,'node1 Pod capacity'):M.check_attachment_capacity(node,pods)
+    def test_terminal_pods_do_not_consume_attachment_capacity(self):
+        node={'metadata':{'name':'node1'},'status':{'allocatable':{'pods':'2'}}}
+        M.check_attachment_capacity(node,[{'spec':{'nodeName':'node1'},'status':{'phase':s}} for s in ('Succeeded','Failed')])
+        node['metadata']['name']='k8s-master'
+        with self.assertRaisesRegex(ValueError,'exact attachment node'):M.check_attachment_capacity(node,[])
     def test_manifest_is_read_only_and_has_no_identity_token(self):
         p=M.manifest()['spec']; c=p['containers'][0]
         self.assertFalse(p['automountServiceAccountToken'])
