@@ -53,7 +53,7 @@ func TestSourceInventoryRulesKeepCapturedCoverageAndFiniteTopology(t *testing.T)
 			case "evaluation-error":
 				rules.EvaluationError = "not complete"
 			}
-			got := sourceInventoryRuleProjection(types, rules, map[string]bool{"source": true}, map[string]string{"node1": "node-uid"}, map[string]bool{"source-pv": true})
+			got := sourceInventoryRuleProjection(types, rules, map[string]bool{"source": true}, map[string]string{"node1": "node-uid"}, map[string]bool{"source-pv": true}, false)
 			if got != (fault == "valid") {
 				t.Fatal("source graph permission mismatch", fault)
 			}
@@ -97,5 +97,23 @@ func TestSourceInventoryPVPermissionsComeFromCompleteLiveSourceClaims(t *testing
 				t.Fatal("live claim policy mismatch", fault)
 			}
 		})
+	}
+}
+
+func TestSourceInventoryVaultListsAreReadOnlyAndDependencyBound(t *testing.T) {
+	types := []productionResourceType{{Resource: "configmaps"}}
+	for _, target := range [][2]string{{"", "persistentvolumes"}, {"storage.k8s.io", "volumeattachments"}, {"discovery.k8s.io", "endpointslices"}} {
+		for _, vault := range []bool{false, true} {
+			for _, verb := range []string{"list", "get", "watch", "patch"} {
+				rules := authzv1.SubjectRulesReviewStatus{ResourceRules: []authzv1.ResourceRule{
+					{Verbs: []string{"get", "list"}, APIGroups: []string{""}, Resources: []string{"configmaps"}},
+					{Verbs: []string{verb}, APIGroups: []string{target[0]}, Resources: []string{target[1]}},
+				}}
+				got := sourceInventoryRuleProjection(types, rules, nil, nil, nil, vault)
+				if got != (vault && verb == "list") {
+					t.Fatal(target, vault, verb, got)
+				}
+			}
+		}
 	}
 }

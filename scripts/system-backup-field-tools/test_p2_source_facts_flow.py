@@ -29,7 +29,7 @@ class SourceFactsFlowTest(unittest.TestCase):
         self.A.retain(self.C.SOURCE_JOURNAL/'author.sent.private.json',{'Argv':['old','author','--plan-file','actual-plan','--definition-file','definition']})
         pod={'metadata':{'uid':'pod-uid'},'spec':{'volumes':[{'name':'provider-dependency-input','secret':{'secretName':'provider'}}]}}
         site=NS(get=lambda kind,name:pod if kind=='pod' else secret)
-        self.dns=NS(probe=Mock());self.events=[];runner=object()
+        self.dns=NS(probe=Mock());self.events=[];runner=NS(provider_local_forward='127.0.0.1:23456')
         @contextmanager
         def access(*args):
             self.events.append('transport-open')
@@ -46,7 +46,7 @@ class SourceFactsFlowTest(unittest.TestCase):
     def test_original_outputs_feed_native_with_private_transport(self):
         self.assertEqual(self.run_flow(),self.receipt)
         argv=self.R.once.call_args.args[-1]
-        self.assertEqual(argv[1:],['produce-facts','--plan-file','actual-plan','--source-selection-file',self.selection['File'],'--source-selection-sha256',self.selection['SHA256']])
+        self.assertEqual(argv[1:],['produce-facts','--plan-file','actual-plan','--source-selection-file',self.selection['File'],'--source-selection-sha256',self.selection['SHA256'],'--provider-local-forward','127.0.0.1:23456'])
         self.assertEqual(self.events,['transport-open','transport-closed']);self.dns.probe.assert_called_once()
     def test_expired_source_stops_before_native(self):
         self.C.live_source.side_effect=ValueError('source expired')

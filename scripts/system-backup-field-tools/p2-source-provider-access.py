@@ -20,16 +20,10 @@ def inputs(A, dependency, secret):
            'exact existing provider material and endpoint required')
     return observer,raw,token
 
-def hosts_file(A, raw, hostname):
-    A.need(0<len(raw)<1<<20 and b'\x00' not in raw, 'bounded host table required')
-    for line in raw.decode('ascii').splitlines():
-        A.need(hostname not in line.split('#',1)[0].split()[1:], 'existing provider host override must be reconciled')
-    return raw+b'\n127.0.0.1 '+hostname.encode('ascii')+b'\n'
-
-def command(directory,hosts,argv):
+def command(directory,argv):
     return ['unshare','--mount','--propagation','private','--','sh','-ec',
-            'mount --bind "$1" "$2"; mount -o remount,bind,ro "$2"; mount --bind "$3" /etc/hosts; mount -o remount,bind,ro /etc/hosts; shift 3; exec "$@"',
-            'p2-source-provider',str(directory),MOUNT,str(hosts),*argv]
+            'mount --bind "$1" "$2"; mount -o remount,bind,ro "$2"; shift 2; exec "$@"',
+            'p2-source-provider',str(directory),MOUNT,*argv]
 
 @contextmanager
 def access(A,F,site,dns,records,pod,dependency,secret):
@@ -42,7 +36,6 @@ def access(A,F,site,dns,records,pod,dependency,secret):
     directory=records/'provider-files';directory.mkdir(mode=0o700,exist_ok=True)
     A.retain(directory/'observer.json',raw);A.retain(directory/'token',token)
     host=Path('/etc/hosts');before=host.read_bytes();st=host.stat();identity=(st.st_dev,st.st_ino)
-    hostpin=A.retain(records/'source.hosts',hosts_file(A,before,urlsplit(observer['Endpoint']).hostname))
     target=Path(MOUNT);created=[]
     forward_records=records/'provider-forward';forward_records.mkdir(mode=0o700,exist_ok=True)
     def check():
@@ -56,17 +49,17 @@ def access(A,F,site,dns,records,pod,dependency,secret):
         for parent in reversed(missing):
             parent.mkdir(mode=0o700);st=parent.stat();created.append((parent,st.st_dev,st.st_ino))
         A.need(target.is_dir() and not target.is_symlink() and not list(target.iterdir()), 'provider mount target must be empty')
-        forward=F.LocalForward(site,{'--provider-service':dependency['workload']['Service'],'--provider-endpoint':observer['Endpoint']},forward_records,A.retain,endpoint_port=True)
+        forward=F.LocalForward(site,{'--provider-service':dependency['workload']['Service'],'--provider-endpoint':observer['Endpoint']},forward_records,A.retain)
         with forward as address:
-            A.need(address=='127.0.0.1:8200','original endpoint port required')
             class Runner:
+                provider_local_forward=address
                 def run(self,argv,**kwargs):
                     check();forward.check()
-                    try:return dns.run(command(directory,Path(hostpin['File']),argv),**kwargs)
+                    try:return dns.run(command(directory,argv),**kwargs)
                     finally:check();forward.check()
-            A.retain(records/'provider-transport.json',{'Version':'p2-source-provider-private-transport.v1','ControllerPodUID':pod['metadata']['uid'],
+            A.retain(records/'provider-transport.json',{'Version':'p2-source-provider-private-transport.v2','ControllerPodUID':pod['metadata']['uid'],
                 'ObserverSHA256':A.sha(raw),'TokenSHA256':A.sha(token),'Endpoint':observer['Endpoint'],
-                'HostFilesMutated':False,'TLSIdentityUnchanged':True,'AuthorityIssued':False})
+                'HostFilesMutated':False,'DNSIdentityUnchanged':True,'TLSIdentityUnchanged':True,'AuthorityIssued':False})
             yield Runner()
     finally:
         for path,dev,ino in reversed(created):

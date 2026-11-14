@@ -44,13 +44,15 @@ type bootstrapSourceReadSelection struct {
 }
 
 type bootstrapSourceRegistryReader struct {
-	ctx         context.Context
-	physical    context.Context
-	access      bootstrapSourceReadAccess
-	association bootstrapSourceReadDeclaration
-	config      DeploymentConfig
-	materials   productionCaptureMaterials
-	profile     api.ExecutionProfile
+	// Installer-only TCP route; never part of persisted source facts.
+	providerLocalForward string
+	ctx                  context.Context
+	physical             context.Context
+	access               bootstrapSourceReadAccess
+	association          bootstrapSourceReadDeclaration
+	config               DeploymentConfig
+	materials            productionCaptureMaterials
+	profile              api.ExecutionProfile
 }
 
 func strictBootstrapSourceJSON(raw []byte, out any) error {

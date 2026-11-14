@@ -201,7 +201,7 @@ func (x *bootstrapSourceRegistryReader) observeBootstrapVaultDependencies(client
 		if e != nil {
 			return nil, install.ErrInstall
 		}
-		o, e := owner.NewInstalledVaultDependencyObserver(cfg, clients.API, x.config.Namespace, x.config.NamespaceUID)
+		o, e := owner.NewInstalledVaultMetadataObserverWithLocalForward(cfg, clients.API, x.config.Namespace, x.config.NamespaceUID, x.providerLocalForward)
 		if e != nil {
 			return nil, install.ErrInstall
 		}
@@ -209,11 +209,11 @@ func (x *bootstrapSourceRegistryReader) observeBootstrapVaultDependencies(client
 			defer o.Close()
 			scope, e := install.ObserveInstalledVaultProviderScope(x.physical, db, clients.API, x.association.Target, selected.Workload, cfg.Endpoint)
 			if e != nil || x.checkPhysical(x.physical) != nil {
-				return formalVaultProviderFacts{}, install.ErrInstall
+				return formalVaultProviderFacts{}, writerAPIReadFailure(install.ErrInstall, x.physical, "facts_vault_scope", "VaultProvider", e)
 			}
 			proof, e := o.Observe(x.physical)
 			if e != nil {
-				return formalVaultProviderFacts{}, install.ErrInstall
+				return formalVaultProviderFacts{}, writerAPIReadFailure(install.ErrInstall, x.physical, "facts_vault_observer", "VaultProvider", e)
 			}
 			native, _, e := proof.Data(x.physical)
 			if e != nil {

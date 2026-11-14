@@ -25,8 +25,11 @@ type BootstrapSourceRegistryFactsReceipt struct {
 // ProduceOriginalBootstrapSourceRegistries is the PRE-config/PRE-capture
 // authenticated action. It accepts no supplied facts, observation callback,
 // enabled Forward, fake V2 identity, worker credential, task or success bit.
-func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA string) (_ BootstrapSourceRegistryFactsReceipt, resultErr error) {
+func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA string, providerLocalForward ...string) (_ BootstrapSourceRegistryFactsReceipt, resultErr error) {
 	var zero BootstrapSourceRegistryFactsReceipt
+	if len(providerLocalForward) > 1 {
+		return zero, install.ErrInstall
+	}
 	phase := "facts_selection"
 	defer func() { resultErr = writerAPIReadFailure(resultErr, ctx, phase, "SourceFacts", nil) }()
 	raw, err := install.ReadPrivateFile(selectionFile, 262144)
@@ -54,6 +57,9 @@ func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *in
 	x, err := newBootstrapSourceAuthoringReader(ctx, authority)
 	if err != nil {
 		return zero, install.ErrInstall
+	}
+	if len(providerLocalForward) == 1 {
+		x.providerLocalForward = providerLocalForward[0]
 	}
 	phase = "facts_collect"
 	facts, err := x.collectBootstrapSourceFacts()

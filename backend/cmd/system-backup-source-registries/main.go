@@ -197,7 +197,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			return 2
 		}
 	}
-	if action == "prepare-provider-materials" || action == "issue-provider-metadata" {
+	if action == "prepare-provider-materials" || action == "issue-provider-metadata" || action == "produce-facts" {
 		allowed["provider-local-forward"] = true
 	}
 	for name, v := range values {
@@ -356,7 +356,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 0
 	}
 	if action == "produce-facts" {
-		receipt, err := execution.ProduceOriginalBootstrapSourceRegistries(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"))
+		receipt, err := execution.ProduceOriginalBootstrapSourceRegistries(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("provider-local-forward"))
 		if err != nil {
 			var failure *execution.WriterAPIReadFailure
 			if errors.As(err, &failure) {

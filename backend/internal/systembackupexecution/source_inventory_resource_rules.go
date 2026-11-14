@@ -63,10 +63,10 @@ func sourceInventoryResourceRules(ctx context.Context, api kubernetes.Interface,
 			seen[cursor] = true
 		}
 	}
-	return sourceInventoryRuleProjection(m.ResourceTypes, status, namespaces, cfg.Security.NodeUIDs, pvs)
+	return sourceInventoryRuleProjection(m.ResourceTypes, status, namespaces, cfg.Security.NodeUIDs, pvs, len(cfg.ProviderDependencies) != 0 && validateFormalVaultDependencies(cfg) == nil)
 }
 
-func sourceInventoryRuleProjection(types []productionResourceType, status authzv1.SubjectRulesReviewStatus, namespaces map[string]bool, nodes map[string]string, pvs map[string]bool) bool {
+func sourceInventoryRuleProjection(types []productionResourceType, status authzv1.SubjectRulesReviewStatus, namespaces map[string]bool, nodes map[string]string, pvs map[string]bool, vault bool) bool {
 	captured := map[string]bool{}
 	for _, t := range types {
 		captured[t.Group+"/"+t.Resource] = true
@@ -92,6 +92,12 @@ func sourceInventoryRuleProjection(types []productionResourceType, status authzv
 					}
 					if self || captured[group+"/"+resource] {
 						projected.ResourceRules = append(projected.ResourceRules, authzv1.ResourceRule{Verbs: []string{verb}, APIGroups: []string{group}, Resources: []string{resource}, ResourceNames: rule.ResourceNames})
+						continue
+					}
+					// Vault's no-alias and live endpoint checks require these complete
+					// metadata lists. Named GETs retain their original scope below.
+					if vault && verb == "list" && len(rule.ResourceNames) == 0 &&
+						(group == "" && resource == "persistentvolumes" || group == "storage.k8s.io" && resource == "volumeattachments" || group == "discovery.k8s.io" && resource == "endpointslices") {
 						continue
 					}
 					if group == "" && (resource == "namespaces" || resource == "nodes" || resource == "persistentvolumes") {

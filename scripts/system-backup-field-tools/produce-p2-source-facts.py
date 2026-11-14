@@ -29,7 +29,7 @@ def run(attempt):
     A.read({'File':str(tool),'SHA256':build['Binaries'][tool.name]['SHA256']},256<<20)
     old=A.decode((C.SOURCE_JOURNAL/'author.sent.private.json').read_bytes())['Argv'];common=old[2:old.index('--definition-file')]
     with V.access(A,F,site,dns,journal,pod,dependency,secret) as runner:
-        value=R.once(A,runner,journal,'native',[str(tool),'produce-facts',*common,'--source-selection-file',complete['SourceSelection']['File'],'--source-selection-sha256',complete['SourceSelection']['SHA256']])
+        value=R.once(A,runner,journal,'native',[str(tool),'produce-facts',*common,'--source-selection-file',complete['SourceSelection']['File'],'--source-selection-sha256',complete['SourceSelection']['SHA256'],'--provider-local-forward',runner.provider_local_forward])
     A.need(value['Version']=='original-source-registry-facts-receipt.v1' and value['SelectionSHA256']==complete['SourceSelection']['SHA256'],'native facts receipt differs')
     print('P2_NATIVE_SOURCE_FACTS_PRODUCED',json.dumps(value),flush=True)
     return value

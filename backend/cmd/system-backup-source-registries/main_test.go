@@ -45,6 +45,18 @@ func TestProviderLocalForwardIsOptionalAndProviderOnly(t *testing.T) {
 	}
 }
 
+func TestFactsLocalForwardDoesNotSupplyAuthority(t *testing.T) {
+	args := []string{"produce-facts"}
+	for _, name := range []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "source-selection-file", "source-selection-sha256"} {
+		args = append(args, "--"+name, "nonexistent-input")
+	}
+	args = append(args, "--provider-local-forward", "127.0.0.1:1234")
+	var out bytes.Buffer
+	if code := run(context.Background(), args, &out); code != 1 || out.Len() != 0 {
+		t.Fatal("forward admitted absent authority", code)
+	}
+}
+
 func TestSourceRegistryCLIOwnerBindingsShareOriginalCapture(t *testing.T) {
 	dir := t.TempDir()
 	args := []string{"owner-bindings", "--capture-consumer-file", filepath.Join(dir, "capture.json"), "--capture-consumer-pin-file", filepath.Join(dir, "capture.sha256"), "--record-file", filepath.Join(dir, "source.record.json"), "--record-sha256", strings.Repeat("a", 64), "--signature-file", filepath.Join(dir, "source.signature")}

@@ -31,15 +31,11 @@ class ProviderTransportTest(unittest.TestCase):
                 if fault=='plaintext':
                     raw=self.A.encode(dict(self.observer,Endpoint='http://vault.'+self.A.NS+'.svc:8200'));secret['data']['observer.json']=base64.b64encode(raw).decode();dep['observer']['SHA256']=self.A.sha(raw)
                 with self.assertRaises(ValueError):self.M.inputs(self.A,dep,secret)
-    def test_hosts_override_is_private_and_conflicts_refused(self):
-        raw=b'127.0.0.1 localhost\n';host='vault.'+self.A.NS+'.svc'
-        changed=self.M.hosts_file(self.A,raw,host)
-        self.assertEqual(raw,b'127.0.0.1 localhost\n');self.assertTrue(changed.startswith(raw))
-        with self.assertRaises(ValueError):self.M.hosts_file(self.A,changed,host)
     def test_command_retains_literal_argv_and_readonly_mounts(self):
         argv=['/tool','arg with space','$(not-a-shell-command)']
-        result=self.M.command(Path('/private/files'),Path('/private/hosts'),argv)
+        result=self.M.command(Path('/private/files'),argv)
         self.assertEqual(result[-3:],argv);self.assertEqual(result[:4],['unshare','--mount','--propagation','private'])
-        self.assertEqual(result[7].count('remount,bind,ro'),2)
+        self.assertEqual(result[7].count('remount,bind,ro'),1)
+        self.assertNotIn('/etc/hosts', ' '.join(result))
 
 if __name__=='__main__':unittest.main()
