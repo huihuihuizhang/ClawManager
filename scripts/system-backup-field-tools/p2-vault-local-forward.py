@@ -42,9 +42,10 @@ def select_provider(service, slices, pod, flags):
     return pod['metadata']['name'], pod['metadata']['uid']
 
 class LocalForward:
-    def __init__(self, site, flags, records, save):
+    def __init__(self, site, flags, records, save, endpoint_port=False):
         self.site, self.flags, self.records, self.save = site, flags, records, save
         self.process = None
+        self.endpoint_port = endpoint_port
 
     def current(self):
         service = self.site.get('service', self.flags['--provider-service'])
@@ -59,7 +60,7 @@ class LocalForward:
     def __enter__(self):
         self.selected = self.current()
         with socket.socket() as sock:
-            sock.bind(('127.0.0.1', 0))
+            sock.bind(('127.0.0.1', 8200 if self.endpoint_port else 0))
             port = sock.getsockname()[1]
         self.address = '127.0.0.1:'+str(port)
         self.save(self.records/'local-forward.json', {'Pod':self.selected[0], 'PodUID':self.selected[1],
