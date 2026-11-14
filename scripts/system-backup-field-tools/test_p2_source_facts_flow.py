@@ -61,4 +61,24 @@ class SourceFactsFlowTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'receipt differs'):self.run_flow()
         self.assertEqual(self.events,['transport-open','transport-closed'])
 
+    def vault_failure(self, step='facts_vault', exit_code=1):
+        j=self.root/'source-facts-20261114-team-8';j.mkdir()
+        self.A.retain(j/'native.exit.json',{'ExitCode':exit_code})
+        self.A.retain(j/'native.stdout.private',{'Status':'original_source_facts_refused','Step':step})
+        self.A.retain(j/'native.sent.private.json',{'Argv':['old','produce-facts','--source-selection-file',self.selection['File'],'--source-selection-sha256',self.selection['SHA256']]})
+        return j
+    def test_known_vault_failure_resumes_into_distinct_journal(self):
+        j=self.vault_failure();before={p.name:p.read_bytes() for p in j.iterdir()}
+        with redirect_stdout(io.StringIO()):self.M.run(8,True)
+        self.assertEqual(self.R.once.call_args.args[2],j.with_name(j.name+'-vault-transport'))
+        self.assertEqual({p.name:p.read_bytes() for p in j.iterdir()},before)
+    def test_other_failure_cannot_use_vault_resume(self):
+        self.vault_failure(step='facts_sql_recheck')
+        with self.assertRaisesRegex(ValueError,'exact pre-output Vault refusal'):self.M.run(8,True)
+        self.R.once.assert_not_called()
+    def test_unknown_exit_cannot_use_vault_resume(self):
+        self.vault_failure(exit_code=4)
+        with self.assertRaisesRegex(ValueError,'known failed Vault'):self.M.run(8,True)
+        self.R.once.assert_not_called()
+
 if __name__=='__main__':unittest.main()
