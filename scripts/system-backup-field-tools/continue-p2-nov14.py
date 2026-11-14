@@ -236,11 +236,11 @@ def run(args, package=None):
     now=dt.datetime.now(dt.timezone.utc);before,until=T.window(now,now+dt.timedelta(hours=8),N.moment(observer['NotAfter']),N.moment(agent['NotAfter']),30)
     private_journal(A)
     print('P2_NOV14_RECORDS',JOURNAL,flush=True)
-    delivery_records=JOURNAL/'release-load' if release_mode else JOURNAL
+    delivery_records=JOURNAL/'resource-rules-load' if release_mode else JOURNAL
     delivery_records.mkdir(mode=0o700,exist_ok=True);site=L.Site(delivery_records,A)
     R.verify_app(A,site)
     prior=A.obj({'File':str(L.PARENT/'receipt.private.json'),'SHA256':L.RECEIPT_SHA})
-    previous_plan=A.decode((JOURNAL/'delivery-plan.private.json').read_bytes()) if release_mode else None
+    previous_plan=A.decode((JOURNAL/'delivery-plan.release.private.json').read_bytes()) if release_mode else None
     old_secret=A.obj(previous_plan['Secret'] if release_mode else prior['SecretManifest'])
     L.verify_secret(site.get('secret',old_secret['metadata']['name']),old_secret)
     old_args=A.decode((T.PARENT/'author.sent.private.json').read_bytes())['Argv']
@@ -263,13 +263,13 @@ def run(args, package=None):
     minted=A.decode(saved.read_bytes());A.need(minted['Version']=='installed-vault-metadata-materials.v1' and minted['Workload']==prior['Workload'],'native provider scope changed')
     native=A.obj(minted['Observer']);token=A.read({'File':native['TokenFile'],'SHA256':native['TokenSHA256']})
     L.verify_metadata(A,F,site,JOURNAL,native,token,minted['Workload'],until)
-    planfile=JOURNAL/('delivery-plan.release.private.json' if release_mode else 'delivery-plan.private.json')
+    planfile=JOURNAL/('delivery-plan.resource-rules.private.json' if release_mode else 'delivery-plan.private.json')
     if not planfile.exists():
         deployment=site.get('deployment',selected['Controller']['Deployment'])
         A.need(deployment['metadata']['uid']==selected['Controller']['DeploymentUID'] and deployment['spec']==old_desired,'controller changed before delivery')
         secret,desired,patch,digest=P.rotation_delivery(deployment,old_secret,native,token,image['Image'])
-        secretpin=A.retain(JOURNAL/('secret.release.private.json' if release_mode else 'secret.private.json'),secret)
-        specpin=A.retain(JOURNAL/('desired-spec.release.private.json' if release_mode else 'desired-spec.private.json'),desired)
+        secretpin=A.retain(JOURNAL/('secret.resource-rules.private.json' if release_mode else 'secret.private.json'),secret)
+        specpin=A.retain(JOURNAL/('desired-spec.resource-rules.private.json' if release_mode else 'desired-spec.private.json'),desired)
         A.retain(planfile,{'Secret':secretpin,'DesiredSpec':specpin,'Patch':patch,'ObserverSHA256':digest})
     plan=A.decode(planfile.read_bytes());secret=A.obj(plan['Secret']);desired=A.obj(plan['DesiredSpec'])
     current=site.get('deployment',selected['Controller']['Deployment'])
@@ -292,7 +292,7 @@ def run(args, package=None):
     for name in ('system-backup-source-registries','system-backup-v2-controller'):
         line=site.call(['exec',fresh['Pod'],'-c','controller','--','sha256sum','/usr/local/bin/'+name]).decode().split()
         A.need(line==[build['Binaries'][name]['SHA256'],'/usr/local/bin/'+name],'running binary differs')
-    A.retain(JOURNAL/('loaded.release.json' if release_mode else 'loaded.json'),{'Controller':fresh,'Image':image['Image'],'BackupReady':False})
+    A.retain(JOURNAL/('loaded.resource-rules.json' if release_mode else 'loaded.json'),{'Controller':fresh,'Image':image['Image'],'BackupReady':False})
     print('P2_NOV14_IDENTITY_AND_CONTROLLER_LOADED',json.dumps({'ControllerPod':fresh['Pod'],'SourceRevision':build['SourceRevision'],'BackupReady':False}),flush=True)
     if load_only:return
     done=refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desired,secret,plan,minted,observer,agent)

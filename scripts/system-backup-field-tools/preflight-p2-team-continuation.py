@@ -152,6 +152,8 @@ def run(package,attempt,load_only=False):
     if plan.exists():allowed.append(A.obj(A.decode(plan.read_bytes())['DesiredSpec']))
     release_plan=C.JOURNAL/'delivery-plan.release.private.json'
     if release_plan.exists():allowed.append(A.obj(A.decode(release_plan.read_bytes())['DesiredSpec']))
+    rules_plan=C.JOURNAL/'delivery-plan.resource-rules.private.json'
+    if rules_plan.exists():allowed.append(A.obj(A.decode(rules_plan.read_bytes())['DesiredSpec']))
     A.need(current['metadata']['uid']==selected['Controller']['DeploymentUID'] and current['spec'] in allowed,'controller changed before image build')
     mint=C.JOURNAL/'mint/native.receipt.private.json'
     if mint.exists():

@@ -126,16 +126,21 @@ class FlowTest(unittest.TestCase):
         self.run_flow()
         previous=(self.journal/'delivery-plan.private.json').read_bytes()
         source=(self.M.SOURCE_JOURNAL/'completed.json').read_bytes()
+        self.put(self.journal/'delivery-plan.release.private.json',self.A.decode(previous))
         build=self.A.decode((self.package/'BUILD_RECEIPT.json').read_bytes());build['LinkedBuildIdentity']={'Version':'release','Commit':'a'*40}
         (self.package/'BUILD_RECEIPT.json').write_bytes(self.A.encode(build))
         self.image='10.130.14.23:5000/clawmanager@sha256:'+'b'*64
         pin=self.put(self.root/'release-image.json',{'Version':'p2-controller-image.v1','SourceRevision':'rev','Binaries':self.binaries,'Image':self.image})
         self.args.image_receipt=pin['File'];self.args.image_sha256=pin['SHA256'];self.args.load_controller_only=True
+        self.fail='rollout'
+        with self.assertRaisesRegex(ValueError,'rollout'):self.run_flow()
+        self.fail=None
         self.run_flow();self.run_flow()
         self.assertEqual(len(self.native_calls),3)
         self.assertEqual((self.journal/'delivery-plan.private.json').read_bytes(),previous)
+        self.assertEqual((self.journal/'delivery-plan.release.private.json').read_bytes(),previous)
         self.assertEqual((self.M.SOURCE_JOURNAL/'completed.json').read_bytes(),source)
-        self.assertTrue((self.journal/'loaded.release.json').exists())
+        self.assertTrue((self.journal/'loaded.resource-rules.json').exists())
         self.assertEqual(self.dep['spec']['template']['spec']['containers'][0]['image'],self.image)
     def test_native_window_serialization_is_equivalent_but_extension_is_rejected(self):
         self.fail='normalized-window';now=self.now.replace(microsecond=81450)
