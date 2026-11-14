@@ -285,8 +285,11 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	}
 	phase = "source_sql_recheck"
 	lastSQL, err := x.readSourceSQL()
-	if err != nil || !sameBootstrapSourceSQL(firstSQL, lastSQL) {
-		return zero, install.ErrInstall
+	if err != nil {
+		return zero, writerAPIReadFailure(install.ErrInstall, x.physical, "mount_sql_recheck_read", "SourceSQL", err)
+	}
+	if !sameBootstrapSourceSQL(firstSQL, lastSQL) {
+		return zero, writerAPIReadFailure(install.ErrInstall, x.physical, "mount_sql_recheck_changed", "SourceSQL", nil)
 	}
 	phase = "writer_api_recheck"
 	lastAPI, err := x.readWriterAPI(x.physical, clients, lastSQL.inventory.Instances)
@@ -312,11 +315,14 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 		phase = "hold_materials_recheck"
 		uri, err := originalLonghornRecoveryURI(x.config, x.materials, time.Now().UTC())
 		if err != nil || uri != recoveryURI {
-			return zero, install.ErrInstall
+			return zero, writerAPIReadFailure(install.ErrInstall, x.physical, "mount_recovery_identity_recheck", "MountMaterials", err)
 		}
 		current, err := observeOriginalLonghornHoldMaterials(x.physical, clients, x.config, &scope, currentLonghorn, uri)
-		if err != nil || !reflect.DeepEqual(longhornMaterial, current) {
-			return zero, install.ErrInstall
+		if err != nil {
+			return zero, writerAPIReadFailure(install.ErrInstall, x.physical, "mount_hold_recheck_read", "MountMaterials", err)
+		}
+		if !reflect.DeepEqual(longhornMaterial, current) {
+			return zero, writerAPIReadFailure(install.ErrInstall, x.physical, "mount_hold_recheck_changed", "MountMaterials", nil)
 		}
 	}
 	if len(scope.RunningTenantPro) != 0 {
