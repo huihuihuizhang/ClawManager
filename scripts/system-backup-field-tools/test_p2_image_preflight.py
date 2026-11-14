@@ -70,6 +70,10 @@ class PreflightTest(unittest.TestCase):
         fixture=load('test_p2_nov14_flow').FlowTest();fixture.setUp();self.addCleanup(fixture.doCleanups);self.f=fixture
         self.P=load('preflight-p2-team-continuation');fixture.modules['continue-p2-nov14']=fixture.M;fixture.modules['build-p2-controller-overlay']=load('build-p2-controller-overlay')
         self.P.load=lambda name:fixture.modules[name]
+        build=fixture.A.decode((fixture.package/'BUILD_RECEIPT.json').read_bytes())
+        build['LinkedBuildIdentity']={'Version':'p2-test','Commit':'a'*40}
+        reader=patch.object(self.P,'binary_release_identity',return_value={'Version':'p2-test','Commit':'a'*40});reader.start();self.addCleanup(reader.stop)
+        (fixture.package/'BUILD_RECEIPT.json').write_bytes(fixture.A.encode(build))
         fixture.A.CONTROLLER='controller';fixture.A.CONTROLLER_UID='depuid'
         plan=fixture.put(fixture.root/'plan.json',b'plan')
         (fixture.T.PARENT/'author.sent.private.json').write_text(json.dumps({'Argv':['old','author-initial-source-inputs','--plan-file',plan['File'],'--plan-sha256',plan['SHA256'],'--definition-file','old']}))
@@ -87,6 +91,14 @@ class PreflightTest(unittest.TestCase):
         report=self.run_preflight();self.assertTrue(report['ReadOnlyClusterChecks']);self.assertFalse(report['ImageBuildStarted'])
         self.assertEqual(self.f.native_calls,[]);self.assertNotIn('patch',self.f.events);self.assertTrue(self.owner_checks and self.space_checks)
         self.assertFalse(self.f.journal.exists())
+    def test_dev_build_refused_before_remote_work(self):
+        p=self.f.package/'BUILD_RECEIPT.json';build=self.f.A.decode(p.read_bytes());build['LinkedBuildIdentity']['Version']='dev';p.write_bytes(self.f.A.encode(build))
+        with self.assertRaisesRegex(ValueError,'native release identity missing'):self.run_preflight()
+        self.assertFalse(self.owner_checks or self.space_checks or self.f.native_calls)
+    def test_mixed_linked_commits_refused_before_remote_work(self):
+        p=self.f.package/'BUILD_RECEIPT.json';build=self.f.A.decode(p.read_bytes());build['LinkedBuildIdentity']['Commit']='b'*40;p.write_bytes(self.f.A.encode(build))
+        with self.assertRaisesRegex(ValueError,'native linked identity differs'):self.run_preflight()
+        self.assertFalse(self.owner_checks or self.space_checks or self.f.native_calls)
     def test_expired_certificate_stops_before_vault_or_registry(self):
         self.f.until=(self.f.now-self.f.N.dt.timedelta(seconds=1)).isoformat()
         with self.assertRaisesRegex(ValueError,'certificate has less'):self.run_preflight()

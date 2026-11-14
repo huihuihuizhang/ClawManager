@@ -32,6 +32,7 @@ class FlowTest(unittest.TestCase):
         self.M.renewed_source=renewed
         self.M.renewed_scope=lambda A,original:original
         self.M.renewed_relay=lambda A,N,original:original
+        self.M.renewed_team_writer=lambda A,original:original
         def put(path,value):path.parent.mkdir(parents=True,exist_ok=True);return self.A.retain(path,value)
         self.put=put
         self.binaries={n:{'SHA256':self.A.sha(n.encode())} for n in ('system-backup-source-registries','system-backup-first-install-materials','system-backup-v2-controller')}
@@ -114,6 +115,21 @@ class FlowTest(unittest.TestCase):
         self.assertEqual(self.native_calls,['issue-provider-metadata','author-initial-source-inputs','prepare-mount-materials'])
         self.assertTrue((self.M.MOUNT_JOURNAL/'completed.json').exists())
         self.assertLess(self.events.index('renewed-credentials-bound'),self.events.index('metadata-verified'))
+    def test_versioned_controller_load_keeps_source_and_previous_delivery_journals(self):
+        self.run_flow()
+        previous=(self.journal/'delivery-plan.private.json').read_bytes()
+        source=(self.M.SOURCE_JOURNAL/'completed.json').read_bytes()
+        build=self.A.decode((self.package/'BUILD_RECEIPT.json').read_bytes());build['LinkedBuildIdentity']={'Version':'release','Commit':'a'*40}
+        (self.package/'BUILD_RECEIPT.json').write_bytes(self.A.encode(build))
+        self.image='10.130.14.23:5000/clawmanager@sha256:'+'b'*64
+        pin=self.put(self.root/'release-image.json',{'Version':'p2-controller-image.v1','SourceRevision':'rev','Binaries':self.binaries,'Image':self.image})
+        self.args.image_receipt=pin['File'];self.args.image_sha256=pin['SHA256'];self.args.load_controller_only=True
+        self.run_flow();self.run_flow()
+        self.assertEqual(len(self.native_calls),3)
+        self.assertEqual((self.journal/'delivery-plan.private.json').read_bytes(),previous)
+        self.assertEqual((self.M.SOURCE_JOURNAL/'completed.json').read_bytes(),source)
+        self.assertTrue((self.journal/'loaded.release.json').exists())
+        self.assertEqual(self.dep['spec']['template']['spec']['containers'][0]['image'],self.image)
     def test_rollout_failure_resumes_from_live_deployment(self):
         self.fail='rollout'
         with self.assertRaisesRegex(ValueError,'rollout'):self.run_flow()

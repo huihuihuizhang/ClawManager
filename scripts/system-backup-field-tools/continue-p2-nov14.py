@@ -70,6 +70,23 @@ def renewed_relay(A,N,original):
     return N.replace_pinned_values(original,replacements)
 
 
+def renewed_team_writer(A,original):
+    R=load('resume-p2-recovered-source')
+    publication=A.obj({'File':str(ROOT/'runtime-pool-recovery-312eaa9e/image/image-data.json'),'SHA256':'f08c78bd613f378aa4bb988a54ab820a12aa514a0b35d6610890597fd35f9ff1'})
+    A.need(publication['Version']=='p2-fixed-source-image-publication.v1' and publication['Reference']==R.IMAGE and
+           publication['BinarySHA256']==R.ELF_SHA and publication['SourceRevision']=='312eaa9e47ad45f71479640185496aa4323e6d06','confirmed business release required')
+    A.read(publication['Manifest']);A.read(publication['Config'])
+    A.need(publication['Manifest']['SHA256']==R.IMAGE.split('sha256:')[1],'business manifest pin differs')
+    result=copy.deepcopy(original);images=result['Materials']['Discovery']['TeamWriterImages']
+    key='deployment/'+A.NS+'/clawmanager-app'
+    previous={'BuildCommit':'eca964d42b96c31cb381531889a39c23a366ffab','ConfigDigest':'sha256:2581e53d771cd99be4e06f5eb61032dbac69701fa98cdbce6c45b43a7d6332cb',
+              'Container':'clawmanager-app','Image':'10.130.14.23:5000/clawmanager@sha256:8287aa71bcfc9e1596d761a9b46891575f3708323300839c98e075a22875e780'}
+    current={'BuildCommit':publication['SourceRevision'],'ConfigDigest':'sha256:'+publication['Config']['SHA256'],'Container':'clawmanager-app','Image':R.IMAGE}
+    A.need(images.get(key) in ([previous],[current]),'team writer release drift')
+    images[key]=[current]
+    return result
+
+
 def renewed_scope(A,original):
     receipt=A.obj({'File':str(ROOT/'p2-team-recovered-coordinates-20261114/receipt.private.json'),
                    'SHA256':'3a85035dc2bf772d60cc95e49534def1a0f20b8a6dd623801a124ebc9a05bc9f'})
@@ -175,6 +192,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image-receipt',required=True);parser.add_argument('--image-sha256',required=True)
     parser.add_argument('--source-attempt',type=int,default=1)
+    parser.add_argument('--load-controller-only',action='store_true')
     run(parser.parse_args())
 
 
@@ -187,7 +205,10 @@ def run(args, package=None):
         A.read({'File':str(package/name),'SHA256':build['Binaries'][name]['SHA256']},256<<20)
     image=A.obj({'File':args.image_receipt,'SHA256':args.image_sha256})
     A.need(image['Version']=='p2-controller-image.v1' and image['SourceRevision']==build['SourceRevision'] and image['Binaries']==build['Binaries'],'image/binary revision mismatch')
-    select_attempt(A,args.source_attempt)
+    release_mode=bool(build.get('LinkedBuildIdentity'))
+    load_only=getattr(args,'load_controller_only',False)
+    if load_only:A.need(release_mode,'versioned release package required for controller-only load')
+    else:select_attempt(A,args.source_attempt)
     # The already confirmed, unsigned recovered source remains the source of business scope.
     parent=A.decode((T.PARENT/'completed.json').read_bytes())
     A.need(parent['Receipt']['SHA256']==T.RECEIPT_SHA and parent['Definition']['SHA256']==T.DEFINITION_SHA and parent['SourceSelection']['SHA256']==T.SELECTION_SHA and parent['GrantsIssued'] is False,'recovered parent differs')
@@ -195,17 +216,22 @@ def run(args, package=None):
     for k in ('PartsFile','SourceWritersFile','RedisSourcesFile'):A.need(not selected.get(k) or not Path(selected[k]).exists(),'parent source facts already issued')
     observer,agent=renewed_credentials(A)
     original=renewed_source(A,N,original,observer,agent)
+    original=renewed_team_writer(A,original)
     original=renewed_relay(A,N,original)
     original=renewed_scope(A,original)
     now=dt.datetime.now(dt.timezone.utc);before,until=T.window(now,now+dt.timedelta(hours=8),N.moment(observer['NotAfter']),N.moment(agent['NotAfter']),30)
     private_journal(A)
-    print('P2_NOV14_RECORDS',JOURNAL,flush=True);site=L.Site(JOURNAL,A)
+    print('P2_NOV14_RECORDS',JOURNAL,flush=True)
+    delivery_records=JOURNAL/'release-load' if release_mode else JOURNAL
+    delivery_records.mkdir(mode=0o700,exist_ok=True);site=L.Site(delivery_records,A)
     R.verify_app(A,site)
-    prior=A.obj({'File':str(L.PARENT/'receipt.private.json'),'SHA256':L.RECEIPT_SHA});old_secret=A.obj(prior['SecretManifest'])
+    prior=A.obj({'File':str(L.PARENT/'receipt.private.json'),'SHA256':L.RECEIPT_SHA})
+    previous_plan=A.decode((JOURNAL/'delivery-plan.private.json').read_bytes()) if release_mode else None
+    old_secret=A.obj(previous_plan['Secret'] if release_mode else prior['SecretManifest'])
     L.verify_secret(site.get('secret',old_secret['metadata']['name']),old_secret)
     old_args=A.decode((T.PARENT/'author.sent.private.json').read_bytes())['Argv']
     common=old_args[2:old_args.index('--definition-file')]
-    old_desired=A.obj(A.decode((H.PARENT/'delivery-plan.private.json').read_bytes())['DesiredSpec'])
+    old_desired=A.obj(previous_plan['DesiredSpec'] if release_mode else A.decode((H.PARENT/'delivery-plan.private.json').read_bytes())['DesiredSpec'])
     mint=JOURNAL/'mint';mint.mkdir(mode=0o700,exist_ok=True)
     saved=mint/'native.receipt.private.json'
     if not saved.exists():
@@ -223,12 +249,13 @@ def run(args, package=None):
     minted=A.decode(saved.read_bytes());A.need(minted['Version']=='installed-vault-metadata-materials.v1' and minted['Workload']==prior['Workload'],'native provider scope changed')
     native=A.obj(minted['Observer']);token=A.read({'File':native['TokenFile'],'SHA256':native['TokenSHA256']})
     L.verify_metadata(A,F,site,JOURNAL,native,token,minted['Workload'],until)
-    planfile=JOURNAL/'delivery-plan.private.json'
+    planfile=JOURNAL/('delivery-plan.release.private.json' if release_mode else 'delivery-plan.private.json')
     if not planfile.exists():
         deployment=site.get('deployment',selected['Controller']['Deployment'])
         A.need(deployment['metadata']['uid']==selected['Controller']['DeploymentUID'] and deployment['spec']==old_desired,'controller changed before delivery')
         secret,desired,patch,digest=P.rotation_delivery(deployment,old_secret,native,token,image['Image'])
-        secretpin=A.retain(JOURNAL/'secret.private.json',secret);specpin=A.retain(JOURNAL/'desired-spec.private.json',desired)
+        secretpin=A.retain(JOURNAL/('secret.release.private.json' if release_mode else 'secret.private.json'),secret)
+        specpin=A.retain(JOURNAL/('desired-spec.release.private.json' if release_mode else 'desired-spec.private.json'),desired)
         A.retain(planfile,{'Secret':secretpin,'DesiredSpec':specpin,'Patch':patch,'ObserverSHA256':digest})
     plan=A.decode(planfile.read_bytes());secret=A.obj(plan['Secret']);desired=A.obj(plan['DesiredSpec'])
     current=site.get('deployment',selected['Controller']['Deployment'])
@@ -251,8 +278,9 @@ def run(args, package=None):
     for name in ('system-backup-source-registries','system-backup-v2-controller'):
         line=site.call(['exec',fresh['Pod'],'-c','controller','--','sha256sum','/usr/local/bin/'+name]).decode().split()
         A.need(line==[build['Binaries'][name]['SHA256'],'/usr/local/bin/'+name],'running binary differs')
-    A.retain(JOURNAL/'loaded.json',{'Controller':fresh,'Image':image['Image'],'BackupReady':False})
+    A.retain(JOURNAL/('loaded.release.json' if release_mode else 'loaded.json'),{'Controller':fresh,'Image':image['Image'],'BackupReady':False})
     print('P2_NOV14_IDENTITY_AND_CONTROLLER_LOADED',json.dumps({'ControllerPod':fresh['Pod'],'SourceRevision':build['SourceRevision'],'BackupReady':False}),flush=True)
+    if load_only:return
     done=refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desired,secret,plan,minted,observer,agent)
     mount(A,L,H,R,D,site,package,done,fresh,pod,desired)
 

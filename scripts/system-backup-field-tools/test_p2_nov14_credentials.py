@@ -3,6 +3,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 def load(name):
@@ -53,6 +54,24 @@ class CredentialsTest(unittest.TestCase):
         for key in ('Manifest','Signature','CA','IssuerKey','ServerCertificate','ServerKey','ClientCertificate','ClientKey'):
             old[key]=self.pin('relay-old-'+key);new[key]=self.pin('relay-new-'+key)
         return old,new
+
+    def test_team_writer_uses_real_publication_and_refuses_unrelated_image(self):
+        manifest=self.pin('business-manifest');config=self.pin('business-config')
+        image='registry/app@sha256:'+manifest['SHA256']
+        publication={'Version':'p2-fixed-source-image-publication.v1','Reference':image,'BinarySHA256':'binary',
+                     'SourceRevision':'312eaa9e47ad45f71479640185496aa4323e6d06','Manifest':manifest,'Config':config}
+        key='deployment/'+self.A.NS+'/clawmanager-app'
+        old={'BuildCommit':'eca964d42b96c31cb381531889a39c23a366ffab','ConfigDigest':'sha256:2581e53d771cd99be4e06f5eb61032dbac69701fa98cdbce6c45b43a7d6332cb',
+             'Container':'clawmanager-app','Image':'10.130.14.23:5000/clawmanager@sha256:8287aa71bcfc9e1596d761a9b46891575f3708323300839c98e075a22875e780'}
+        original={'Materials':{'Discovery':{'TeamWriterImages':{key:[old]}}},'Scope':[1,2,3,7,8]}
+        before=copy.deepcopy(original)
+        with patch.object(self.A,'obj',return_value=publication),patch.object(self.C,'load',return_value=SimpleNamespace(IMAGE=image,ELF_SHA='binary')):
+            result=self.C.renewed_team_writer(self.A,original)
+            pin=result['Materials']['Discovery']['TeamWriterImages'][key][0]
+            self.assertEqual((pin['Image'],pin['ConfigDigest'],pin['BuildCommit']),(image,'sha256:'+config['SHA256'],publication['SourceRevision']))
+            self.assertEqual(original,before);self.assertEqual(result['Scope'],original['Scope'])
+            original['Materials']['Discovery']['TeamWriterImages'][key][0]['Image']='unrelated'
+            with self.assertRaisesRegex(ValueError,'release drift'):self.C.renewed_team_writer(self.A,original)
 
     def test_relay_signed_files_rebound_without_changing_business_scope(self):
         old,new=self.relay_fixture()
