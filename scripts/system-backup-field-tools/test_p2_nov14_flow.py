@@ -31,6 +31,7 @@ class FlowTest(unittest.TestCase):
             self.events.append('renewed-credentials-bound');return original
         self.M.renewed_source=renewed
         self.M.renewed_scope=lambda A,original:original
+        self.M.renewed_relay=lambda A,N,original:original
         def put(path,value):path.parent.mkdir(parents=True,exist_ok=True);return self.A.retain(path,value)
         self.put=put
         self.binaries={n:{'SHA256':self.A.sha(n.encode())} for n in ('system-backup-source-registries','system-backup-first-install-materials','system-backup-v2-controller')}

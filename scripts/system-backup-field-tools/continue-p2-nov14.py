@@ -54,6 +54,22 @@ def renewed_source(A,N,original,observer,agent):
     N.replace_materialized_aliases(A,original,digest_paths,replacements)
     return N.replace_pinned_values(original,replacements)
 
+def renewed_relay(A,N,original):
+    old=A.obj({'File':str(ROOT/'controller-relay/relay-pki.receipt.private.json'),'SHA256':'ce9ad004c051b52969c52c632c29e74bffc9fba617c52316c288662bd58cfc0a'})
+    new=A.obj({'File':str(ROOT/'controller-relay-renewal-20261114/relay-pki.receipt.private.json'),'SHA256':'b63dea4c72600b452100da197a01f3aa2e2be61beea3c4954397c58214246711'})
+    A.need(new['Version']=='original-relay-pki-result.v1' and new['State']=='original_relay_pki_material_issued_service_tls_not_yet_verified' and
+           all(new[k]==old[k] for k in ('DeploymentUID','ServiceUID','Endpoint')),'renewed relay identity differs')
+    A.need(N.moment(new['Until'])>dt.datetime.now(dt.timezone.utc)+dt.timedelta(minutes=45),'renewed relay window insufficient')
+    replacements={};digest_paths={}
+    for key in ('Manifest','Signature','CA','IssuerKey','ServerCertificate','ServerKey','ClientCertificate','ClientKey'):
+        before,after=old[key],new[key];A.read(before);A.read(after);digest_paths[before['SHA256']]=after['File']
+        for field in ('File','SHA256'):
+            A.need(before[field] not in replacements or replacements[before[field]]==after[field],'ambiguous renewed relay pin')
+            replacements[before[field]]=after[field]
+    N.replace_materialized_aliases(A,original,digest_paths,replacements)
+    return N.replace_pinned_values(original,replacements)
+
+
 def renewed_scope(A,original):
     receipt=A.obj({'File':str(ROOT/'p2-team-recovered-coordinates-20261114/receipt.private.json'),
                    'SHA256':'3a85035dc2bf772d60cc95e49534def1a0f20b8a6dd623801a124ebc9a05bc9f'})
@@ -179,6 +195,7 @@ def run(args, package=None):
     for k in ('PartsFile','SourceWritersFile','RedisSourcesFile'):A.need(not selected.get(k) or not Path(selected[k]).exists(),'parent source facts already issued')
     observer,agent=renewed_credentials(A)
     original=renewed_source(A,N,original,observer,agent)
+    original=renewed_relay(A,N,original)
     original=renewed_scope(A,original)
     now=dt.datetime.now(dt.timezone.utc);before,until=T.window(now,now+dt.timedelta(hours=8),N.moment(observer['NotAfter']),N.moment(agent['NotAfter']),30)
     private_journal(A)

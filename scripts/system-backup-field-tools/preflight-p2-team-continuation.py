@@ -96,7 +96,7 @@ def run(package,attempt):
             for v in value:pins(v)
     for cert in certificates:
         A.need(N.moment(cert['NotAfter'])>until,'certificate has less than 45 minutes; renew before image build');pins(cert)
-    C.renewed_scope(A,C.renewed_source(A,N,A.obj(parent['Definition']),*certificates))
+    C.renewed_scope(A,C.renewed_relay(A,N,C.renewed_source(A,N,A.obj(parent['Definition']),*certificates)))
     records=Path(tempfile.mkdtemp(prefix='preflight-',dir=package))
     print('P2_PREFLIGHT_RECORDS',str(records),flush=True)
     site=L.Site(records,A);R.verify_app(A,site)

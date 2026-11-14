@@ -47,6 +47,28 @@ class CredentialsTest(unittest.TestCase):
         self.new['Endpoints'][0]['BootID']='other-boot'
         with self.assertRaisesRegex(ValueError,'observer identity changed'):self.C.renewed_source(self.A,self.N,{},self.new,self.agent)
 
+    def relay_fixture(self):
+        old={'DeploymentUID':'controller','ServiceUID':'service','Endpoint':'https://relay'}
+        new={**old,'Version':'original-relay-pki-result.v1','State':'original_relay_pki_material_issued_service_tls_not_yet_verified','Until':'2099-01-01T00:00:00Z'}
+        for key in ('Manifest','Signature','CA','IssuerKey','ServerCertificate','ServerKey','ClientCertificate','ClientKey'):
+            old[key]=self.pin('relay-old-'+key);new[key]=self.pin('relay-new-'+key)
+        return old,new
+
+    def test_relay_signed_files_rebound_without_changing_business_scope(self):
+        old,new=self.relay_fixture()
+        original={'issuer_certificate':old['CA']['File'],'issuer_certificate_sha256':old['CA']['SHA256'],
+                  'Manifest':old['Manifest'],'Signature':old['Signature'],'scope':[1,2,3,7,8]}
+        with patch.object(self.A,'obj',side_effect=[old,new]):
+            result=self.C.renewed_relay(self.A,self.N,original)
+        self.assertEqual(result,{'issuer_certificate':new['CA']['File'],'issuer_certificate_sha256':new['CA']['SHA256'],
+                                 'Manifest':new['Manifest'],'Signature':new['Signature'],'scope':[1,2,3,7,8]})
+
+    def test_relay_expiry_and_identity_drift_refuse_reuse(self):
+        for key,value,reason in [('Until','2000-01-01T00:00:00Z','window insufficient'),('ServiceUID','other','identity differs')]:
+            old,new=self.relay_fixture();new[key]=value
+            with patch.object(self.A,'obj',side_effect=[old,new]),self.assertRaisesRegex(ValueError,reason):
+                self.C.renewed_relay(self.A,self.N,{})
+
     def proofs(self):
         root=self.root/self.C.RENEWAL;root.mkdir()
         def put(name,value):
