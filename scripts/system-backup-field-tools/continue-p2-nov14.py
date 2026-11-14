@@ -49,7 +49,7 @@ def live_source(A, done, now=None):
     return selected
 
 
-def select_attempt(A, number):
+def select_attempt(A, number, stage_attachment=True):
     global SOURCE_JOURNAL,MOUNT_JOURNAL,SOURCE_OUT
     A.need(1<=number<=99,'source-attempt must be 1..99')
     def paths(n):
@@ -82,7 +82,7 @@ def select_attempt(A, number):
             for k in ('PartsFile','SourceWritersFile','RedisSourcesFile'):
                 A.need(not selection.get(k) or not Path(selection[k]).exists(),'source facts already produced; retire actual task/source before renewal')
         record=oldmount/'team-attachment.created.private.json'
-        if record.exists():
+        if record.exists() and stage_attachment:
             MOUNT_JOURNAL.mkdir(mode=0o700,exist_ok=True)
             # prepare re-observes and validates this exact UID/spec before reuse.
             A.retain(MOUNT_JOURNAL/record.name,record.read_bytes())

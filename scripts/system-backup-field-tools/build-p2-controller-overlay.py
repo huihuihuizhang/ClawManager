@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import subprocess
 import tarfile
+import tempfile
 import urllib.request
 
 BASE='10.130.14.23:5000/clawmanager@sha256:4c196dd9b904244e7715f2151f9f672c9db129b582ca716f1324b2bf31b6847a'
@@ -56,33 +57,83 @@ def build_overlay(base_path,layer_path,output,tag):
             m=tarfile.TarInfo('blobs/sha256/'+digest);m.size=layer_path.stat().st_size;m.mode=0o600
             with layer_path.open('rb') as f:dest.addfile(m,f)
         return sha(manifest)
-def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--directory',required=True);args=parser.parse_args()
-    os.umask(0o077);package=Path(__file__).resolve().parent; build=json.loads((package/'BUILD_RECEIPT.json').read_bytes())
-    directory=Path(args.directory);need(directory.is_absolute() and not directory.exists(),'fresh absolute image-work directory required');directory.mkdir(mode=0o700)
-    need(directory.resolve()==directory,'canonical image-work directory required')
-    for name in TOOLS:
-        need(sha((package/name).read_bytes())==build['Binaries'][name]['SHA256'],'packaged binary hash mismatch')
-    tag='10.130.14.23:5000/clawmanager:p2-team-'+build['SourceRevision'][:12]
-    def run(argv):
-        r=subprocess.run(argv,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=600)
-        need(r.returncode==0,'containerd image operation failed; keep image-work directory');return r.stdout
-    run(['ctr','-n','k8s.io','images','pull','--plain-http',BASE])
-    run(['ctr','-n','k8s.io','images','export',str(directory/'base.tar'),BASE])
-    layer=directory/'tools.tar'
-    with tarfile.open(layer,'w') as t:
-        for name in TOOLS:
-            raw=(package/name).read_bytes();m=tarfile.TarInfo('usr/local/bin/'+name);m.size=len(raw);m.mode=0o555;t.addfile(m,io.BytesIO(raw))
-    digest=build_overlay(directory/'base.tar',layer,directory/'controller.oci.tar',tag)
-    run(['ctr','-n','k8s.io','images','import',str(directory/'controller.oci.tar')])
-    run(['ctr','-n','k8s.io','images','push','--plain-http',tag])
+def registry_receipt(receipt):
+    digest=receipt['Image'].split('@sha256:')[1]
     req=urllib.request.Request('http://10.130.14.23:5000/v2/clawmanager/manifests/sha256:'+digest,headers={'Accept':'application/vnd.oci.image.manifest.v1+json'})
     with urllib.request.urlopen(req,timeout=30) as response: raw=response.read(1<<20)
     need(sha(raw)==digest,'registry readback differs')
-    receipt={'Version':'p2-controller-image.v1','Base':BASE,'Image':'10.130.14.23:5000/clawmanager@sha256:'+digest,'SourceRevision':build['SourceRevision'],'Binaries':build['Binaries']}
-    path=directory/'image.json';path.write_bytes(canonical(receipt))
-    for name in ('base.tar','tools.tar','controller.oci.tar'):(directory/name).unlink()
+
+
+def build_image(package,directory):
+    build=json.loads((package/'BUILD_RECEIPT.json').read_bytes())
+    for name in TOOLS:
+        need(sha((package/name).read_bytes())==build['Binaries'][name]['SHA256'],'packaged binary hash mismatch')
+    need(directory.is_absolute() and not directory.is_symlink(),'absolute real image-work directory required')
+    directory.mkdir(mode=0o700,exist_ok=True)
+    need(directory.resolve()==directory,'canonical image-work directory required')
+    expected={'Version':'p2-controller-image.v1','Base':BASE,'SourceRevision':build['SourceRevision'],'Binaries':build['Binaries']}
+    path=directory/'image.json'
+    if path.exists():
+        try:receipt=json.loads(path.read_bytes())
+        except ValueError:raise ValueError('image receipt is incomplete; preserve this directory and rerun from a fresh unpack directory')
+        need({k:receipt[k] for k in expected}==expected,'existing image receipt belongs to another package; use a fresh unpack directory')
+        registry_receipt(receipt)
+    else:
+        # A fresh attempt never overwrites interrupted exports or their logs.
+        attempt=Path(tempfile.mkdtemp(prefix='attempt-',dir=directory))
+        (attempt/'inputs.json').write_bytes(canonical(expected))
+        print('P2_IMAGE_ATTEMPT',str(attempt),flush=True)
+        def run(label,argv):
+            (attempt/(label+'.argv.json')).write_bytes(canonical(argv))
+            with (attempt/(label+'.stdout.log')).open('xb') as stdout, (attempt/(label+'.stderr.log')).open('xb') as stderr:
+                try:
+                    r=subprocess.run(argv,stdout=stdout,stderr=stderr,timeout=600)
+                except BaseException as error:
+                    (attempt/(label+'.result.json')).write_bytes(canonical({'Exception':type(error).__name__}))
+                    raise
+            (attempt/(label+'.result.json')).write_bytes(canonical({'ExitCode':r.returncode}))
+            need(r.returncode==0,'image '+label+' failed; logs: '+str(attempt)+'; rerun the same entry command; previous attempt is preserved')
+        tag='10.130.14.23:5000/clawmanager:p2-team-'+build['SourceRevision'][:12]
+        try:
+            run('pull',['ctr','-n','k8s.io','images','pull','--plain-http',BASE])
+            run('export',['ctr','-n','k8s.io','images','export',str(attempt/'base.tar'),BASE])
+            layer=attempt/'tools.tar'
+            with tarfile.open(layer,'w') as t:
+                for name in TOOLS:
+                    raw=(package/name).read_bytes();m=tarfile.TarInfo('usr/local/bin/'+name);m.size=len(raw);m.mode=0o555;t.addfile(m,io.BytesIO(raw))
+            digest=build_overlay(attempt/'base.tar',layer,attempt/'controller.oci.tar',tag)
+            run('import',['ctr','-n','k8s.io','images','import',str(attempt/'controller.oci.tar')])
+            run('push',['ctr','-n','k8s.io','images','push','--plain-http',tag])
+            receipt={**expected,'Image':'10.130.14.23:5000/clawmanager@sha256:'+digest,'BuildAttempt':attempt.name}
+            registry_receipt(receipt)
+            staged=attempt/'image.json'
+            with staged.open('xb') as f:
+                f.write(canonical(receipt));f.flush();os.fsync(f.fileno())
+            os.replace(staged,path)
+        except BaseException as error:
+            (attempt/'failure.json').write_bytes(canonical({'Exception':type(error).__name__,'Retry':'rerun the same entry command','Logs':str(attempt)}))
+            print('P2_IMAGE_RETRY_SAME_COMMAND_LOGS_RETAINED',str(attempt),flush=True)
+            raise
+    if receipt.get('BuildAttempt'):
+        name=receipt['BuildAttempt'];need(name.startswith('attempt-') and Path(name).name==name,'invalid build attempt receipt')
+        attempt=directory/name;need(attempt.resolve()==attempt and attempt.is_dir(),'recorded build attempt unavailable')
+        for name in ('base.tar','tools.tar','controller.oci.tar'):
+            artifact=attempt/name;need(not artifact.is_symlink(),'unexpected image artifact link')
+            artifact.unlink(missing_ok=True)
     print('P2_CONTROLLER_IMAGE_READY',json.dumps({'Receipt':str(path),'SHA256':sha(path.read_bytes()),'Image':receipt['Image']}),flush=True)
+    return receipt
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--directory',required=True);args=parser.parse_args()
+    os.umask(0o077);directory=Path(args.directory)
+    need(directory.is_absolute() and not directory.is_symlink(),'absolute real image-work directory required')
+    directory.mkdir(mode=0o700,exist_ok=True)
+    import fcntl
+    with (directory/'build.lock').open('a') as lock:
+        try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:raise ValueError('another image build is active; wait and rerun the same command')
+        build_image(Path(__file__).resolve().parent,directory)
 if __name__=='__main__':
     try:main()
     except Exception as e:raise SystemExit('P2_IMAGE_UNCONFIRMED '+(str(e) if isinstance(e,ValueError) else type(e).__name__))

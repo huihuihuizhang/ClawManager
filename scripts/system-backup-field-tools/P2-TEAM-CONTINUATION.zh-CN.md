@@ -2,7 +2,7 @@
 
 范围仅限已经确认的空闲 RWX 卷挂载阻断和过期 metadata 凭据。执行入口是 `bash run-p2-team-continuation.sh`。务必在独立解包目录内运行；脚本以子进程退出，不关闭登录终端。仅回传 P2_ 开头的摘要，不回传 private 文件或 token。
 
-入口按顺序完成：
+前置只读预检通过后，入口按顺序完成：
 1. 校验包内文件；从已确认的应用镜像构建三个工具的 OCI 覆盖层，推送现场 registry 并按 digest 回读。成功后删除该目录中三个镜像临时 tar，保留 image.json。
 2. 用原安装者密码、enrollment、完整 writer selection 和实际 Vault 作用域签发 metadata-only 身份。不会使用过期 source window 作为签发前置条件；其余证书有效期仍独立检查。
 3. 创建新的 immutable Secret，以 Deployment UID、resourceVersion 和完整旧 spec 为条件更新控制器；核验 rollout、Pod 所有者、文件模式/属主/哈希及运行二进制。
@@ -58,3 +58,13 @@ python3 -B retire-p2-team-attachment.py \
 若删除响应丢失，使用同一组参数重跑：实际 Pod 已消失且有本入口 sent 记录时补齐回执；仍在终止则继续等待；同名替换 Pod、来源存在新批次、证据变化或控制器仍运行均拒绝。
 
 离线验证使用真实 Python 编排、pin 校验、交付计划、原生调用日志和输出传递，仅模拟 Kubernetes/Vault/原生进程边界。它不证明现场实际恢复或存储健康。
+
+## 镜像前预检与镜像中断重跑
+
+入口顺序现在是：包校验 → `preflight-p2-team-continuation.py` → 镜像制作/仓库回读 → 凭据签发与控制器更新。预检检查必要工具和原始文件/pin、当前控制器身份/规格、来源批次状态、原节点/运行时证书至少剩余 45 分钟；已有新 metadata 凭据时读回其 TTL，否则检查用于签发的原 Vault owner 凭据。旧来源 API token 将在正式续接中重新签发，不把其过期误判成不可续接。
+
+预检只读取集群和 Vault，临时 Vault 端口转发用后关闭；不签发 token、不更新 Deployment、不拉取或推送镜像。原管理员密码等文件会校验存在性/权限，实际原生身份授权仍由随后签发入口验证。预检报告写在解包目录的 `preflight-*` 中。仓库检查使用 `/v2/` 与精确 base manifest 摘要；磁盘按解包位置、`/var/lib/containerd` 和 `/run/system-backup/runtime` 估算需求，同一文件系统的需求相加。空间估算包含余量，不能保证压缩层的实际展开尺寸。后续正式入口仍重复检查有效期，预检结果不能代替即时授权。
+
+镜像制作中断后，直接重跑同一条 `bash run-p2-team-continuation.sh`（若使用了批次参数，原样保留）。新实现允许已存在的 `image-work`，每次无成功回执的重试新建 `image-work/attempt-*`；原失败文件、argv、stdout/stderr、退出码或异常摘要全部保留。旧版遗留的根目录 tar 也保留。不会继续使用半截导出包。
+
+成功回执通过原子替换写入 `image-work/image.json`，然后仅清理该成功批次的三个临时 tar，保留日志。若已有成功回执，重跑只核验包身份并向仓库重新读取镜像摘要；同一目录有并行制作时会明确要求等待。若旧回执已损坏或属于其他包，提示保留目录、在新的解包目录执行，避免猜测或覆盖旧记录。失败日志可能包含现场路径，不直接公开全部日志。
