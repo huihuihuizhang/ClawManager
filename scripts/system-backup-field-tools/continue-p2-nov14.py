@@ -56,7 +56,7 @@ def renewed_source(A,N,original,observer,agent):
 
 def renewed_relay(A,N,original):
     old=A.obj({'File':str(ROOT/'controller-relay/relay-pki.receipt.private.json'),'SHA256':'ce9ad004c051b52969c52c632c29e74bffc9fba617c52316c288662bd58cfc0a'})
-    new=A.obj({'File':str(ROOT/'controller-relay-renewal-20261114-resource-rules/relay-pki.receipt.private.json'),'SHA256':'205459a7edcfc4a8e119caa2a06b223b7733e05ec3d7452507e24e9a3dcb7058'})
+    new=A.obj({'File':str(ROOT/'controller-relay-renewal-20261114-resource-selections/relay-pki.receipt.private.json'),'SHA256':'97ef521ad1887e16de0c6ecffc59ca44f913e5a45ffad90a2543980b0966f252'})
     A.need(new['Version']=='original-relay-pki-result.v1' and new['State']=='original_relay_pki_material_issued_service_tls_not_yet_verified' and
            all(new[k]==old[k] for k in ('DeploymentUID','ServiceUID','Endpoint')),'renewed relay identity differs')
     A.need(N.moment(new['Until'])>dt.datetime.now(dt.timezone.utc)+dt.timedelta(minutes=45),'renewed relay window insufficient')
