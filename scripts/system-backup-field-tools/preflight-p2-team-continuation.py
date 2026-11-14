@@ -86,7 +86,7 @@ def run(package,attempt):
             digest=common[common.index(sha_flag)+1] if sha_flag in common else A.sha(Path(path).read_bytes())
             A.read({'File':path,'SHA256':digest})
     until=dt.datetime.now(dt.timezone.utc)+dt.timedelta(minutes=45)
-    certificates=[(C.ROOT/'renewal-20261113/observer/receipt.private.json','c0d69a9d9d1254a40993fb5516ed936325f265a74b0dde4b3823ea52fdd010f5'),(C.ROOT/'renewal-20261113/runtime-unique/runtime-agent.receipt.private.json','1d61b1d11b3427fd46d9d2eab3bd04f19daf74ae3a674a9f2275269c1810f149')]
+    certificates=C.renewed_credentials(A)
     def pins(value):
         if isinstance(value,dict):
             if set(value)=={'File','SHA256'}:A.read(value)
@@ -94,8 +94,9 @@ def run(package,attempt):
                 for v in value.values():pins(v)
         elif isinstance(value,list):
             for v in value:pins(v)
-    for path,digest in certificates:
-        cert=A.obj({'File':str(path),'SHA256':digest});A.need(N.moment(cert['NotAfter'])>until,'certificate has less than 45 minutes; renew before image build');pins(cert)
+    for cert in certificates:
+        A.need(N.moment(cert['NotAfter'])>until,'certificate has less than 45 minutes; renew before image build');pins(cert)
+    C.renewed_scope(A,C.renewed_source(A,N,A.obj(parent['Definition']),*certificates))
     records=Path(tempfile.mkdtemp(prefix='preflight-',dir=package))
     print('P2_PREFLIGHT_RECORDS',str(records),flush=True)
     site=L.Site(records,A);R.verify_app(A,site)

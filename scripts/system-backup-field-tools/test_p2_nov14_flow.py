@@ -26,6 +26,11 @@ class FlowTest(unittest.TestCase):
         self.M.ROOT=self.root;self.M.JOURNAL=self.journal;self.M.MIRROR=self.mirror
         self.events=[];self.fail=None;self.native_calls=[];self.created=False
         self.now=dt.datetime.now(dt.timezone.utc);self.until=(self.now+dt.timedelta(hours=4)).isoformat()
+        self.M.renewed_credentials=lambda A:({'NotAfter':self.until},{'NotAfter':self.until})
+        def renewed(A,N,original,observer,agent):
+            self.events.append('renewed-credentials-bound');return original
+        self.M.renewed_source=renewed
+        self.M.renewed_scope=lambda A,original:original
         def put(path,value):path.parent.mkdir(parents=True,exist_ok=True);return self.A.retain(path,value)
         self.put=put
         self.binaries={n:{'SHA256':self.A.sha(n.encode())} for n in ('system-backup-source-registries','system-backup-first-install-materials','system-backup-v2-controller')}
@@ -107,6 +112,7 @@ class FlowTest(unittest.TestCase):
         self.run_flow();self.run_flow()
         self.assertEqual(self.native_calls,['issue-provider-metadata','author-initial-source-inputs','prepare-mount-materials'])
         self.assertTrue((self.M.MOUNT_JOURNAL/'completed.json').exists())
+        self.assertLess(self.events.index('renewed-credentials-bound'),self.events.index('metadata-verified'))
     def test_rollout_failure_resumes_from_live_deployment(self):
         self.fail='rollout'
         with self.assertRaisesRegex(ValueError,'rollout'):self.run_flow()

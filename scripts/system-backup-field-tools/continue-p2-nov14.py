@@ -16,6 +16,53 @@ MIRROR=Path('/run/system-backup/runtime/p2-renew-1048e373bfe0')
 SOURCE_JOURNAL=JOURNAL/'source'
 MOUNT_JOURNAL=ROOT/'longhorn-source-20261114-team-attachment'
 SOURCE_OUT=MIRROR/'initial-source-20261114-team'
+RENEWAL='renewal-20261114-after-mysql-expansion'
+CERTIFICATES=(('observer/receipt.private.json','623e4b6b5e7619a70b6f835beeda4d46a62496bb2f8e48d3d1cf1c8f6b4584a6'),
+              ('runtime-unique/runtime-agent.receipt.private.json','7b523961d83f6cf507b45aae14361c3eecddb6f0d625984ad0e1b8dba53d52e8'))
+ROTATIONS=(('node-k8s-master/completed.json','83c647cb5cd92a8a802246bfa6aa1da5e393ff9a8673f1fdcfbc74125bdd42d6'),
+           ('node-node1/completed.json','c89ed76c075a48c1347bc101ebf8a68404c2724fe7977cb538fcf5d5c48e7093'),
+           ('runtime-unique/runtime-rotation/completed.json','bbb220740d8b5bc7883f91d4b1f42c8384eb0b03207156d7cab2ea2254b67037'))
+
+def renewed_credentials(A):
+    observer,agent=[A.obj({'File':str(ROOT/RENEWAL/name),'SHA256':digest}) for name,digest in CERTIFICATES]
+    proofs=[A.obj({'File':str(ROOT/RENEWAL/name),'SHA256':digest}) for name,digest in ROTATIONS]
+    for node,proof in zip(('k8s-master','node1'),proofs):
+        A.need(proof['Version']=='p2-observer-certificate-rotation-completed.v1' and proof['Node']==node and
+               proof['CA']==observer['CA']['SHA256'] and proof['DurableRecordsPreserved'] is True,'completed observer rotation differs')
+    A.need(proofs[2]['Version']=='p2-runtime-certificate-rotation.v1' and proofs[2]['CA']==agent['CA'] and
+           proofs[2]['ImagesPreserved'] is True and proofs[2]['NotAfter']==agent['NotAfter'],'completed runtime rotation differs')
+    return observer,agent
+
+def renewed_source(A,N,original,observer,agent):
+    old=A.obj({'File':str(ROOT/'renewal-20261113/observer/receipt.private.json'),'SHA256':'c0d69a9d9d1254a40993fb5516ed936325f265a74b0dde4b3823ea52fdd010f5'})
+    old_agent=A.obj({'File':str(ROOT/'renewal-20261113/runtime-unique/runtime-agent.receipt.private.json'),'SHA256':'1d61b1d11b3427fd46d9d2eab3bd04f19daf74ae3a674a9f2275269c1810f149'})
+    replacements={};digest_paths={}
+    def pair(before,after):
+        A.read(before);A.read(after);digest_paths[before['SHA256']]=after['File']
+        for key in ('File','SHA256'):
+            A.need(before[key] not in replacements or replacements[before[key]]==after[key],'ambiguous renewed credential')
+            replacements[before[key]]=after[key]
+    for key in ('CA','ClientCertificate','ClientKey'):pair(old[key],observer[key])
+    endpoints={(e['Node'],e['Kind']):e for e in observer['Endpoints']}
+    A.need(len(endpoints)==len(old['Endpoints'])==8,'complete renewed observer roster required')
+    for previous in old['Endpoints']:
+        current=endpoints[(previous['Node'],previous['Kind'])]
+        A.need(all(previous[k]==current[k] for k in ('NodeUID','Endpoint','MachineID','BootID')),'renewed observer identity changed')
+        for key in ('Certificate','PrivateKey','AnchorKey'):
+            if previous.get(key,{}).get('File'):pair(previous[key],current[key])
+    pair(old_agent['CA'],agent['CA'])
+    N.replace_materialized_aliases(A,original,digest_paths,replacements)
+    return N.replace_pinned_values(original,replacements)
+
+def renewed_scope(A,original):
+    receipt=A.obj({'File':str(ROOT/'p2-team-current-coordinates-20261114/receipt.private.json'),
+                   'SHA256':'0a3b018d94d9fc7d0dc5ab61501e172345bc2841b5404694d344915cf1a87eb7'})
+    A.need(receipt['Version']=='original-initial-source-data-authored.v1' and receipt['InstanceCount']==8 and
+           receipt['WriterQualified'] is False and receipt['BackupReady'] is False,'native renewed coordinates required')
+    coordinates=A.obj(receipt['Coordinates']);A.read(receipt['KubernetesSnapshot'])
+    old=original['Deployment']['runtime_sources']['runtime_test_scope']
+    if old==coordinates['RuntimeTestScope']:return original
+    return load('renew-p2-runtime-scope-nov13').replace_scope(original,coordinates)
 def load(name):
     spec=importlib.util.spec_from_file_location(name,Path(__file__).with_name(name+'.py'));m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
 
@@ -130,8 +177,9 @@ def run(args, package=None):
     A.need(parent['Receipt']['SHA256']==T.RECEIPT_SHA and parent['Definition']['SHA256']==T.DEFINITION_SHA and parent['SourceSelection']['SHA256']==T.SELECTION_SHA and parent['GrantsIssued'] is False,'recovered parent differs')
     original=A.obj(parent['Definition']);selected=A.obj(parent['SourceSelection']);A.read(parent['Receipt'])
     for k in ('PartsFile','SourceWritersFile','RedisSourcesFile'):A.need(not selected.get(k) or not Path(selected[k]).exists(),'parent source facts already issued')
-    observer=A.obj({'File':str(ROOT/'renewal-20261113/observer/receipt.private.json'),'SHA256':'c0d69a9d9d1254a40993fb5516ed936325f265a74b0dde4b3823ea52fdd010f5'})
-    agent=A.obj({'File':str(ROOT/'renewal-20261113/runtime-unique/runtime-agent.receipt.private.json'),'SHA256':'1d61b1d11b3427fd46d9d2eab3bd04f19daf74ae3a674a9f2275269c1810f149'})
+    observer,agent=renewed_credentials(A)
+    original=renewed_source(A,N,original,observer,agent)
+    original=renewed_scope(A,original)
     now=dt.datetime.now(dt.timezone.utc);before,until=T.window(now,now+dt.timedelta(hours=8),N.moment(observer['NotAfter']),N.moment(agent['NotAfter']),30)
     private_journal(A)
     print('P2_NOV14_RECORDS',JOURNAL,flush=True);site=L.Site(JOURNAL,A)
