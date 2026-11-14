@@ -65,13 +65,30 @@ class CredentialsTest(unittest.TestCase):
              'Container':'clawmanager-app','Image':'10.130.14.23:5000/clawmanager@sha256:8287aa71bcfc9e1596d761a9b46891575f3708323300839c98e075a22875e780'}
         original={'Materials':{'Discovery':{'TeamWriterImages':{key:[old]}}},'Scope':[1,2,3,7,8]}
         before=copy.deepcopy(original)
-        with patch.object(self.A,'obj',return_value=publication),patch.object(self.C,'load',return_value=SimpleNamespace(IMAGE=image,ELF_SHA='binary')):
+        init={'Container':'wait-secret-broker','Image':'fixed-init','ConfigDigest':'fixed-config','BuildCommit':'fixed-commit'}
+        with patch.object(self.A,'obj',return_value=publication),patch.object(self.C,'confirmed_team_init',return_value=init),patch.object(self.C,'load',return_value=SimpleNamespace(IMAGE=image,ELF_SHA='binary')):
             result=self.C.renewed_team_writer(self.A,original)
             pin=result['Materials']['Discovery']['TeamWriterImages'][key][0]
             self.assertEqual((pin['Image'],pin['ConfigDigest'],pin['BuildCommit']),(image,'sha256:'+config['SHA256'],publication['SourceRevision']))
             self.assertEqual(original,before);self.assertEqual(result['Scope'],original['Scope'])
+            self.assertEqual(result['Materials']['Discovery']['TeamWriterImages'][key][1],init)
+            self.assertEqual(self.C.renewed_team_writer(self.A,result),result)
+            drift=copy.deepcopy(result);drift['Materials']['Discovery']['TeamWriterImages'][key][1]['Image']='unreviewed-init'
+            with self.assertRaisesRegex(ValueError,'release drift'):self.C.renewed_team_writer(self.A,drift)
             original['Materials']['Discovery']['TeamWriterImages'][key][0]['Image']='unrelated'
             with self.assertRaisesRegex(ValueError,'release drift'):self.C.renewed_team_writer(self.A,original)
+
+    def test_init_release_requires_pinned_config_and_revision(self):
+        digest='c357f48da36e9dc7f3ebf54c255ecd08b6ca08aaf38de2a8f61863b6ac3eef45'
+        manifest={'config':{'digest':'sha256:'+digest}}
+        config={'config':{'Labels':{'org.opencontainers.image.revision':'03fa0a461930642f1f0561ab872f35be0402468d'}}}
+        with patch.object(self.A,'obj',side_effect=[manifest,config]) as read:
+            pin=self.C.confirmed_team_init(self.A)
+            self.assertEqual(pin['Container'],'wait-secret-broker')
+            self.assertEqual(read.call_args_list[1].args[0]['SHA256'],digest)
+        for bad_manifest,bad_config in [({'config':{'digest':'other'}},config),(manifest,{'config':{'Labels':{}}})]:
+            with patch.object(self.A,'obj',side_effect=[bad_manifest,bad_config]),self.assertRaisesRegex(ValueError,'init release differs'):
+                self.C.confirmed_team_init(self.A)
 
     def test_relay_signed_files_rebound_without_changing_business_scope(self):
         old,new=self.relay_fixture()

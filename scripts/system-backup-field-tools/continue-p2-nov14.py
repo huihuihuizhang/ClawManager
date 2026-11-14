@@ -70,6 +70,19 @@ def renewed_relay(A,N,original):
     return N.replace_pinned_values(original,replacements)
 
 
+def confirmed_team_init(A):
+    directory=ROOT/'team-init-image-20261114'
+    manifest=A.obj({'File':str(directory/'manifest.json'),'SHA256':'ae64fd8a1c0fd825c44722107894a0d60ce428e0daf5a66e9b2064d5b3c4335e'})
+    config_digest='c357f48da36e9dc7f3ebf54c255ecd08b6ca08aaf38de2a8f61863b6ac3eef45'
+    config=A.obj({'File':str(directory/'config.json'),'SHA256':config_digest})
+    revision='03fa0a461930642f1f0561ab872f35be0402468d'
+    A.need(manifest.get('config',{}).get('digest')=='sha256:'+config_digest and
+           config.get('config',{}).get('Labels',{}).get('org.opencontainers.image.revision')==revision,
+           'confirmed team init release differs')
+    return {'Container':'wait-secret-broker','Image':'10.130.14.23:5000/clawmanager@sha256:ae64fd8a1c0fd825c44722107894a0d60ce428e0daf5a66e9b2064d5b3c4335e',
+            'ConfigDigest':'sha256:'+config_digest,'BuildCommit':revision}
+
+
 def renewed_team_writer(A,original):
     R=load('resume-p2-recovered-source')
     publication=A.obj({'File':str(ROOT/'runtime-pool-recovery-312eaa9e/image/image-data.json'),'SHA256':'f08c78bd613f378aa4bb988a54ab820a12aa514a0b35d6610890597fd35f9ff1'})
@@ -82,8 +95,9 @@ def renewed_team_writer(A,original):
     previous={'BuildCommit':'eca964d42b96c31cb381531889a39c23a366ffab','ConfigDigest':'sha256:2581e53d771cd99be4e06f5eb61032dbac69701fa98cdbce6c45b43a7d6332cb',
               'Container':'clawmanager-app','Image':'10.130.14.23:5000/clawmanager@sha256:8287aa71bcfc9e1596d761a9b46891575f3708323300839c98e075a22875e780'}
     current={'BuildCommit':publication['SourceRevision'],'ConfigDigest':'sha256:'+publication['Config']['SHA256'],'Container':'clawmanager-app','Image':R.IMAGE}
-    A.need(images.get(key) in ([previous],[current]),'team writer release drift')
-    images[key]=[current]
+    init=confirmed_team_init(A)
+    A.need(images.get(key) in ([previous],[current],[current,init]),'team writer release drift')
+    images[key]=[current,init]
     return result
 
 
