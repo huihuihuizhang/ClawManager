@@ -39,6 +39,20 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 		roots[node] = append(roots[node], root)
 		return nil
 	}
+	volumeScope := func(pod *corev1.Pod) ([]string, *originalCSIPodScope, error) {
+		paths, classes, err := s.classifyPodPersistentVolumes(ctx, pod)
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(classes) == 0 {
+			return paths, nil, nil
+		}
+		if len(paths) != 0 {
+			return nil, nil, OriginalWriterSourceFailure{Dependency: "original_mixed_csi_host_scope_required"}
+		}
+		coverage, err := s.prepareCSIPodScope(ctx, pod, classes)
+		return nil, coverage, err
+	}
 	for _, w := range s.deployments {
 		// Native Redis captures logical DUMP/absolute TTL, not live AOF files.
 		if w.redis != nil {
@@ -48,15 +62,18 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 			continue
 		}
 		for _, p := range w.pods {
-			addPod(p)
 			pod, err := s.owner.operator.installer.kube.CoreV1().Pods(w.namespace).Get(ctx, p.Name, metav1.GetOptions{})
 			if err != nil || string(pod.UID) != p.UID {
 				return nil, ErrInstall
 			}
-			paths, err := s.actualPodPersistentRoots(ctx, pod)
+			paths, coverage, err := volumeScope(pod)
 			if err != nil {
 				return nil, err
 			}
+			if coverage != nil {
+				continue
+			} // concrete Longhorn actor, never a fabricated cold-cut root
+			addPod(p)
 			for _, root := range paths {
 				if addRoot(p.Node, root) != nil {
 					return nil, ErrInstall
@@ -65,15 +82,18 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 		}
 	}
 	for _, w := range s.proPods {
-		addPod(w.process)
 		pod, err := s.owner.operator.installer.kube.CoreV1().Pods(w.source.Namespace).Get(ctx, w.source.Pod, metav1.GetOptions{})
 		if err != nil || string(pod.UID) != w.original.UID || originalObjectSHA(pod.Spec) != w.specSHA {
 			return nil, ErrInstall
 		}
-		paths, err := s.actualPodPersistentRoots(ctx, pod)
+		paths, coverage, err := volumeScope(pod)
 		if err != nil {
 			return nil, err
 		}
+		if coverage != nil {
+			continue
+		}
+		addPod(w.process)
 		for _, root := range paths {
 			if addRoot(w.process.Node, root) != nil {
 				return nil, ErrInstall
@@ -91,8 +111,14 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 	// actual captured volume roots must nevertheless be pinned by the same
 	// original readonly prepare anchor, before the first source mutation.
 	for _, shared := range s.sharedRuntimes {
-		paths, err := s.actualPodPersistentRoots(ctx, &shared.pod)
-		if err != nil || len(paths) == 0 {
+		paths, coverage, err := volumeScope(&shared.pod)
+		if err != nil {
+			return nil, err
+		}
+		if coverage != nil {
+			continue
+		}
+		if len(paths) == 0 {
 			return nil, ErrInstall
 		}
 		for _, root := range paths {

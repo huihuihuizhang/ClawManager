@@ -69,6 +69,7 @@ type PreparedOriginalWriterSet struct {
 	longhornMaterials     *q.LonghornExt4Materials
 	longhornRWXClients    []originalLonghornRWXClient
 	longhornRWX           []*originalLonghornRWXHold
+	csiPods               []*originalCSIPodScope
 	minioHistory          *originalMinIOHistoryLifecycle
 	sharedLifecycle       []*originalSharedRuntimeLifecycle
 	sharedRuntimes        []*OriginalSharedRuntimeReservation

@@ -84,8 +84,8 @@ func TestOriginalLonghornRWXPreStopRegistrationRetainsOriginalMount(t *testing.T
 	}
 	provider := q.LonghornExt4Request{Action: "register", Attempt: 1, Binding: material.Sources[0].Binding,
 		Claim: q.LonghornExt4Claim{OriginalOperationID: "original", EntryRowVersion: 7}}
-	r := originalLonghornRWXClientRegistration(provider, clients[0])
-	if r.Action != "register-client" || r.ClientPodUID != clients[0].PodUID || r.ClientContainerID != clients[0].ContainerID || r.SourceIdentity != clients[0].Template.Identity || r.Claim != provider.Claim || r.Binding.NodeUID != clients[0].Template.Binding.NodeUID || r.DrainBoundarySHA256 != "" || len(r.RegistrationBoundarySHA256) != 64 {
+	r := originalLonghornRWXClientRegistration(provider, clients[0], true)
+	if r.Action != "register-client" || !r.ClientMustExit || r.ClientPodUID != clients[0].PodUID || r.ClientContainerID != clients[0].ContainerID || r.SourceIdentity != clients[0].Template.Identity || r.Claim != provider.Claim || r.Binding.NodeUID != clients[0].Template.Binding.NodeUID || r.DrainBoundarySHA256 != "" || len(r.RegistrationBoundarySHA256) != 64 {
 		t.Fatal("pre-stop registration changed the original source or pretended it was drained")
 	}
 }

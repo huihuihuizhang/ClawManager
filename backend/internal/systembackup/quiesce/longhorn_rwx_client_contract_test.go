@@ -5,6 +5,21 @@ import (
 	"testing"
 )
 
+func TestLonghornColdClientExitRequirementIsOriginalOnly(t *testing.T) {
+	r := LonghornExt4Request{Action: "register-client", ClientPodName: "app", ClientPodUID: "pod", ClientContainerID: "containerd://original", RegistrationBoundarySHA256: strings.Repeat("a", 64), ClientMustExit: true}
+	if validLonghornRWXClientTransition(r) {
+		t.Fatal("unbound exit mode accepted")
+	}
+	r.Claim.OriginalOperationID = strings.Repeat("1", 32)
+	if !validLonghornRWXClientTransition(r) {
+		t.Fatal("original cold mode refused")
+	}
+	r.Claim.TaskPublicID = "task"
+	if validLonghornRWXClientTransition(r) {
+		t.Fatal("original cold mode borrowed task scope")
+	}
+}
+
 func TestLonghornRWXClientSyncRequiresBothOriginalAndDrainBoundaries(t *testing.T) {
 	r := LonghornExt4Request{Action: "register-client", ClientPodName: "original-app", ClientPodUID: "original-pod", ClientContainerID: "containerd://original", RegistrationBoundarySHA256: strings.Repeat("a", 64)}
 	if !validLonghornRWXClientTransition(r) {

@@ -41,6 +41,9 @@ func (c *SharedRuntimeNodeClient) LonghornExt4Transition(ctx context.Context, in
 	if (in.Action == "register-client" || in.Action == "sync-client") && !validLonghornRWXClientTransition(in) {
 		return nil, nil, ErrNodeObservation
 	}
+	if in.ClientMustExit && in.Action != "register-client" && in.Action != "sync-client" {
+		return nil, nil, ErrNodeObservation
+	}
 	endpoint, ok := c.proof.Endpoints[in.Binding.Node]
 	if !ok {
 		return nil, nil, ErrNodeObservation

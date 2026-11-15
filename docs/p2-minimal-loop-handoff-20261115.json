@@ -5,7 +5,7 @@
   "user_requested_handoff": true,
   "complete": false,
   "continuation_progress": {
-    "state": "Shared runtime native CSI/NFS observation component now implemented with exact installed-template/original-journal mount pins and truthful cgroup-only facts. Local 40 top-level/54 subtests passed, including actual kernel cgroup freeze/thaw/FD scan. Not wired into controller CSI coverage or C1 archive capture, not deployed; no real backup.",
+    "state": "Cold-client exit requirement and concrete CSI pod-to-RWX/RWO actor coverage now wired and locally verified. Shared runtime requests use exact NFS client references; complete held verifier additionally requires matching physical actor and synced client state. No false whole-node cut/host paths. C1 archive still host-only; real node1 unit lacks Longhorn materials and original selection lacks host definition. Not deployed, no real backup.",
     "runtime_binding_recovery_current": {
       "Root": "/root/sbk/p2-remote-1a466c69-01/runtime-instance3-recovery-current",
       "Cause": "Instance 3 still referenced old Hermes Pod ebbccb4b-967d-49e9-874c-bc479743c321 after certificate rollout. New Pod reused its IP, so healthy agent endpoint prevented automatic stale-pod failover. Original mount author correctly refused the draining old binding.",
@@ -97,8 +97,8 @@
     ],
     "test_cleanup": "本轮 D:\\dsh-work\\p2-keeper-flow-20261115 已整体删除并确认不存在；Linux tmpfs 已卸载。只保留正式交付目录/归档与上传记录。无运行中的本轮测试或构建。",
     "next_required": [
-      "下一步直接接 controller 实际 CSI 全量卷覆盖与 C1 采集。CSI-only App 冷客户端不能仅凭 sync-client 成功替代原进程退出：当前 native sync 对仍存活客户端可直接 syncfs，若不再有 whole-node cut，必须明确要求 cold 客户端原 CRI EXITED+完整 task scan，不能删去这项物理证明。runtime CSI 新分支仅证明 cgroup/mount；最终 held 必须同时核对对应完整 RWX cohort sync、provider hold/RWO keeper hold。",
-      "原 ArchiveNativeCut/PrepareArchiveProvider 只从 s.nodes 取 whole-node host-root claim；CSI provider 需要真实 Longhorn 原 held 源采集。不可伪造 node cold-cut、空路径或漏掉 Pro/团队/工作区任何源部分。",
+      "下一项直接补 C1 的真实 Longhorn 冻结源采集。当前控制器 CSI 卷覆盖与冷客户端退出要求已本地通过，不再重复基础测试。原 ArchiveNativeCut/PrepareArchiveProvider 仍从 s.nodes 取 host-root cut；不能将 CSI 根塞入该 host claim，不能伪造节点 cut 或漏任何卷部分。",
+      "现场真实配置缺口：node1 owner unit 只有基础 runtime 参数，没有 --longhorn-materials-file/sha256；保留 writer-selection-runtime-recovered 也没有 LonghornHostDefinition/LonghornKeeperImage。现有 originalWriterSourceConfig 已支持 original_longhorn_host_definition/original_longhorn_keeper_image，必须经正式 author 使用。主机材料作者的 tenant 检查消费有时效的 V2 registry；旧 window 已过期，不可绕过或手造已加载模板。待 C1 调用链和恢复通过后集中刷新短期来源、原生生成/加载对应主机材料与新 selection，再现场验证。",
       "通过当前调用链和必要异常恢复后，集中刷新实际需要的短期来源。新组件和新 relay 已验收，不重做镜像、组件更新或仍充足有效期的证书轮换；旧 facts/selection 不覆盖、不盲重放。",
       "页面真实首单：完整采集、业务恢复、上传、独立读回、目录登记全部留存原始回执后才完成目标。当前仍未停写、采集或创建任务。"
     ],
@@ -170,6 +170,18 @@
         "reuse": "复用 Longhorn register-client 的实际 CRI/原命名空间 FD/NFS 挂载校验和现有 runtime 私有 MAC/fsync 日志。新请求必须是已安装模板及同一原 Pod/CID/namespace/node/mount；不携带 claim，不增加签发权。恢复从认证原日志固定坐标并重查实际挂载。",
         "finish_check": "CSI 分支的 check-frozen 只证明原 cohort cgroup/Agent/mount，并明确另需 Longhorn source owner；Files 必须为 0，不能继承 host flush/external-writer 断言。混入 hostPaths、空引用、漂移身份、未安装来源、错误 TLS 回复事实/文件数拒绝。40 主与54子测试通过，包括真实 cgroup/FD 与私有认证日志；不是现场 NFS/完整采集验收。",
         "not_yet_complete": "尚未接 controller 的 CSI 全量卷覆盖，tenant/CSI guard 保持；现场未部署。C1 archive provider 当前仍绑定 whole-node host-root cut，需要真实 Longhorn held 源采集，不能伪造冷 Pod/节点 cut 或把 NFS 当 hostPath。"
+      },
+      {
+        "change": "原安装冷 RWX 客户端的退出要求在 register-client 时固定，sync 不可降级",
+        "blocked_step": "移交 CSI actor 后不能依赖 host-path whole-node cut；原 sync-client 对仍存活进程可以直接 syncfs，API Pod 消失不能保证 App 原进程退出。",
+        "reuse": "复用既有 CRI EXITED+双轮完整任务扫描及保留 FD；仅对原安装冷客户端加固定 ClientMustExit，task 分支不扩展。真实原进程仍活且 CRI RUNNING 时返回退出未确认，真退出后才能同步；独立 release 不依赖该客户端状态。",
+        "finish_check": "实际隔离原进程/命名空间/cgroup，完整 native sync 入口拒绝 live 分支、退出后同一 FD 成功；缺失/运行 CRI 拒绝；已登记退出要求不能降级。Linux 相关回归通过，NFS/CRI 元数据仍为夹具，不是现场 NFS held。"
+      },
+      {
+        "change": "App/Pro/shared runtime 的实际 CSI 卷映射接入原 actor 与完整 held 核对",
+        "blocked_step": "host roots 不能描述现场 CSI 卷，也不能用空 SourcePaths、虚构冷 Pod 或安装 namespace 的 whole-node cut 覆盖 tenant Pro。",
+        "reuse": "复用实际 PVC/PV/namespace/node/Pod/CID 和已有 RWX/RWO actor。当前现场每 Pod 一个 CSI 卷、一个普通容器；未知/混合形态仍拒绝。shared runtime 使用已实现 LonghornClient 观测；最终 held 必须同时有对应真实 source hold、完整 cohort sync 和匹配的冷退出/frozen 证明。",
+        "finish_check": "已通过 Windows install 全包37.695s及 Linux相关回归；缺 actor、跨 set、身份替换、sidecar/subpath、错误 CID、PVC/PV/ns/node 漂移都拒绝；仅有 metadata/actor 对象不能成为 held。未解除 tenant file-only gate；C1 archive provider 仍需真实 Longhorn 冻结源采集。"
       }
     ],
     "latest_read_only_field_check": {
@@ -891,6 +903,64 @@
       "EnvironmentCorrections": "Initial D ancestry correctly refused private-owner store. Used D tmpfs with private mount/PID/cgroup namespaces and standard rootfs. Temporary rootfs had to be a real bind mount for kernel mountinfo and child unshare. No production guard/test assertion changed. Existing Docker Engine unavailable; it was not started.",
       "TemporaryRoot": "D:\\dsh-work\\p2-shared-csi-20261115",
       "Cleanup": "D tmpfs verified unmounted (mountpoint exit32), dedicated cgroup and /run aliases verified absent; D:/dsh-work/p2-shared-csi-20261115 entirely removed and verified absent. No build/test from this round remains running."
+    },
+    "csi_controller_wiring_validation": {
+      "At": "2026-11-15T16:23:57.947323+00:00",
+      "State": "PASS local wiring/regressions; C1 frozen-source archive still missing. Not deployed.",
+      "WindowsInstallFullPackageSeconds": 37.695,
+      "LinuxTopLevelPasses": 41,
+      "LinuxSubtestPasses": 54,
+      "ActualColdLiveCRIProcessRefusedBeforeSync": true,
+      "ActualOriginalExitThenRetainedFDSync": true,
+      "ExitRequirementCannotBeDowngraded": true,
+      "CRIAndNFSMetaAreFixtures": true,
+      "ActualKernelCgroupFreezeThawAndFDScan": true,
+      "OnlySkippedParentHelper": "TestSharedCgroupNativeWorker, executed as subprocess by native tests",
+      "ResourceMappingFixturesAreNotFieldCoverageProofs": true,
+      "Deployed": false,
+      "SiteNFSProbeCompleted": false,
+      "BackupCompleted": false,
+      "SourceSHA256": {
+        "quiesce/longhorn_ext4_contract.go": "8aafe8b58f57f39dcb1d08b73ef142d5f9e6f718ef4ea97a10174a0c6a96dee9",
+        "quiesce/longhorn_ext4_client.go": "b81e10cf11e7fe790bc4c20bf1fc167edbc307ad68c099e6fb8b0ff436478a60",
+        "quiesce/longhorn_ext4_registration_linux.go": "e3a3fdcffaa8ab1ccc633a19d4d58aa58ee27d94e669bb27cb2ac5edef97f380",
+        "quiesce/longhorn_rwx_client_actions_linux.go": "3e68538bc69d7cc009481c2b26846d270f74b97ac3f9e6814b2b08eb763b4f0d",
+        "quiesce/longhorn_rwx_client_contract.go": "91248c615aafc20f6ad6ff1f1da279752f73f15f683a2f1e302a374d8cfdfee7",
+        "quiesce/longhorn_rwx_client_contract_test.go": "421f84269b0d667b3ac132ab1f91922c738fc5b22d26af022da7883557da3652",
+        "quiesce/longhorn_rwx_client_exit_linux_test.go": "63c5bd61c726b5036a4e914fe35a99336904819de75af35dd45b4231090ee673",
+        "../systembackupinstallationowner/install/original_longhorn_rwx_hold.go": "4d8444f6cf808c6145c8dbb5593e8d36a03f7184b562b14f222733c26f6d975c",
+        "../systembackupinstallationowner/install/original_longhorn_rwx_hold_test.go": "682449c04aef2fad0d271b9b5a4d645ed9f4d3f184ddef333c980e3bc4f3431e",
+        "../systembackupinstallationowner/install/original_writer_set.go": "e74180da5934415c1eacad7c14f5ab315f1c71c8e73b613cceba046b9b682b56",
+        "../systembackupinstallationowner/install/original_csi_pod_scope.go": "144d15ff6613c56afbd1eb892dafc896f4c4247f28441607fef22fe74ce24472",
+        "../systembackupinstallationowner/install/original_csi_pod_scope_test.go": "608479710eabf2e7002e4188495b4d476aaaada5512cdbeb07009fb9994c0b4a",
+        "../systembackupinstallationowner/install/original_writer_native_scope.go": "0d30630ab59414c5a81bb87a9eb91ac91f26275e1eded56d39960c35e14a8b7a",
+        "../systembackupinstallationowner/install/original_shared_runtime_lifecycle.go": "44de570d699dfb7e90098dd13a5ca3938abcbdd6d869155c48713e06f397e60a",
+        "../systembackupinstallationowner/install/original_writer_hold.go": "627c6620d48e9aa8e5bfb4905e7a742b5c10bbab639be6d8170436f6f0f2f4c8"
+      },
+      "LogSHA256": {
+        "windows-install.log": "a61ddd6f8d52c3c6d08594301fc323f488dd4911e61bd01db2cca519348f0bb9",
+        "linux-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linux-tests.log": "211db989fc2d5b0b9a04037abb7b6dae6ca875218fc2ddffbcfdee27c9bcd64f"
+      },
+      "TemporaryRoot": "D:\\dsh-work\\p2-csi-wiring-20261115",
+      "Cleanup": "Native tmpfs unmounted (mountpoint exit32), dedicated test cgroup absence verified, D:/dsh-work/p2-csi-wiring-20261115 entirely removed and verified absent. No build/test remains running."
+    },
+    "field_csi_configuration_readback": {
+      "At": "2026-11-15T16:23:57.965324+00:00",
+      "Node1HasLonghornMaterialsArguments": false,
+      "SelectionHasLonghornHostDefinition": false,
+      "SelectionHasLonghornKeeperImage": false,
+      "PreparedLonghornMaterials": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-runtime-recovered/longhorn-hold-materials.json",
+        "SHA256": "2bd69edbcbc3c4334486e2ec52758a96da68873bb84a0451d80d54c372a0e3a8"
+      },
+      "ActualOpenclawPodNode": "k8s-master",
+      "ActualOpenclawPodUID": "a8b828cd-6fb2-4766-8e79-2139004601b5",
+      "TeamReadonlyPodUID": "5465d76c-0966-47c0-8aaf-85d0a8adc8f9",
+      "TeamReadonlyNode": "node1",
+      "ObservationOnly": true,
+      "ProbeCompleted": false,
+      "NoSourceHoldOrTaskDispatched": true
     }
   },
   "workspace": "C:/Users/zhanghui08/Desktop/clawmanager/ClawManager/.worktrees/build-06bf0e89",

@@ -19,13 +19,18 @@ type longhornRWXClient struct {
 	fd         int
 	original   observedProcess
 	mountTable []byte
+	mustExit   bool
 }
 
 func longhornRWXClientKey(c longhornRWXClient) string {
 	p := c.pin
-	return observationDigest([]any{c.source.Binding, c.source.Claim, c.source.Attempt, c.source.Identity,
+	key := []any{c.source.Binding, c.source.Claim, c.source.Attempt, c.source.Identity,
 		c.source.ProviderPodUID, c.source.ProviderContainerID,
-		[]string{p.mountID, p.device, p.root, p.point, p.source, p.endpoint.String()}})
+		[]string{p.mountID, p.device, p.root, p.point, p.source, p.endpoint.String()}}
+	if c.mustExit {
+		key = append(key, true)
+	}
+	return observationDigest(key)
 }
 
 func (h *SharedRuntimeNodeHandler) configureLonghornRWXClients(ctx context.Context, coordinates []LonghornRWXClientCoordinates) error {
@@ -84,6 +89,7 @@ func (a *longhornExt4Actions) registerClient(r LonghornExt4Request) (LonghornExt
 	if err != nil {
 		return out, err
 	}
+	client.mustExit = r.ClientMustExit
 	key := longhornRWXClientKey(client)
 	if !time.Now().Before(longhornExt4ForwardUntil(r.Binding, r.Claim)) {
 		unix.Close(client.fd)
@@ -200,7 +206,7 @@ func (a *longhornExt4Actions) syncClient(r LonghornExt4Request) (LonghornExt4Res
 		}
 	}
 	until := longhornExt4ForwardUntil(r.Binding, r.Claim)
-	if !found || !time.Now().Before(until) {
+	if !found || client.mustExit != r.ClientMustExit || !time.Now().Before(until) {
 		return out, ErrNodeObservation
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), until)
@@ -210,7 +216,7 @@ func (a *longhornExt4Actions) syncClient(r LonghornExt4Request) (LonghornExt4Res
 		return out, ErrNodeObservation
 	}
 	proc := filepath.Join(o.HostProc, fmt.Sprint(client.source.MountOwnerPID))
-	stopped := longhornExt4ProviderCurrent(ctx, o, client.source) != nil
+	stopped := client.mustExit || longhornExt4ProviderCurrent(ctx, o, client.source) != nil
 	var table []byte
 	var err error
 	if stopped {

@@ -25,7 +25,7 @@ func longhornExt4RegistrationMatches(installed LonghornExt4Source, r LonghornExt
 
 func (a *longhornExt4Actions) sourceForRequest(ctx context.Context, r LonghornExt4Request) (string, error) {
 	template, ok := a.templates[r.SourceIdentity]
-	if !ok || !longhornExt4RegistrationMatches(template, r) || r.ClientPodUID != "" || r.ClientPodName != "" || r.ClientContainerID != "" {
+	if !ok || !longhornExt4RegistrationMatches(template, r) || r.ClientPodUID != "" || r.ClientPodName != "" || r.ClientContainerID != "" || r.ClientMustExit {
 		return "", ErrNodeObservation
 	}
 	if r.Action == "register" && !validObservationHash(r.RegistrationBoundarySHA256) {

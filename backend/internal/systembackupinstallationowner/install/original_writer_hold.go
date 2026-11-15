@@ -288,6 +288,9 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 		responses = append(responses, source.held.Response())
 	}
 	proof.digest = originalObjectSHA(responses)
+	if s.recheckCSIPodsHeld(time.Now()) != nil {
+		return nil, ErrInstall
+	}
 	if s.journal.append(ctx, "", "complete_native_paused_observation", nil, struct {
 		InventorySHA256, ObservationSHA256 string
 		Responses                          []any
@@ -301,7 +304,7 @@ func (s *PreparedOriginalWriterSet) recheckHeldAPI(ctx context.Context) error {
 	if s.recheckTenantLifecycle(ctx, nil, nil) != nil {
 		return ErrInstall
 	}
-	if s == nil || s.owner.checkCurrentGate(ctx, c.GateAcquiring, c.GateHeld) != nil || s.checkApplicationGate(ctx, "acquiring", "held") != nil || s.owner.checkInstances(ctx) != nil || s.recheckVolumePins(ctx) != nil {
+	if s == nil || s.owner.checkCurrentGate(ctx, c.GateAcquiring, c.GateHeld) != nil || s.checkApplicationGate(ctx, "acquiring", "held") != nil || s.owner.checkInstances(ctx) != nil || s.recheckVolumePins(ctx) != nil || s.recheckCSIResourcePins(ctx) != nil {
 		return ErrInstall
 	}
 	for _, provider := range s.preAdoptionProviders {
@@ -495,6 +498,9 @@ func (p *originalHeldReadiness) VerifyParticipantsPaused(ctx context.Context, co
 		if source.recheckHeld(now) != nil {
 			return ErrInstall
 		}
+	}
+	if s.recheckCSIPodsHeld(now) != nil {
+		return ErrInstall
 	}
 	for _, node := range s.nodes {
 		if node.current == nil || node.current.Recheck(ctx, node.request.Binding, "stopped", node.boot, now) != nil {

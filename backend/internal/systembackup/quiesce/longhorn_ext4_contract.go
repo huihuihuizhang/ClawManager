@@ -95,6 +95,9 @@ type LonghornExt4Request struct {
 	RegistrationBoundarySHA256                     string
 	ClientPodUID, ClientPodName, ClientContainerID string
 	Keeper                                         *LonghornExt4Keeper `json:",omitempty"`
+	// Original cold clients must really exit, even if CRI still reports their
+	// process as live after Kubernetes removed the Pod. Fixed at registration.
+	ClientMustExit bool `json:",omitempty"`
 }
 
 // The controller obtains the keeper identity from its original resource

@@ -66,7 +66,7 @@ func (h *originalLonghornRWXHold) register(ctx context.Context) error {
 	// App replicas also mount this site's workspace. Register their original
 	// mount descriptors while live, before any Deployment is scaled down.
 	for _, client := range h.clients {
-		request := originalLonghornRWXClientRegistration(*h.registration, client)
+		request := originalLonghornRWXClientRegistration(*h.registration, client, h.clientIsColdWriter(client))
 		h.clientRegistrations = append(h.clientRegistrations, request)
 		proof, _, err := p.forwardLonghorn(ctx, h.set.longhornClient, h.set.journal, claim, &request)
 		if err != nil || proof.Response().Phase != "client-prepared" || proof.Response().NativeState != "nfs-client" {
@@ -76,14 +76,29 @@ func (h *originalLonghornRWXHold) register(ctx context.Context) error {
 	return nil
 }
 
-func originalLonghornRWXClientRegistration(provider q.LonghornExt4Request, client originalLonghornRWXClient) q.LonghornExt4Request {
+func originalLonghornRWXClientRegistration(provider q.LonghornExt4Request, client originalLonghornRWXClient, mustExit bool) q.LonghornExt4Request {
 	request := provider
 	request.Action = "register-client"
 	request.Binding.Node, request.Binding.NodeUID = client.Template.Binding.Node, client.Template.Binding.NodeUID
 	request.SourceIdentity = client.Template.Identity
 	request.ClientPodName, request.ClientPodUID, request.ClientContainerID = client.PodName, client.PodUID, client.ContainerID
-	request.RegistrationBoundarySHA256 = originalObjectSHA([]any{provider, client})
+	request.ClientMustExit = mustExit
+	request.RegistrationBoundarySHA256 = originalObjectSHA([]any{provider, client, mustExit})
 	return request
+}
+
+func (h *originalLonghornRWXHold) clientIsColdWriter(client originalLonghornRWXClient) bool {
+	for _, writer := range h.set.deployments {
+		if writer.namespace != client.Template.PodNamespace {
+			continue
+		}
+		for _, pod := range writer.pods {
+			if originalLonghornRWXProcessCovered(client, pod) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // The original App clients may have exited; their entries remain in the sync
@@ -209,7 +224,10 @@ func (h *originalLonghornRWXHold) syncClients(ctx context.Context) error {
 		return ErrInstall
 	}
 	h.syncSent = true
-	for _, registered := range h.clientRegistrations {
+	for i, registered := range h.clientRegistrations {
+		if registered.ClientMustExit != h.clientIsColdWriter(h.clients[i]) {
+			return ErrInstall
+		}
 		request := registered
 		request.Action = "sync-client"
 		request.DrainBoundarySHA256 = originalObjectSHA([]any{*h.registration, h.clients, h.clientRegistrations})

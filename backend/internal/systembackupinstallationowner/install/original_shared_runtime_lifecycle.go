@@ -48,6 +48,12 @@ func (s *PreparedOriginalWriterSet) prepareSharedRuntimeLifecycle(ctx context.Co
 		roots[node.request.Binding.Node] = append(roots[node.request.Binding.Node], node.request.SourcePaths...)
 	}
 	for _, r := range s.sharedRuntimes {
+		if scope := s.csiPodScope(string(r.pod.UID)); scope != nil {
+			if _, err := scope.sharedClient(); err != nil {
+				return err
+			}
+			continue
+		}
 		paths, err := s.actualPodPersistentRoots(ctx, &r.pod)
 		if err != nil || len(paths) == 0 {
 			return ErrInstall
@@ -78,7 +84,16 @@ func (s *PreparedOriginalWriterSet) prepareSharedRuntimeLifecycle(ctx context.Co
 		}
 		p := s.owner
 		binding := q.ObservationBinding{Kind: q.SharedRuntimeNodeKind, InstallationID: p.operator.installer.plan.Target.InstallationID, OperationID: p.operation, ReservationID: r.identity.OperationID, InventorySHA256: s.inventorySHA, Namespace: r.row.Namespace, NamespaceUID: p.operator.installer.plan.Target.NamespaceUID, Node: node.Name, NodeUID: string(node.UID), Generation: p.token.Generation, FenceEpoch: p.token.FencingToken, ExpiresAt: p.until.UTC().Truncate(time.Microsecond)}
-		actor := &originalSharedRuntimeLifecycle{source: r, client: client, request: q.SharedRuntimeNodeRequest{Binding: binding, AgentPod: q.PodIdentity{Name: r.pod.Name, UID: string(r.pod.UID), Node: node.Name, Containers: []string{r.pod.Status.ContainerStatuses[0].ContainerID}}, WorkspaceRoot: workspace, AgentDataDir: data, Original: state, OriginalRaw: bytes.Clone(r.originalRaw), SourcePaths: originalNonOverlappingRoots(roots[node.Name])}, dispatched: map[string]bool{}}
+		paths := originalNonOverlappingRoots(roots[node.Name])
+		var csiClient *q.LonghornRWXClientCoordinates
+		if scope := s.csiPodScope(string(r.pod.UID)); scope != nil {
+			csiClient, err = scope.sharedClient()
+			if err != nil || csiClient.MountPoint != workspace {
+				return ErrInstall
+			}
+			paths = nil
+		}
+		actor := &originalSharedRuntimeLifecycle{source: r, client: client, request: q.SharedRuntimeNodeRequest{Binding: binding, AgentPod: q.PodIdentity{Name: r.pod.Name, UID: string(r.pod.UID), Node: node.Name, Containers: []string{r.pod.Status.ContainerStatuses[0].ContainerID}}, WorkspaceRoot: workspace, AgentDataDir: data, Original: state, OriginalRaw: bytes.Clone(r.originalRaw), SourcePaths: paths, LonghornClient: csiClient}, dispatched: map[string]bool{}}
 		// Register before the first uncertain physical RPC so partial recovery
 		// retains this original actor even if no complete hold is returned.
 		s.sharedLifecycle = append(s.sharedLifecycle, actor)

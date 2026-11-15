@@ -6,6 +6,9 @@ func validLonghornRWXClientTransition(r LonghornExt4Request) bool {
 	if r.Keeper != nil || r.ClientPodUID == "" || r.ClientPodName == "" || r.ClientContainerID == "" || r.RecoveryBoundarySHA256 != "" || !validObservationHash(r.RegistrationBoundarySHA256) {
 		return false
 	}
+	if r.ClientMustExit && (r.Claim.OriginalOperationID == "" || r.Claim.TaskPublicID != "") {
+		return false
+	}
 	switch r.Action {
 	case "register-client":
 		return r.DrainBoundarySHA256 == ""
