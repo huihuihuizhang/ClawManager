@@ -19,11 +19,18 @@ import (
 	"syscall"
 	"time"
 
+	"clawreef/internal/buildinfo"
 	"clawreef/internal/systembackupinstallationowner/install"
 	"github.com/go-sql-driver/mysql"
 )
 
 func run(ctx context.Context, args []string, out io.Writer) int {
+	if ctx != nil && out != nil && len(args) == 1 && args[0] == "--version" {
+		if json.NewEncoder(out).Encode(buildinfo.Current()) != nil {
+			return 1
+		}
+		return 0
+	}
 	flags := flag.NewFlagSet("system-backup-first-adoption", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	action := flags.String("action", "adopt", "explicit prepare-selection, prepare-issuers or adopt")

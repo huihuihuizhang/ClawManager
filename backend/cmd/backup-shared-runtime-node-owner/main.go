@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"runtime"
 	"syscall"
 
+	"clawreef/internal/buildinfo"
 	"clawreef/internal/systembackup/quiesce"
 )
 
@@ -24,6 +26,9 @@ func main() {
 }
 
 func run(ctx context.Context, args []string) error {
+	if len(args) == 1 && args[0] == "--version" {
+		return json.NewEncoder(os.Stdout).Encode(buildinfo.Current())
+	}
 	f := flag.NewFlagSet("backup-shared-runtime-node-owner", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
 	node := f.String("node", "", "original node name")

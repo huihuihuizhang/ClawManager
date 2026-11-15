@@ -66,12 +66,19 @@ def registry_receipt(receipt):
 
 def build_image(package,directory):
     build=json.loads((package/'BUILD_RECEIPT.json').read_bytes())
-    for name in TOOLS:
-        need(sha((package/name).read_bytes())==build['Binaries'][name]['SHA256'],'packaged binary hash mismatch')
+    tools=[(name,'usr/local/bin/'+name,build['Binaries'][name]) for name in TOOLS]
+    # This site's node owner also serves the Longhorn client protocol. An
+    # overlay carrying its new caller must carry the matching native owner.
+    owner=build.get('HostTools',{}).get('backup-shared-runtime-node-owner')
+    if owner is not None:
+        tools.append(('backup-shared-runtime-node-owner','backup-shared-runtime-node-owner',owner))
+    for name,_,pin in tools:
+        need(sha((package/name).read_bytes())==pin['SHA256'],'packaged binary hash mismatch: '+name)
     need(directory.is_absolute() and not directory.is_symlink(),'absolute real image-work directory required')
     directory.mkdir(mode=0o700,exist_ok=True)
     need(directory.resolve()==directory,'canonical image-work directory required')
     expected={'Version':'p2-controller-image.v1','Base':BASE,'SourceRevision':build['SourceRevision'],'Binaries':build['Binaries']}
+    if owner is not None:expected['NativeOwner']=owner
     path=directory/'image.json'
     if path.exists():
         try:receipt=json.loads(path.read_bytes())
@@ -99,8 +106,8 @@ def build_image(package,directory):
             run('export',['ctr','-n','k8s.io','images','export',str(attempt/'base.tar'),BASE])
             layer=attempt/'tools.tar'
             with tarfile.open(layer,'w') as t:
-                for name in TOOLS:
-                    raw=(package/name).read_bytes();m=tarfile.TarInfo('usr/local/bin/'+name);m.size=len(raw);m.mode=0o555;t.addfile(m,io.BytesIO(raw))
+                for name,target,_ in tools:
+                    raw=(package/name).read_bytes();m=tarfile.TarInfo(target);m.size=len(raw);m.mode=0o555;t.addfile(m,io.BytesIO(raw))
             digest=build_overlay(attempt/'base.tar',layer,attempt/'controller.oci.tar',tag)
             run('import',['ctr','-n','k8s.io','images','import',str(attempt/'controller.oci.tar')])
             run('push',['ctr','-n','k8s.io','images','push','--plain-http',tag])
