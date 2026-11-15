@@ -8,7 +8,7 @@ build=A.decode((package/'BUILD_RECEIPT.json').read_bytes())
 for name in ('system-backup-source-registries','system-backup-first-install-materials'):
  A.read({'File':str(package/name),'SHA256':build['Binaries'][name]['SHA256']},256<<20)
 C.select_attempt(A,args.source_attempt)
-j=C.ROOT/'p2-team-credential-renewal-20261115';api=j/('source-'+str(args.source_attempt)+'-api');api.mkdir(mode=0o700,exist_ok=True);site=L.Site(api,A)
+j=C.ROOT/'controller-secret-scope-20261115';api=j/('source-'+str(args.source_attempt)+'-api');api.mkdir(mode=0o700,exist_ok=True);site=L.Site(api,A)
 loaded=A.decode((j/'loaded.json').read_bytes());plan=A.decode((j/'delivery-plan.private.json').read_bytes());desired=A.obj(plan['DesiredSpec']);secret=A.obj(plan['Secret'])
 fresh,pod=C.controller_ref(A,site,L,loaded,desired);L.verify_secret(site.get('secret',secret['metadata']['name']),secret)
 minted=A.decode((j/'mint/native.receipt.private.json').read_bytes());native=A.obj(minted['Observer']);token=A.read({'File':native['TokenFile'],'SHA256':native['TokenSHA256']})
@@ -18,7 +18,7 @@ original=A.obj(parent['Definition']);selected=A.obj(parent['SourceSelection']);o
 original=C.renewed_source(A,N,original,observer,agent);original=C.renewed_team_writer(A,original);original=C.capture_resource_types(A,original);original=C.renewed_scope(A,original)
 original=C.approved_secret_scope(A,original)
 old=A.obj({'File':str(C.ROOT/'controller-relay/relay-pki.receipt.private.json'),'SHA256':'ce9ad004c051b52969c52c632c29e74bffc9fba617c52316c288662bd58cfc0a'})
-new=A.obj({'File':str(C.ROOT/'controller-relay-renewal-20261115-secret-policy/directory-ready/relay-pki.receipt.private.json'),'SHA256':'4493883b7f4cd20e75f4bc2a7ceba99d2990f58df65b36eb38bbe2425b70942c'})
+new=A.obj(A.decode((j/'relay/completed.json').read_bytes())['Receipt'])
 A.need(new['Version']=='original-relay-pki-result.v1' and new['State']=='original_relay_pki_material_issued_service_tls_not_yet_verified' and all(new[k]==old[k] for k in ('DeploymentUID','ServiceUID','Endpoint')) and N.moment(new['Until'])>dt.datetime.now(dt.timezone.utc)+dt.timedelta(minutes=45),'relay identity/window differs')
 replacements={};digest_paths={}
 for key in ('Manifest','Signature','CA','IssuerKey','ServerCertificate','ServerKey','ClientCertificate','ClientKey'):
