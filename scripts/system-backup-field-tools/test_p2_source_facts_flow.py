@@ -95,4 +95,24 @@ class SourceFactsFlowTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'known failed Vault'):self.M.run(8,True)
         self.R.once.assert_not_called()
 
+    def test_sql_recheck_resume_preserves_failure_and_selection(self):
+        j=self.vault_failure(step='facts_sql_recheck');before={p.name:p.read_bytes() for p in j.iterdir()}
+        with redirect_stdout(io.StringIO()):self.M.run(8,resume_sql_recheck=True)
+        self.assertEqual(self.R.once.call_args.args[2],j.with_name(j.name+'-sql-recheck'))
+        self.assertIn(self.selection['SHA256'],self.R.once.call_args.args[-1])
+        self.assertEqual({p.name:p.read_bytes() for p in j.iterdir()},before)
+        self.assertEqual(self.events,['transport-open','transport-closed'])
+
+    def test_sql_resume_rejects_other_stage(self):
+        self.vault_failure(step='facts_native_registries')
+        with self.assertRaisesRegex(ValueError,'exact pre-output refusal'):self.M.run(8,resume_sql_recheck=True)
+        self.R.once.assert_not_called()
+
+    def test_sql_resume_rejects_expired_or_produced_source(self):
+        self.vault_failure(step='facts_sql_recheck')
+        for reason in ('source expired','source facts already produced'):
+            self.C.live_source.side_effect=ValueError(reason)
+            with self.assertRaisesRegex(ValueError,reason):self.M.run(8,resume_sql_recheck=True)
+        self.R.once.assert_not_called();self.assertEqual(self.events,[])
+
 if __name__=='__main__':unittest.main()

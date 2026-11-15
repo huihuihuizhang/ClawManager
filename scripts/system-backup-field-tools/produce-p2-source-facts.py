@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 def load(name):
     s=importlib.util.spec_from_file_location(name,Path(__file__).with_name(name+'.py'));m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
 
-def run(attempt, resume_vault_transport=False, resume_parts_authoring=False):
+def run(attempt, resume_vault_transport=False, resume_parts_authoring=False, resume_sql_recheck=False):
     os.umask(0o077);C=load('continue-p2-nov14')
     A,L,D,R,F,V=[load(n) for n in ('assemble-p2-installation-candidate','load-p2-formal-vault','p2-source-dns','resume-p2-recovered-source','p2-vault-local-forward','p2-source-provider-access')]
     C.select_attempt(A,attempt,stage_attachment=False)
@@ -18,9 +18,9 @@ def run(attempt, resume_vault_transport=False, resume_parts_authoring=False):
     A.need(len(core['provider_dependencies'])==1,'exact formal Vault dependency required')
     dependency=core['provider_dependencies'][0]
     journal=C.ROOT/('source-facts-20261114-team-'+str(attempt))
-    A.need(not (resume_vault_transport and resume_parts_authoring),'one resume reason required')
-    if resume_vault_transport or resume_parts_authoring:
-        failed_step='facts_parts' if resume_parts_authoring else 'facts_vault'
+    A.need(sum(map(bool,(resume_vault_transport,resume_parts_authoring,resume_sql_recheck)))<=1,'one resume reason required')
+    if resume_vault_transport or resume_parts_authoring or resume_sql_recheck:
+        failed_step='facts_sql_recheck' if resume_sql_recheck else ('facts_parts' if resume_parts_authoring else 'facts_vault')
         A.need(not (journal/'native.receipt.private.json').exists() and
                A.decode((journal/'native.exit.json').read_bytes())=={'ExitCode':1},'known failed Vault attempt required')
         failed=A.decode((journal/'native.stdout.private').read_bytes())
@@ -29,7 +29,7 @@ def run(attempt, resume_vault_transport=False, resume_parts_authoring=False):
                sent[1]=='produce-facts' and sent[sent.index('--source-selection-file')+1]==complete['SourceSelection']['File'] and
                sent[sent.index('--source-selection-sha256')+1]==complete['SourceSelection']['SHA256'],
                'only this exact pre-output refusal may resume')
-        journal=journal.with_name(journal.name+('-parts-authoring' if resume_parts_authoring else '-vault-transport'))
+        journal=journal.with_name(journal.name+('-sql-recheck' if resume_sql_recheck else ('-parts-authoring' if resume_parts_authoring else '-vault-transport')))
     journal.mkdir(mode=0o700,exist_ok=True)
     site=L.Site(journal,A);pod=site.get('pod',selected['Controller']['Pod'])
     A.need(pod['metadata']['uid']==selected['Controller']['PodUID'] and not pod['metadata'].get('deletionTimestamp'),'source controller replaced')
@@ -48,6 +48,6 @@ def run(attempt, resume_vault_transport=False, resume_parts_authoring=False):
     return value
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--source-attempt',required=True,type=int);g=p.add_mutually_exclusive_group();g.add_argument('--resume-vault-transport',action='store_true');g.add_argument('--resume-parts-authoring',action='store_true');args=p.parse_args()
-    try:run(args.source_attempt,args.resume_vault_transport,args.resume_parts_authoring)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--source-attempt',required=True,type=int);g=p.add_mutually_exclusive_group();g.add_argument('--resume-vault-transport',action='store_true');g.add_argument('--resume-parts-authoring',action='store_true');g.add_argument('--resume-sql-recheck',action='store_true');args=p.parse_args()
+    try:run(args.source_attempt,args.resume_vault_transport,args.resume_parts_authoring,args.resume_sql_recheck)
     except Exception as e:raise SystemExit('P2_SOURCE_FACTS_UNCONFIRMED '+(str(e) if isinstance(e,ValueError) else type(e).__name__))

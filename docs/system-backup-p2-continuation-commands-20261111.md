@@ -153,6 +153,8 @@ python3 -B "$TOOL/prepare-p2-metadata-read-access.py" \
 
 ## 3. 从真实签发到配置登记的命令账本
 
+2026-11-15 现场补充：若 `produce-p2-source-facts.py --source-attempt N` 明确以 exit 1、`original_source_facts_refused / facts_sql_recheck` 结束，可在团队周期任务完成后的空闲窗口执行同入口并追加 `--resume-sql-recheck`。入口仍要求同一 selection 路径及摘要、有效期至少剩余十分钟、没有来源事实输出；续接记录写入独立的 `-sql-recheck` 目录，保留原失败日志。它重新执行完整原生读取和前后比较，不忽略业务变化。结果未知、已有产物、过期或其他阶段失败均不得使用此选项，续接再次失败也不覆盖记录重跑。
+
 所有 `OWNER` 参数使用既有 `retry-p2-writer-selection.py.owner_arguments()` 的本次 P1 plan/public/enrollment/kubeconfig/installer DSN/CA/admin-password 文件；路径及哈希只用于定位，真实身份仍由 Go owner 验证。下面的 `pinflags(X)` 表示精确的 `--x-file <真实输出.File> --x-sha256 <真实输出.SHA256>`，每个输出来源列于表中，不允许编造文件。不要把旧 operator 的另一个 namespace/run 目录伪装成本次 run。
 
 | 顺序/产生者 → 消费者 | 实际入口及必需追加参数 | 成功判据；失败接续 |
