@@ -66,6 +66,8 @@ type PreparedOriginalWriterSet struct {
 	longhornKeepers       []*originalLonghornKeeper
 	longhornClient        *q.SharedRuntimeNodeClient
 	longhornSources       map[string]q.LonghornExt4SourceCoordinates
+	longhornMaterials     *q.LonghornExt4Materials
+	longhornRWXClients    []originalLonghornRWXClient
 	minioHistory          *originalMinIOHistoryLifecycle
 	sharedLifecycle       []*originalSharedRuntimeLifecycle
 	sharedRuntimes        []*OriginalSharedRuntimeReservation
@@ -488,6 +490,12 @@ func (s *PreparedOriginalWriterSet) recheckPreflight(ctx context.Context) error 
 	}
 	if s.recheckTenantPreflight(ctx) != nil {
 		return ErrInstall
+	}
+	if s.longhornMaterials != nil {
+		current, err := originalLonghornRWXClients(ctx, s.owner.operator.installer.kube, *s.longhornMaterials)
+		if err != nil || !reflect.DeepEqual(current, s.longhornRWXClients) {
+			return ErrInstall
+		}
 	}
 	raw, err := readBootstrapSourcePin(s.selectionPin, 262144)
 	clear(raw)

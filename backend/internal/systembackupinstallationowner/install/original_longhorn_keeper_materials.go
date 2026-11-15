@@ -38,6 +38,11 @@ func (s *PreparedOriginalWriterSet) prepareLonghornKeepers(ctx context.Context, 
 	if err != nil || decodeExact(raw, &materials) != nil {
 		return ErrInstall
 	}
+	clients, err := originalLonghornRWXClients(ctx, i.kube, materials)
+	if err != nil {
+		return err
+	}
+	s.longhornMaterials, s.longhornRWXClients = &materials, clients
 	s.longhornClient, err = q.NewSharedRuntimeNodeClient(config.Observer.Endpoints, config.Observer.CAFile, config.Observer.CertificateFile, config.Observer.KeyFile)
 	if err != nil {
 		return ErrInstall

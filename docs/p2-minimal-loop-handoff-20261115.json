@@ -5,7 +5,83 @@
   "user_requested_handoff": true,
   "complete": false,
   "continuation_progress": {
-    "state": "本地接线与回归推进中；未提交、未部署、未触发现场停写或正式备份。原 remaining_critical_path 仍需逐项完成。",
+    "state": "Current source facts and full writer selection succeeded. Added actual RWX mount cohort enumeration and preflight recheck; complete install regression PASS 42.517s. Current blocker remains wiring native sync/freeze/release and complete CSI coverage. Tenant/CSI guards retained; no real backup task, hold or capture completed.",
+    "runtime_binding_recovery_current": {
+      "Root": "/root/sbk/p2-remote-1a466c69-01/runtime-instance3-recovery-current",
+      "Cause": "Instance 3 still referenced old Hermes Pod ebbccb4b-967d-49e9-874c-bc479743c321 after certificate rollout. New Pod reused its IP, so healthy agent endpoint prevented automatic stale-pod failover. Original mount author correctly refused the draining old binding.",
+      "Recovery": "POST /api/v1/instances/3/restart through existing formal authenticated API, once, with retained intent and response; HTTP 200. No SQL DML or workspace reset.",
+      "Readback": {
+        "InstanceID": 3,
+        "Generation": 13,
+        "Gateway": "gw-3-13",
+        "GatewayPID": 94,
+        "GatewayPort": 20000,
+        "Pod": "hermes-runtime-d5d84ff74-ct6sx",
+        "PodUID": "f3d0b852-5962-4acb-a9a7-c36c33474307",
+        "PoolID": 12,
+        "InstanceState": "running",
+        "BindingState": "running",
+        "PoolState": "ready",
+        "Draining": false,
+        "WorkspaceMatches": true
+      },
+      "NewSourceJournal": "/root/sbk/p2-remote-1a466c69-01/source-definition-runtime-recovered",
+      "NewCoordinates": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/source-definition-runtime-recovered/coordinates/initial-source-coordinates.json",
+        "SHA256": "030ab1d683bc4fd8e92d192ad6ec789d788dd48d2d84632162f9671fe720d74e"
+      },
+      "NewSourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-runtime-recovered-current/source-selection.json",
+        "SHA256": "8f9025d21efd7f66098c0ae56d688b503807f4aeb39e689a1bcc132e0c22ea51"
+      },
+      "RuntimeScopeSHA256": "6f584d6415b0e6d675505e91cd466788c35c041e27d64acb1768607f01598515",
+      "Until": "2026-11-15T14:34:20.594508Z",
+      "NewMountJournal": "/root/sbk/p2-remote-1a466c69-01/mount-materials-runtime-recovered",
+      "MountNativeReceipt": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/mount-materials-runtime-recovered/native.receipt.private.json",
+        "SHA256": "ee7159a76af0b7bea14712e8c5f23638e2a1c2d112bedc1f714dd66b7e92fe7a"
+      },
+      "MountSourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-runtime-recovered/mount-source-selection.json",
+        "SHA256": "f42cd5bd35e001b5e7771ba666c9ac84b730cd92597afc55014f6ece9044ece4"
+      },
+      "LonghornHoldMaterials": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-runtime-recovered/longhorn-hold-materials.json",
+        "SHA256": "2bd69edbcbc3c4334486e2ec52758a96da68873bb84a0451d80d54c372a0e3a8"
+      },
+      "SourceFactsJournal": "/root/sbk/p2-remote-1a466c69-01/source-facts-runtime-recovered",
+      "FreshWriterSelectionJournal": "/root/sbk/p2-remote-1a466c69-01/writer-selection-runtime-recovered",
+      "FreshWriterSelection": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/writer-selection-runtime-recovered/selection/original-writer-selection.json",
+        "SHA256": "f0b01ab156db9ad7dd27fbdd4e7836df44d2c5cae9faacc85a1376c958fc5c58"
+      },
+      "SourceFactsReceipt": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/source-facts-runtime-recovered/native.receipt.private.json",
+        "SHA256": "b32390d99d6a915bed6adfee9d1d8b0023b70dd8d72641ef17196a989b3eb6d3"
+      },
+      "PartsRegistry": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-runtime-recovered-current/parts-registry.json",
+        "SHA256": "891de995efe800375139fb236f8abe9b7dff695bb2b7cb40380b2648307ab103"
+      },
+      "SourceWritersRegistry": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-runtime-recovered-current/source-writers-registry.json",
+        "SHA256": "dea1d9977b484ae41dd381a91c6dbc3bea6f3ab06cee401bb5c6511ba1e5b1bb"
+      },
+      "ActualLonghornPVCs": [
+        "clawmanager-workspaces",
+        "clawreef-2-pvc",
+        "clawreef-team-1-shared"
+      ],
+      "PartCount": 14,
+      "ScopeNote": "14 source parts and 3 volume coordinates are preparation evidence only. Zero gate/generation fields remain unissued templates; do not hand-fill them. Complete capture and recovery are unverified.",
+      "PendingRemoteCommands": false,
+      "PriorMountAttemptPreserved": true,
+      "PriorMountOutputConfirmedEmpty": true,
+      "CredentialsRenewedAgain": false,
+      "GrantsIssued": false,
+      "BackupReady": false,
+      "BackupCompleted": false
+    },
     "implemented": [
       "VerifiedOriginalAdoptionReservation.LonghornClaim 实际 SQL 重查；注册 claim 保持不变且不能续租；前向请求持久 intent/response。",
       "租户 Deployment 准备接入工厂，namespace/name 索引，准备/held/recovery 全量 census，恢复 Pod 按节点与 writer 的身份映射。",
@@ -19,16 +95,22 @@
       "Python 来源配置 5 项、刷新入口 4 项测试通过；未生成字节码。",
       "本轮 Windows: install 全包 42.504s、first-adoption CLI 6.127s、kube 全包 6.929s 通过；kube 新增 keeper 创建后 Observe 回执丢失和未知创建/404 拒绝清理测试。Linux WSL D 路径 tmpfs 的 keeper journal、claim、tenant、journal 重开、恢复 mutation closure 全部 PASS。上述均为本地协议/回归，不是真实冻结采集证明。"
     ],
-    "test_cleanup": "本轮测试已结束；D:\\dsh-work\\p2-keeper-flow-20261115 待清理（Linux tmpfs 已由脚本卸载）。",
+    "test_cleanup": "本轮 D:\\dsh-work\\p2-keeper-flow-20261115 已整体删除并确认不存在；Linux tmpfs 已卸载。只保留正式交付目录/归档与上传记录。无运行中的本轮测试或构建。",
     "next_required": [
-      "交付并核实现场对应组件，保留 tenant/CSI guard；不因本地回归通过而声称能完成实际采集。",
-      "本次 Pro RWO 与团队 RWX 尚需接齐物理覆盖、CSI capture/adoption；只补现场涉及的路径，不扩大通用能力。",
-      "正式页面入口为 POST /api/v1/admin/system-backups；旧 /admin/system-backup/tasks 在 server 中拒绝写入。核实正式 action authorizer 是否强制 MFA 后再决定本次登记服务所需最小工作。",
-      "现场组件核实更新后集中续签；正式页任务、完整上传、独立读回、目录登记、业务恢复和 source-disabled 证据仍未完成。"
+      "已完成 dc1804d3 omitzero 回归及原生 selection 验证；新 metadata、observer/runtime/relay 证书已经加载并读回，不要重复续签或重复启动 relay。",
+      "源事实和新 writer selection 已成功并核对摘要；不能覆盖现有事实或重放 produce-facts。沿当前 3 卷实际物理停写/采集/恢复路径接线。",
+      "更新来源定义与本次 Pro/team 物理停写、CSI capture/adoption，保持guard；页面首单、完整采集/恢复/上传/独立读回/目录登记均未完成。"
     ],
     "scope_instruction": "仅补本次现场实际路径；当前调用链及必要异常恢复通过后交付并进入现场，先核实更新组件，再集中续签。MFA 仅在正式入口强制要求时补到用户能登记创建任务。不得删除保护条件、漏数据或跳过恢复验证。",
     "current_wiring": "已接入 keeper create/register → 原 Deployment stop → acquire → check-held → 独立 release → 业务恢复 → cleanup；Pending 仅重读、不重建；创建日志错误仍保留不可变 intent；tenant census 核对本次 keeper Job/Pod。Windows 全包及 Linux 持久日志回归通过，尚未部署或正式采集。",
     "new_work_acceptance": [
+      {
+        "change": "本次 RWX 实际客户端清点接入原安装 Longhorn 准备与准备重查",
+        "blocked_step": "clawmanager-workspaces 与团队共享卷在 freeze 前必须完整 register-client/sync-client；此前原安装仅有 RWO keeper，没有固定实际客户端 cohort。",
+        "reuse": "复用原生 Longhorn 模板、Kubernetes API、source identity 与 spec 摘要。任务执行器 nativeSource 绑定真实 TaskPublicID/Attempt 的调度权限，不能伪造任务后直接给 taskless 原安装入口复用；本补丁只补只读清点，不添加另一套生命周期。",
+        "finish_check": "已通过 Windows D 盘完整 install 包回归 42.517s：完整运行挂载、同名 Pod 替换、未知节点/挂载、缺失进程、重复模板、PV 替换、预填 claim、subpath、额外运行容器。准备重查已接线；不是原生 freeze 或恢复验收。",
+        "not_yet_complete": "原生 register-client/sync-client、provider freeze/check-held/release 与完整物理覆盖尚未接齐，tenant/CSI guard 保留，尚未部署本补丁。"
+      },
       {
         "change": "RWO keeper 调度接入",
         "blocked_step": "Pro 原 Pod 退出后的物理持锁和恢复",
@@ -54,11 +136,395 @@
       "proReady": "1/1",
       "teamAttachment": "Running",
       "backupSuccessVerified": false
+    },
+    "delivery": {
+      "revision": "1a466c6967c9e913c11210ad04f469fae45a7671",
+      "archive": "D:/dsh-work/p2-keeper-delivery-1a466c69.tar.gz",
+      "sha256": "3bfa512e624d28ae7b78641f8f24f145d1c1a66956f82e8423338201b04c493a",
+      "bytes": 232904965,
+      "files": 47,
+      "remote": "/root/sbk/p2-remote-1a466c69-01",
+      "queueStart": 1995703965,
+      "queueEndBeforeInspection": 2307126548,
+      "status": "upload in progress; wait for P2_KEEPER_PACKAGE_VERIFIED_1A466C69 then P2_PREUPDATE_INSPECTION_1A466C69",
+      "controllerUpdated": false,
+      "observerUpdated": false
+    },
+    "formal_entry_finding": "正式 POST /api/v1/admin/system-backups 经 backend/cmd/server/system_backup_tasks_live.go 注册，action_scope.go 明确 operate + idempotency，recent_strong_auth=none。旧 /admin/system-backup/tasks 写入已被 server 拒绝。创建本单不应扩建 MFA；配置启用若实际要求强验证，再补最小入口。",
+    "field_delivery_verified": {
+      "Version": "p2-package-field-verification.v1",
+      "CheckedAt": "2026-11-15T08:41:07.064160+00:00",
+      "Directory": "/root/sbk/p2-remote-1a466c69-01",
+      "SourceRevision": "1a466c6967c9e913c11210ad04f469fae45a7671",
+      "ArchiveSHA256": "3bfa512e624d28ae7b78641f8f24f145d1c1a66956f82e8423338201b04c493a",
+      "Files": 47,
+      "LinkedIdentityVerified": true,
+      "ControllerUpdated": false,
+      "ObserverUpdated": false,
+      "SourceRenewed": false,
+      "BackupCompleted": false
+    },
+    "field_controller_updated": {
+      "Version": "p2-controller-update.v1",
+      "CheckedAt": "2026-11-15T08:50:08.749412+00:00",
+      "UID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+      "Image": "10.130.14.23:5000/clawmanager@sha256:a4072a51b4232ac4b9ff182ab23fecd91df1d4608d447e924c6d7d9bc4193a7b",
+      "BinaryReadback": {
+        "/usr/local/bin/system-backup-source-registries": "fcd6cdccace6ccc0d51726caeec096d1eaf8d6d7ae14da7b6590d52f1f353ac6",
+        "/usr/local/bin/system-backup-first-install-materials": "683a10a1e85db79fd901a524f33569a157a0bc681f5ad604626dba3cc9993074",
+        "/usr/local/bin/system-backup-v2-controller": "8a3b4ac64d3fa0538cbc375ee166b277ffbf98065382b077bb2c22fb2fa8aaec",
+        "/backup-shared-runtime-node-owner": "c43b56129587731102f1408326fa9665f1ffd0a0093a5fe349b2aa94c553a76c"
+      },
+      "ControllerUpdated": true,
+      "ControllerEnabled": false,
+      "SourceRenewed": false,
+      "BackupCompleted": false
+    },
+    "field_node1_updated": {
+      "CheckedAt": "2026-11-15T08:52:47.441405+00:00",
+      "Node": "node1",
+      "PID": 2699256,
+      "ExecutableSHA256": "c43b56129587731102f1408326fa9665f1ffd0a0093a5fe349b2aa94c553a76c",
+      "UnitUnchanged": true,
+      "DurableRecordsPreserved": true,
+      "ObserverUpdated": true,
+      "SourceRenewed": false,
+      "BackupCompleted": false
+    },
+    "field_relay_renewed_not_loaded": {
+      "Receipt": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/credential-renewal/relay-native.receipt.private.json",
+        "SHA256": "aa8e12c3fd72ee27d93df7cab402ef4e5c1dad5f6245d3b72181df00c3357491"
+      },
+      "Until": "2026-11-15T10:12:01Z",
+      "ControllerPod": "sbk-d4f51b83b57e-controller-b659776b9-vbjvv",
+      "Loaded": false,
+      "BackupCompleted": false
+    },
+    "actual_rotated_credentials": {
+      "CheckedAt": "2026-11-15T08:54:23.020135+00:00",
+      "ActuallyRotatedObserverNotAfter": "2026-11-15T10:12:01Z",
+      "ActuallyRotatedRuntimeNotAfter": "2026-11-15T10:12:19Z",
+      "CurrentRotationReceiptsVerified": true,
+      "relay": [
+        {
+          "receipt": "/root/sbk/p2-cert-renewal.1KyqMtsd/controller-relay-renewal-20261114-release/relay-pki.receipt.private.json",
+          "Until": "2026-11-14T18:06:06Z",
+          "NotAfter": null,
+          "Version": "original-relay-pki-result.v1"
+        },
+        {
+          "receipt": "/root/sbk/p2-cert-renewal.1KyqMtsd/controller-relay/record-key-export.receipt.private.json",
+          "Until": null,
+          "NotAfter": null,
+          "Version": "original-runtime-record-key-export-result.v1"
+        },
+        {
+          "receipt": "/root/sbk/p2-cert-renewal.1KyqMtsd/controller-relay/relay-pki.receipt.private.json",
+          "Until": "2026-11-13T00:35:38Z",
+          "NotAfter": null,
+          "Version": "original-relay-pki-result.v1"
+        },
+        {
+          "receipt": "/root/sbk/p2-cert-renewal.1KyqMtsd/controller-relay-renewal-20261115/relay-pki.receipt.private.json",
+          "Until": "2026-11-15T03:37:17Z",
+          "NotAfter": null,
+          "Version": "original-relay-pki-result.v1"
+        },
+        {
+          "receipt": "/root/sbk/p2-cert-renewal.1KyqMtsd/controller-relay-renewal-20261114-resource-rules/relay-pki.receipt.private.json",
+          "Until": "2026-11-14T20:36:42Z",
+          "NotAfter": null,
+          "Version": "original-relay-pki-result.v1"
+        },
+        {
+          "receipt": "/root/sbk/p2-cert-renewal.1KyqMtsd/controller-relay-renewal-20261114-resource-selections/relay-pki.receipt.private.json",
+          "Until": "2026-11-14T21:04:19Z",
+          "NotAfter": null,
+          "Version": "original-relay-pki-result.v1"
+        },
+        {
+          "receipt": "/root/sbk/p2-cert-renewal.1KyqMtsd/controller-relay-renewal-20261114/relay-pki.receipt.private.json",
+          "Until": "2026-11-14T17:32:13Z",
+          "NotAfter": null,
+          "Version": "original-relay-pki-result.v1"
+        }
+      ]
+    },
+    "relay_capacity_continuation": {
+      "directory": "/root/sbk/p2-remote-1a466c69-01/capacity-account",
+      "issueExit": 3,
+      "queryExit": 3,
+      "operation": "/root/sbk/p2-remote-1a466c69-01/capacity-account/materials/capacity-operation.json",
+      "operationSHA256": "0f24566ad72a0ad10fecdf61cfba497341b587aea0a7bbcc45b4381b816f79c9",
+      "account": "sbk_cap_9e76194782b65ce0",
+      "dispatchEvidence": "create, 102 grants, unlock all intent records present; query not verified",
+      "placement": "MySQL mysql-7f6f5b88b9-hx8pc UID f5c77a56-2ac7-4fd7-8d14-eb87d3c8e52d on node1; PVC mysql-data mounted /var/lib/mysql; management host lacks auto.cnf",
+      "next": "capacity 完整 query 已成功，勿再签发。接 relay-start TLS location 作者拒绝：输入/权限/原 TLS canonical pin 均核对通过，输出目录仍空；保留失败记录后定位原生拒绝点。",
+      "nativeBinary": "reuse relay-pki.sent.private.json Argv[0] capacity subcommand",
+      "script": "D:/dsh-work/p2-keeper-delivery-1a466c69.issue-capacity.py",
+      "mysqlPlacedQueryExit": 3,
+      "independentCollectorExit": 1,
+      "independentCollectorSamples": 0,
+      "exactChecks": {
+        "OwnedMarkerMatches": true,
+        "ExactSelectGrantSet": true,
+        "ExpectedAndActualTables": 102,
+        "BadAllocationRows": 0,
+        "AutoCNFMatches": true
+      },
+      "strictNativeMySQLClient": {
+        "ExitCode": 0,
+        "TLS": "TLSv1.3",
+        "VerifyIdentity": true,
+        "CurrentRole": "NONE",
+        "VisibleTables": 102
+      },
+      "inputChecks": {
+        "ConfigMatchesOperation": true,
+        "TLSMatchesOperation": true,
+        "DSNUserMatches": true,
+        "DSNAddress": "10.105.202.42:3306",
+        "Options": [
+          "parseTime",
+          "readTimeout",
+          "timeout",
+          "writeTimeout"
+        ]
+      },
+      "temporaryCleanup": "mysql placement files 10 and 11 removed; separate client CA/config and temp directory removed",
+      "diagnostic_build": {
+        "sessionId": 19894,
+        "processId": 18068,
+        "temp": "D:/dsh-work/p2-capacity-phase-20261115",
+        "output": "D:/dsh-work/p2-keeper-delivery-1a466c69/system-backup-c1-native-inputs-capacity-diagnostic",
+        "state": "Completed; missing-input native test correctly returned safe Phase=inputs and exit1; D:/dsh-work/p2-capacity-phase-20261115 removed. Remote tool hash 71ab04fed7e5c9c6bb494973b6f99c99cc02b7e8a635753d30d34a54090f53fd.",
+        "source": "backend/internal/systembackupinstallationowner/install/original_c1_capacity_collector.go",
+        "change": "Only fixed failure phase JSON, exit stays nonzero, all native checks retained. Not yet tested or delivered."
+      },
+      "final_native_query": {
+        "State": "original_capacity_select_only_native_verified",
+        "OriginalUsersPreserved": true,
+        "Receipt": {
+          "File": "/root/sbk/p2-remote-1a466c69-01/capacity-account/mysql-final-query/stdout.private.json",
+          "SHA256": "d5f934be5c90f1ae66a0ba955d3bcce5afb4bbd3b5a3ff272a5291c4479daa07"
+        }
+      },
+      "root_cause": "originalSQLWrite emits ordinary JSON but c1CapacityQuery final configuration checks decodeExact require canonical JSON. Same operation bytes retained; independent directory canonical equivalent config/TLS allowed full native query to succeed. Collector manual inputs also required canonical JSON."
+    },
+    "relay_start": {
+      "directory": "/root/sbk/p2-remote-1a466c69-01/relay-start",
+      "TLSLocationInput": "tls-location-inputs.json",
+      "attempts": [
+        "sql-tls-location (diagnostic current ELF) exit1",
+        "sql-tls-original-release (original eca964 ELF) exit1"
+      ],
+      "OutputDirectory": "/run/system-backup/runtime/p2-renew-1048e373bfe0/relay-sql-tls-1a466c69",
+      "OutputFiles": [],
+      "InputReadback": "all expected files mode600 exist, OriginalTLS hash matches and canonical; no successful TLS location receipt yet",
+      "do_not_repeat": "The supported-flags followup guard expected exit2 and stopped because actual exit1. No duplicate native send from that guard.",
+      "TLSLocation": "sql-tls-canonical-input.receipt.private.json verified",
+      "cause": "A.retain encodes ordinary unsorted JSON. New native inputs require canonical bytes; preserved original input and used canonical successor.",
+      "ListenerState": "STOPPED by bound PID/starttime/executable/cmd hash administrative stop; old Pod replaced during metadata rollout. No formal handover claimed. Must issue new relay PKI binding actual new Pod and start anew.",
+      "SuccessfulProbe": "/root/sbk/p2-remote-1a466c69-01/relay-start/leaf-probe.json",
+      "PodUID": "531bba5e-9f6c-4edf-968f-9c8af9d9fb2c",
+      "ServiceUID": "7fab2030-be06-40ac-b8da-6c5131e23085",
+      "StartIntent": "/root/sbk/p2-remote-1a466c69-01/relay-start/listener-start-intent.json",
+      "InputFile": "/run/system-backup/runtime/p2-renew-1048e373bfe0/readonly-relay-1a466c69/serve-inputs.json",
+      "ReadbackTime": "2026-11-15T09:46:36.707752Z",
+      "ClientChainFinding": "Python/ordinary OpenSSL sent extra root chain, rejected by existing exact-one-peer-cert guard. OpenSSL -verifyCAfile CA -no-CAfile -no-CApath -no-CAstore strictly verifies server while sending original client leaf only; returned200. Server unchanged.",
+      "DoNotRespawn": true
+    },
+    "source_api_renewal": {
+      "Receipt": "/root/sbk/p2-remote-1a466c69-01/source-api-renewal/completed.json",
+      "ExpiresAt": "2026-11-15T17:48:30Z",
+      "TokenReviewVerified": true,
+      "SourceDefinitionAuthored": false
+    },
+    "metadata_renewal": {
+      "Receipt": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/provider-metadata-renewal/original-wire/native.receipt.private.json",
+        "SHA256": "2eb5fb5a0833632e3070fc17118d158d6a066171efcd6e54df299039aeab54e3"
+      },
+      "Observer": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/provider-metadata-renewal/material/provider-metadata-observer.private.json",
+        "SHA256": "a6bd9fb8cbe5e810b8b544948f3f1d4b1bcebb20df57129260b90a1bd5c1ea7a"
+      },
+      "Loaded": false,
+      "FirstAttempt": "1a466c69 rejected before mint at strict writer JSON readback: added LonghornHostDefinition zero struct with omitempty still serialized; original wire lacks it. Output empty.",
+      "SuccessfulBinary": "/root/sbk/p2-remote-06c90c97-01/system-backup-source-registries, SHA6931e48a0d69884e801a2595f291edc90f2c0da11b2192bbefeb2213602d3491",
+      "LocalFix": "original_writer_set.go adds omitzero to LonghornHostDefinition; not yet tested, committed or redeployed"
+    },
+    "metadata_loaded": {
+      "State": "renewed_metadata_loaded_actual_bytes_verified",
+      "Pod": "sbk-d4f51b83b57e-controller-5c6cb7d4dc-tbf5f",
+      "PodUID": "51c45795-5f46-4642-aa3d-c27ad195bdce",
+      "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+      "Secret": "backup-provider-e6a528ac11a0ac1f8b5db49b",
+      "ObserverSHA256": "e6a528ac11a0ac1f8b5db49b808a31c0da2a2098ad3d7621abf209d47f1adc08",
+      "ControllerEnabled": false,
+      "OldReadOnlyRelayStopped": true,
+      "FormalHandover": false,
+      "BackupCompleted": false
+    },
+    "wire_fix_test": {
+      "session": 14171,
+      "temp": "D:/dsh-work/p2-writer-wire-20261115",
+      "state": "PASS install targeted regression 5.512s; D:/dsh-work/p2-writer-wire-20261115 deleted. No active test/build.",
+      "test": "TestOriginalWriterSelectionRetainsPreKeeperWire",
+      "change": "LonghornHostDefinition omitzero preserves absent original struct field in strict canonical writer roundtrip"
+    },
+    "certificate_renewal": {
+      "directory": "/root/sbk/p2-remote-1a466c69-01/certificate-renewal",
+      "observer": {
+        "ReceiptSHA256": "6dce88e958b84dae9c3655c7edebedfdc9b7bd97d085bf7f5554f209775ae468",
+        "NotAfter": "2026-11-16T10:02:15Z",
+        "Loaded": true,
+        "MasterCompletion": "/root/sbk/p2-remote-1a466c69-01/certificate-renewal/observer-rotation/k8s-master/completed.json",
+        "Node1Completion": "/root/sbk/p2-keeper-node1-1a466c69/certificate-renewal/records/completed.json",
+        "TLSReadback": "/root/sbk/p2-remote-1a466c69-01/certificate-renewal/observer-tls-readback.json",
+        "ExactNewLeafAll8Endpoints": true,
+        "PreservedELFPerNode": true
+      },
+      "runtime": {
+        "ReceiptSHA256": "5b17113f069b7abd24d71731dcf4c8c365ed253c506ba8d445749d973ffaa013",
+        "NotAfter": "2026-11-16T10:02:19Z",
+        "Loaded": true,
+        "RotationCompletion": "runtime-unique/runtime-rotation/completed.json",
+        "AppFinalCASHA256": "414d61370ce39214c9f8b035d80c8d3aac4c492b7ee2ce3cf4a7476d24b27554",
+        "RunningIDs": [
+          1,
+          2,
+          3,
+          7,
+          8
+        ],
+        "SQLBindingVerificationRequired": true
+      },
+      "observer_host": {
+        "receipt": "observer-host/native.receipt.private.json",
+        "SHA256": "7efb99b423f081143e424389e154bb78d0e82a992c790436d084b50dc6a4cd97",
+        "sharedELF": "c43b56129587731102f1408326fa9665f1ffd0a0093a5fe349b2aa94c553a76c",
+        "Loaded": false,
+        "next": "node1 actual shared ELF already c43; master actual shared ELF still e4fe. Cert-only payload generator checks source/current ELF. Generate native host bundle with original shared binary for master separately, or explicitly update master only if required. Never silently revert node1 ELF. Query actual unit hashes on both nodes before payload."
+      }
+    },
+    "relay_current": {
+      "PKIReceipt": "/root/sbk/p2-remote-1a466c69-01/credential-renewal-current/relay-native.receipt.private.json",
+      "PKIReceiptSHA256": "e45109155c586b6c315dfc9004313ac3f5216c912975860dfcfb0740ba69f4ba",
+      "Until": "2026-11-15T16:14:28Z",
+      "StartIntent": "/root/sbk/p2-remote-1a466c69-01/relay-start-current/listener-start-intent.json",
+      "Completed": "/root/sbk/p2-remote-1a466c69-01/relay-start-current/listener-completed.json",
+      "PodUID": "51c45795-5f46-4642-aa3d-c27ad195bdce",
+      "TLS_SQLVerifiedAt": "2026-11-15T10:15:41.412802Z",
+      "NoRespawn": true
+    },
+    "transport_cleanup": "Observer node1 payload passed only encrypted log ciphertext, decrypted locally SHA checked and sent through existing SSH queue; local temporary password file deleted. All prior D test/build temp deleted.",
+    "source_wire_fix_release": {
+      "Revision": "dc1804d3139cf7d89814d38f6c9c48f9c2451439",
+      "Pushed": true,
+      "Test": "PASS TestOriginalWriterSelectionRetainsPreKeeperWire 5.512s",
+      "BuildSession": 84084,
+      "BuildStatus": "completed; field verified",
+      "Temp": "D:/dsh-work/p2-source-wire-dc1804d3",
+      "Output": "D:/dsh-work/p2-source-tools-dc1804d3",
+      "Tools": [
+        "system-backup-first-adoption",
+        "system-backup-first-install-materials",
+        "system-backup-source-registries"
+      ],
+      "MustCleanupTemp": true,
+      "FieldVerification": {
+        "Revision": "dc1804d3139cf7d89814d38f6c9c48f9c2451439",
+        "ArchiveSHA256": "59bdc5954b741f24fd9fa9729808ad831d49ab342e482a2983b91383d8f4b7b5",
+        "Binaries": {
+          "system-backup-first-adoption": "d4beaeb0ec16f544319a4c73afb270f34b643f11dc31d60e7ebef2c7cb11f21b",
+          "system-backup-first-install-materials": "2955c9da41886217c041dd0b041b03af49ef431057a7a7fc45f008cb8cec429d",
+          "system-backup-source-registries": "8acd34f2425e7c96fa91f19937faf8ecfdd4e6bc436347a51591ddc2556e4bda"
+        },
+        "FieldReadbackVerified": true
+      },
+      "TempCleanup": "D:/dsh-work/p2-source-wire-dc1804d3 removed",
+      "Remote": "/root/sbk/p2-source-tools-dc1804d3"
+    },
+    "new_source_inputs": {
+      "Directory": "/root/sbk/p2-remote-1a466c69-01/current-source-inputs",
+      "CoordinatesReceipt": "coordinates.receipt.private.json",
+      "CoordinatesSHA256": "ae5da2340b341ac447688a63efe02107d87deab1b858b4ce15865ad9c49acbe7",
+      "ConfigSHA256": "22514c9d5ad8a365026d999239d14f485f1057a68c34002fb49e7df6ca7ee83f",
+      "AttachmentsSHA256": "31b4d6c30291ed49d4d62dfeae96fcf7044c0b529a6fed000c79ee58f487d15f",
+      "ConfigurationInputs": "configuration-inputs.json",
+      "SourceCount": 8,
+      "LoadedAppRuntimeCohortVerified": true,
+      "SourceStopSent": false,
+      "Next": "Current native writer preparation succeeded for8instances with1TenantPro and1TeamAttachment. No stop. Need new initial-source definition using actual newwriter/sourcecoordinates/currentruntimeScope,newAPI credential,newmetadata,newrelay,newPKI. Reuse C.refresh/material owner paths, do not copy old signed source or remove tenant/CSI guards.",
+      "NativeWriterSelection": {
+        "Receipt": {
+          "File": "/root/sbk/p2-remote-1a466c69-01/current-source-inputs/writer-selection.receipt.private.json",
+          "SHA256": "c099bd69559118f0efe0430f5c8b0a3d59e6e068a45e2a24f8b7886263466719"
+        },
+        "Selection": {
+          "File": "/root/sbk/p2-remote-1a466c69-01/current-source-inputs/selection/original-writer-selection.json",
+          "SHA256": "7d1ab6da333641d4bfc8da3cbc3e717c08e5b991aa6311084dbfb172ab32f093"
+        },
+        "SourceCount": 8,
+        "TenantPro": 1,
+        "TeamAttachments": 1,
+        "SourceStopSent": false
+      }
+    },
+    "current_initial_source": {
+      "Directory": "/root/sbk/p2-remote-1a466c69-01/source-definition-current",
+      "ReceiptSHA256": "ca9364a46f037a87f2539a35de2485b02fd6dc89a325bc3957eafd5a485355e5",
+      "DefinitionSHA256": "f12be9f819cf56b75ecb7d1486f5a10e198417860cb4240406dee5a42311ad7d",
+      "SourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-1a466c69-current/source-selection.json",
+        "SHA256": "0010680b7dd917dd2cb9ccaa778dfe139cbf272b2e8d8f641ab38e5c42df10b5"
+      },
+      "Until": "2026-11-15T14:34:20.594508Z",
+      "ExpiredPredecessorReceiptMatches": true,
+      "SourceStopSent": false,
+      "GrantsIssued": false,
+      "BackupReady": false,
+      "Note": "Original wrapper assertion wrongly expected selection.ExpiredPredecessor; actual protocol stores it on author receipt. Native exit0 and all exact outputs rechecked without author replay; completed.json saved."
+    },
+    "current_mount_attempt": {
+      "Directory": "/root/sbk/p2-remote-1a466c69-01/current-mount-materials",
+      "NativeExit": 1,
+      "Status": "original_mount_author_refused",
+      "Phase": "native_writers",
+      "Step": "native_instance_binding",
+      "Kind": "RuntimeBinding",
+      "Reason": "validation",
+      "Attachment": "same original UID5465d76c-0966-47c0-8aaf-85d0a8adc8f9/spec verified using original source13 native receipt chain; record copied with provenance, not recreated",
+      "NoReplay": "Native intent exists; reconcile partial outputs before continuation. Source author succeeded and must not be resent.",
+      "Resolved": "Formal restart recovered instance 3; predecessor output confirmed empty and retained. New mount-materials-runtime-recovered native attempt succeeded. See runtime_binding_recovery_current for exact new pins; do not repeat restart or old mount operation.",
+      "Next": "Current source facts and full writer selection succeeded. Complete and qualify actual 3-volume physical stop/capture/recovery integration before C1/source issuance; preserve tenant/CSI guards until equivalent native authority and coverage are present."
+    },
+    "rwx_client_census_validation": {
+      "Command": "go test -p=2 -mod=readonly -count=1 ./internal/systembackupinstallationowner/install",
+      "Result": "PASS",
+      "PackageSeconds": 42.517,
+      "GOOS": "windows",
+      "GOARCH": "amd64",
+      "CGO_ENABLED": "0",
+      "TemporaryRoot": "D:/dsh-work/p2-rwx-census-20261115",
+      "LogSHA256": "ef2c6677c68082908d63c1a30373460d94a4c27a4724509bb6bc96d767630ee6",
+      "SourceSHA256": {
+        "original_longhorn_rwx_clients.go": "45a6730f4e5da236cc405c972e06c0c41eb24ac3a63503797280ed775a0d48a8",
+        "original_longhorn_rwx_clients_test.go": "6a1d5414a0ed92335afbcb126c802ded8ba73c4ab41a92823fb2510d038d0f78",
+        "original_longhorn_keeper_materials.go": "3c4a193fac7b68a3d8f43b8d619d1c0230477be7efdba8b04f28e8bc8c8a614e",
+        "original_writer_set.go": "1dfeea9933c86f0b75e6eda6382ff4389f1d1496f0042964ea570f4431772e70"
+      },
+      "FirstRun": "Rejected private paths because Windows TEMP used slash separators; rerun used native backslash D paths without changing protection code.",
+      "NativeHoldVerified": false,
+      "Deployed": false,
+      "Cleanup": "D:/dsh-work/p2-rwx-census-20261115 removed after tests; verified absent. No running test/build from this round."
     }
   },
   "workspace": "C:/Users/zhanghui08/Desktop/clawmanager/ClawManager/.worktrees/build-06bf0e89",
   "branch": "backup",
-  "head_verified": "06c90c97e61d8b5d86dbd22ff038cb254e1b9987",
+  "head_verified": "dc1804d3139cf7d89814d38f6c9c48f9c2451439",
   "git_remote": "https://github.com/huihuihuizhang/ClawManager.git",
   "constraints": [
     "仅补已确认阻断所需的接口，不扩展通用生命周期平台。",
@@ -141,16 +607,21 @@
         "SHA256": "eb36b986704a5763b5d893920a2eee27fec27df04579d4ed8104454caaca6bdc"
       }
     },
-    "renewal": "06c90c97 实现未配置安装的有限过期续接，source14 输入链只读预检真实通过，尚未执行 native renewal。先接完首单阻断再申请 30min 来源，避免反复过期。Vault metadata token 已过期；observer/runtime/relay 证书有效期也须重新查验。"
+    "renewal": "06c90c97 实现未配置安装的有限过期续接，source14 输入链只读预检真实通过，尚未执行 native renewal。先接完首单阻断再申请 30min 来源，避免反复过期。Vault metadata token 已过期；observer/runtime/relay 证书有效期也须重新查验。",
+    "node1_session": {
+      "queue": "D:/dsh-work/p2-remote-session-35ade5b0-01/node1/commands.txt",
+      "output": "D:/dsh-work/p2-remote-session-35ade5b0-01/node1/output.log",
+      "sshPID": 18332,
+      "rule": "append only, do not restart consumer"
+    }
   },
   "remaining_critical_path": [
-    "把原安装 Longhorn claim 的构造和每次发送绑定到真实 OriginalAdoptionReservation/当前 SQL 维护锁，保留独立恢复权限和不可续用的旧 claim。当前仅协议数据支持，不是持锁证明。部署时节点 observer 也必须更新；旧 observer 严格解码会拒绝新增 original 字段，不能只更新 controller。",
-    "实现本次 Pro RWO 的实际只读 keeper 及原安装持久 journal，原 writer Pod 退出后仍能观测同一物理设备；RWX 需真实 share-manager/client 同步/冻结和恢复。",
-    "接入 prepareTenantDeployment，完整租户 census 包含已知只读 team attachment；root namespace 的 writer map/census/readiness/restore 不能误用到 tenant。不能忽略陌生 Pod。",
-    "prepareNativeScopes 仍拒绝 CSI persistent_volume_native_fence_required；不能给 Longhorn 捏造 hostPath 或空 SourcePaths。整体 stop→held→恢复证明齐全后才解除 tenant guard。",
-    "C1 实际签发、capture、mixed adoption、恢复、disabled initialization/composition 尚未完成；不能以空数据库计数绕过。需要全部真实 registry 和材料 owner 输出。",
-    "MFA 登记服务尚未部署完整。现有接口 /api/v1/admin/system-backup-strong-auth/enroll、/confirm；需登记服务 TLS、完整 runtime、S3 制品身份/凭据、应用 JWT/session 撤销衔接。用户不知道现成入口；服务就绪后由用户本地真实登记，不能代填验证码或生成假 MFA。",
-    "正式任务及恢复验证产生后，用 retire-p2-team-attachment.py 的真实 task-id、业务恢复、source-disabled 证据清理本次临时挂载；目前没有真实任务，不可伪造编号删除。"
+    "完成交付包现场独立读回和组件更新。已经排队只读核对 controller disabled/.ready absent、keeper executable、observer unit/ELF/node/owner-directory。不得覆盖旧 journal；更新完成后才集中续签。",
+    "本次 Pro RWO keeper 调度已接通，但 tenant/CSI guard 仍在。只补实际 CSI 物理覆盖与捕获/接管调用，不以空 SourcePaths 或删除 guard 替代证明。",
+    "本次团队共享卷的 share-manager/client 同步、冻结、恢复需接入现有 Longhorn 协议。复用原协议、权限和日志，限定现场实际卷与 client，不扩展通用生命周期。",
+    "本次 C1/source 真实签发、capture、mixed adoption、初始化/配置组合仍未完成。只补实际阻断；已有上传、独立读回和目录登记调用优先复用并现场验收。",
+    "从正式页面发起一单并实际成功；当前正式 action authorizer 的 create 不强制 MFA。只有配置启用等实际正式入口强制时，补到用户可登记操作；不扩建认证系统。",
+    "真实完整采集、业务恢复、上传、独立读回和目录登记均须留存回执。取得真实 task-id 与恢复/source-disabled 证据后，按既有 retirement 脚本清理本次团队只读挂载。"
   ],
   "mfa_prepared_historical_evidence": {
     "root": "/root/sbk/p2-cert-renewal.1KyqMtsd/registration-preflight-20261115",
