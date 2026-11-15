@@ -446,6 +446,15 @@ func (a *longhornExt4Actions) run(r LonghornExt4Request) (LonghornExt4Response, 
 		}
 		return response, physicalErr
 	}
+	if !found && r.Action == "release" && s.Keeper == nil {
+		// Original RWX recovery retains the exact register boundary. A late
+		// register must see this closure, even when Forward has already expired.
+		event, err = a.closeUnregisteredOriginal(ctx, key, s, v, r)
+		if err != nil {
+			return response, err
+		}
+		found = true
+	}
 	if !found {
 		// The controller journals its request before dispatch. Recovery may
 		// reach the Node first. Close that same request without freezing and
@@ -468,7 +477,7 @@ func (a *longhornExt4Actions) run(r LonghornExt4Request) (LonghornExt4Response, 
 			return response, err
 		}
 	}
-	if r.Action == "register" && event.RegistrationBoundarySHA256 != r.RegistrationBoundarySHA256 {
+	if r.Action == "register" && !longhornExt4RegisterEventMatches(event, r) {
 		return response, ErrNodeObservation
 	}
 	if event.Hold.Mechanism == longhornFreezeCounterMechanism && v.freeze != nil {

@@ -27,6 +27,9 @@ type originalScopedRecoveryObserver interface {
 // until the COMPLETE current source and native recovery proof succeeds.
 func (s *PreparedOriginalWriterSet) restoreOriginalPartial(ctx context.Context, fence *originalWriterRecoveryFence) error {
 	failures := []error{}
+	if err := s.releaseLonghornRWX(ctx, fence); err != nil {
+		return err // Do not thaw a runtime while its RWX provider is frozen.
+	}
 	if err := s.releaseLonghornKeepers(ctx, fence); err != nil {
 		return err // Never restart a consumer while its device may remain frozen.
 	}

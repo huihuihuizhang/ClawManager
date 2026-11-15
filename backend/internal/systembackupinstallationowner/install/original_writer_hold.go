@@ -86,6 +86,11 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 			return nil, err
 		}
 	}
+	for _, source := range s.longhornRWX {
+		if err := source.register(ctx); err != nil {
+			return nil, err
+		}
+	}
 	if s.minioHistory != nil && s.minioHistory.acquireOriginalHistory(ctx) != nil {
 		return nil, ErrInstall
 	}
@@ -106,6 +111,17 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 	}
 	if err := s.freezeSharedRuntimeLifecycle(ctx); err != nil {
 		return nil, err
+	}
+	// Sync the entire RWX cohort before freezing any provider superblock.
+	for _, source := range s.longhornRWX {
+		if err := source.syncClients(ctx); err != nil {
+			return nil, err
+		}
+	}
+	for _, source := range s.longhornRWX {
+		if err := source.acquire(ctx); err != nil {
+			return nil, err
+		}
 	}
 	for _, keeper := range s.longhornKeepers {
 		if err := keeper.acquire(ctx); err != nil {
@@ -157,6 +173,11 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 // Every authority check still uses the SAME original context, never an invented
 // context/grant or an extended deadline.
 func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*originalHeldReadiness, error) {
+	for _, source := range s.longhornRWX {
+		if err := source.checkHeld(ctx); err != nil {
+			return nil, err
+		}
+	}
 	for _, keeper := range s.longhornKeepers {
 		if err := keeper.checkHeld(ctx); err != nil {
 			return nil, err
@@ -259,6 +280,12 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 			return nil, ErrInstall
 		}
 		responses = append(responses, keeper.held.Response())
+	}
+	for _, source := range s.longhornRWX {
+		if source.recheckHeld(time.Now()) != nil {
+			return nil, ErrInstall
+		}
+		responses = append(responses, source.held.Response())
 	}
 	proof.digest = originalObjectSHA(responses)
 	if s.journal.append(ctx, "", "complete_native_paused_observation", nil, struct {
@@ -461,6 +488,11 @@ func (p *originalHeldReadiness) VerifyParticipantsPaused(ctx context.Context, co
 	}
 	for _, keeper := range s.longhornKeepers {
 		if keeper.recheckHeld(now) != nil {
+			return ErrInstall
+		}
+	}
+	for _, source := range s.longhornRWX {
+		if source.recheckHeld(now) != nil {
 			return ErrInstall
 		}
 	}

@@ -55,10 +55,13 @@ func (s *PreparedOriginalWriterSet) RestoreOriginalSources(ctx context.Context, 
 	if s.observeOriginalRecoveryStopped(ctx, fence) != nil {
 		return ErrOriginalRecoveryNativeProof
 	}
-	if err := s.restoreSharedRuntimeLifecycle(ctx, fence); err != nil {
+	if err := s.releaseLonghornRWX(ctx, fence); err != nil {
 		return err
 	}
 	if err := s.releaseLonghornKeepers(ctx, fence); err != nil {
+		return err
+	}
+	if err := s.restoreSharedRuntimeLifecycle(ctx, fence); err != nil {
 		return err
 	}
 	// Deployment controllers are restored before their workload consumers.
@@ -122,6 +125,11 @@ type originalRecoveredReadiness struct {
 }
 
 func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context, fence *originalWriterRecoveryFence) (*originalRecoveredReadiness, error) {
+	for _, source := range s.longhornRWX {
+		if source.registration != nil && !originalLonghornRWXReleaseMatches(source.registration, source.released) {
+			return nil, ErrOriginalRecoveryNativeProof
+		}
+	}
 	if s.cleanupLonghornKeepers(ctx, fence) != nil {
 		return nil, ErrOriginalRecoveryNativeProof
 	}

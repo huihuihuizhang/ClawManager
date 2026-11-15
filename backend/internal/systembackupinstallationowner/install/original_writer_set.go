@@ -68,6 +68,7 @@ type PreparedOriginalWriterSet struct {
 	longhornSources       map[string]q.LonghornExt4SourceCoordinates
 	longhornMaterials     *q.LonghornExt4Materials
 	longhornRWXClients    []originalLonghornRWXClient
+	longhornRWX           []*originalLonghornRWXHold
 	minioHistory          *originalMinIOHistoryLifecycle
 	sharedLifecycle       []*originalSharedRuntimeLifecycle
 	sharedRuntimes        []*OriginalSharedRuntimeReservation

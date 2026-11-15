@@ -54,6 +54,15 @@ func (s *PreparedOriginalWriterSet) prepareLonghornKeepers(ctx context.Context, 
 			return ErrInstall
 		}
 		s.longhornSources[key] = source
+		cohort := []originalLonghornRWXClient{}
+		for _, client := range clients {
+			if client.Template.OriginalSourceSHA256 == source.OriginalSourceSHA256 && client.Template.PVCUID == source.PVCUID && client.Template.PVUID == source.PVUID {
+				cohort = append(cohort, client)
+			}
+		}
+		if len(cohort) > 0 {
+			s.longhornRWX = append(s.longhornRWX, &originalLonghornRWXHold{set: s, source: source, clients: cohort})
+		}
 	}
 	for _, writer := range s.deployments {
 		if writer.namespace == s.initial.Namespace {

@@ -5,7 +5,7 @@
   "user_requested_handoff": true,
   "complete": false,
   "continuation_progress": {
-    "state": "Current source facts and full writer selection succeeded. Added actual RWX mount cohort enumeration and preflight recheck; complete install regression PASS 42.517s. Current blocker remains wiring native sync/freeze/release and complete CSI coverage. Tenant/CSI guards retained; no real backup task, hold or capture completed.",
+    "state": "RWX original registration -> complete client sync -> provider acquire/check-held -> independent release wired. Full install regression PASS 42.500s; Linux original cancellation/journal/freeze-interruption regression 13 top-level + 21 subtests PASS. Frozen runtime coverage checks exact container identity; unknown original register can be durably closed before its late arrival without inverse ioctl. Both recovery branches release volumes before runtime thaw. No deployment or real hold/capture/page task; CSI physical scope guard remains the next blocker.",
     "runtime_binding_recovery_current": {
       "Root": "/root/sbk/p2-remote-1a466c69-01/runtime-instance3-recovery-current",
       "Cause": "Instance 3 still referenced old Hermes Pod ebbccb4b-967d-49e9-874c-bc479743c321 after certificate rollout. New Pod reused its IP, so healthy agent endpoint prevented automatic stale-pod failover. Original mount author correctly refused the draining old binding.",
@@ -97,9 +97,9 @@
     ],
     "test_cleanup": "本轮 D:\\dsh-work\\p2-keeper-flow-20261115 已整体删除并确认不存在；Linux tmpfs 已卸载。只保留正式交付目录/归档与上传记录。无运行中的本轮测试或构建。",
     "next_required": [
-      "已完成 dc1804d3 omitzero 回归及原生 selection 验证；新 metadata、observer/runtime/relay 证书已经加载并读回，不要重复续签或重复启动 relay。",
-      "源事实和新 writer selection 已成功并核对摘要；不能覆盖现有事实或重放 produce-facts。沿当前 3 卷实际物理停写/采集/恢复路径接线。",
-      "更新来源定义与本次 Pro/team 物理停写、CSI capture/adoption，保持guard；页面首单、完整采集/恢复/上传/独立读回/目录登记均未完成。"
+      "本轮 RWX native 调用与异常恢复回归已通过；先接完 actualPodPersistentRoots 的实际 CSI 物理覆盖及 C1/capture/adoption，保持 tenant/CSI guard。",
+      "不得重复 native source facts 或凭据签发；当前源事实已有正式产物。完成调用链后核实更新组件，再集中续签本次确实到期的凭据。",
+      "页面首单完整采集、业务恢复、上传、独立读回、目录登记全部真实通过后才完成目标。"
     ],
     "scope_instruction": "仅补本次现场实际路径；当前调用链及必要异常恢复通过后交付并进入现场，先核实更新组件，再集中续签。MFA 仅在正式入口强制要求时补到用户能登记创建任务。不得删除保护条件、漏数据或跳过恢复验证。",
     "current_wiring": "已接入 keeper create/register → 原 Deployment stop → acquire → check-held → 独立 release → 业务恢复 → cleanup；Pending 仅重读、不重建；创建日志错误仍保留不可变 intent；tenant census 核对本次 keeper Job/Pod。Windows 全包及 Linux 持久日志回归通过，尚未部署或正式采集。",
@@ -128,6 +128,20 @@
         "blocked_step": "held 与恢复的全量租户核对",
         "reuse": "复用全量 census 和 WorkerObserver；原逻辑拒绝所有 Job，需仅纳入本次 keeper。",
         "finish_check": "只接纳 journal 同 UID 且 spec/process 核验一致的 keeper；陌生或替换 Job/Pod 仍拒绝。"
+      },
+      {
+        "change": "本次 RWX 原安装调用接线",
+        "blocked_step": "共享工作区与团队共享卷需要真实 register-client/sync-client、provider acquire/check-held 和独立 release，单纯客户端坐标不能构成 held。",
+        "reuse": "复用 SharedRuntimeNodeClient、forwardLonghorn 的真实 SQL reservation 重查及固定 lease、原有 native journal 与独立恢复 fence。正式任务 executor 的 nativeSource 绑定 TaskPublicID，不能伪造任务用于原安装；仅构造本次两类 RWX 源的原操作调用。",
+        "finish_check": "provider 注册先于 stop；两个 runtime 必须有新鲜 check-frozen，团队只读附件必须匹配原 UID/spec/PVC/PV；全部 client 同步先于任何 provider acquire；held proof 纳入整体 SQL readiness；RWX/RWO release 先于 runtime/业务恢复；未知 sync 不重发。Windows install 完整回归 42.500s、Linux 原生日志/冻结异常回归 13 主测试与 21 子测试通过；未作现场冻结声明。",
+        "not_yet_complete": "tenant/CSI guard 和 actualPodPersistentRoots 拒绝保持；没有把 CSI 当作空路径或 hostPath。尚未部署或实际停写。"
+      },
+      {
+        "change": "原安装 RWX 的恢复先到关闭记录",
+        "blocked_step": "register 回执未知，独立恢复可能先于迟到 register 到达节点；现有无 keeper 分支要求原事件存在，不能完成此窗口的关闭。",
+        "reuse": "复用原 recovery mTLS URI、固定原安装 claim、source key、设备义务检查、HMAC/fsync 节点事件。原 RWO/普通任务保护分支不变；仅在原安装、精确注册/恢复边界、无原事件且没有任何未闭设备操作或 volatile freeze/thaw 的条件下写 released tombstone，不发 freeze/thaw ioctl。",
+        "finish_check": "Linux 实际私有持久日志重开仍 released；同一迟到 register 被拒绝；过期 Forward 不阻断恢复；未知冻结/不同 acquisition/其他未闭设备操作不可被转成 released。Linux 私有 HMAC/fsync 日志实际重开和拒绝用例通过；本地计数/冻结 syscall 故障注入不代替现场物理验证。",
+        "not_yet_complete": "本地 native journal 回归不代替现场物理冻结、完整采集或业务恢复。"
       }
     ],
     "latest_read_only_field_check": {
@@ -520,11 +534,46 @@
       "NativeHoldVerified": false,
       "Deployed": false,
       "Cleanup": "D:/dsh-work/p2-rwx-census-20261115 removed after tests; verified absent. No running test/build from this round."
+    },
+    "rwx_native_validation": {
+      "State": "PASS",
+      "WindowsCommand": "go test -p=2 -mod=readonly -count=1 ./internal/systembackupinstallationowner/install",
+      "WindowsPackageSeconds": 42.5,
+      "WindowsPreviousPassSeconds": 42.59,
+      "LinuxCommand": "quiesce.test -test.v -test.run ^(TestLonghorn|TestOriginalLonghorn)",
+      "LinuxTopLevelPasses": 13,
+      "LinuxSubtestPasses": 21,
+      "LinuxNativeJournalActualIO": true,
+      "LinuxKernelFreezeCallsSimulated": true,
+      "LinuxRootTmpfs": "/mnt/host/d/dsh-work/p2-rwx-native-20261115/native-tmp",
+      "TemporaryRoot": "D:\\dsh-work\\p2-rwx-native-20261115",
+      "LogSHA256": {
+        "install-tests.log": "1b660c3ba622b21441fe947791ca8a8e442ef1c69c2d2064b41abeab9c0991da",
+        "linux-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linux-tests.log": "b51522b5237259a6db113d7a6d2a4b15ca6c7a8be25f0b72989f31b7c527e3d3"
+      },
+      "SourceSHA256": {
+        "systembackup/quiesce/longhorn_ext4_actions_linux.go": "5027c1e3d224ae96f2c2fc062e73da21ec2f86d1e77c69e95c3e6a8dc0e9b07e",
+        "systembackup/quiesce/longhorn_ext4_original_cancel_linux.go": "bc8117ec083ebc3ffb9327b905b39331b52947b82a6bfd2440922ca609d4ccba",
+        "systembackup/quiesce/longhorn_ext4_original_cancel_linux_test.go": "e180465f86c93b2c4b2578f2c86541c77da93873b23fc5cdf51831663890054a",
+        "systembackupinstallationowner/install/original_longhorn_rwx_hold.go": "092d5197ccc413a4e13f257439b4a7ddb20fffb9e094d76e2b0bed0f57e898b8",
+        "systembackupinstallationowner/install/original_longhorn_rwx_hold_test.go": "2896d28d760d8dd4988c1ac001e3a5efbeeac6b6611eac15a7f54095de765f75",
+        "systembackupinstallationowner/install/original_longhorn_rwx_recovery.go": "89607dec3429817eee769194ad4365415b570a1d37f126e85c2b4a5966b3edcd",
+        "systembackupinstallationowner/install/original_longhorn_keeper_materials.go": "e79c35fe65a210bbf072658d1f94711cd333c5d64da92e425fc04c1c1d7e4ec8",
+        "systembackupinstallationowner/install/original_writer_set.go": "515c5434b21750ac411721e744d7289c8e8bd35c4f207406fea508d7d650977c",
+        "systembackupinstallationowner/install/original_writer_hold.go": "cc67be503e29c7b53ab92d2b9aa7eaceecebfbc3d1028192415c341e64434d45",
+        "systembackupinstallationowner/install/original_writer_partial_restore.go": "201ece4e7137fcb401f8abf0b5fb7a9651c28cc4f20add91095a6eb452f40ecd",
+        "systembackupinstallationowner/install/original_writer_restore.go": "927a1751f6f5157aac01bdb53bd2fc075485328f6dbafa2bea21bb7120d88a8d"
+      },
+      "Cleanup": "Linux native tmpfs confirmed unmounted; D:/dsh-work/p2-rwx-native-20261115 removed and verified absent. No test/build from this round remains running.",
+      "Deployed": false,
+      "PhysicalHoldVerified": false,
+      "BackupCompleted": false
     }
   },
   "workspace": "C:/Users/zhanghui08/Desktop/clawmanager/ClawManager/.worktrees/build-06bf0e89",
   "branch": "backup",
-  "head_verified": "dc1804d3139cf7d89814d38f6c9c48f9c2451439",
+  "head_verified": "9820e30719f6546b26990db99a42bb7662dfdbce",
   "git_remote": "https://github.com/huihuihuizhang/ClawManager.git",
   "constraints": [
     "仅补已确认阻断所需的接口，不扩展通用生命周期平台。",
@@ -618,7 +667,7 @@
   "remaining_critical_path": [
     "完成交付包现场独立读回和组件更新。已经排队只读核对 controller disabled/.ready absent、keeper executable、observer unit/ELF/node/owner-directory。不得覆盖旧 journal；更新完成后才集中续签。",
     "本次 Pro RWO keeper 调度已接通，但 tenant/CSI guard 仍在。只补实际 CSI 物理覆盖与捕获/接管调用，不以空 SourcePaths 或删除 guard 替代证明。",
-    "本次团队共享卷的 share-manager/client 同步、冻结、恢复需接入现有 Longhorn 协议。复用原协议、权限和日志，限定现场实际卷与 client，不扩展通用生命周期。",
+    "本次 RWX share-manager/client 同步、冻结、held 重查和独立恢复已接入原 Longhorn 协议，并通过本地回归；尚未部署。下一步补齐 whole-node 冷切所需的实际 CSI 覆盖与 capture/adoption，再验收现场物理停写/恢复。",
     "本次 C1/source 真实签发、capture、mixed adoption、初始化/配置组合仍未完成。只补实际阻断；已有上传、独立读回和目录登记调用优先复用并现场验收。",
     "从正式页面发起一单并实际成功；当前正式 action authorizer 的 create 不强制 MFA。只有配置启用等实际正式入口强制时，补到用户可登记操作；不扩建认证系统。",
     "真实完整采集、业务恢复、上传、独立读回和目录登记均须留存回执。取得真实 task-id 与恢复/source-disabled 证据后，按既有 retirement 脚本清理本次团队只读挂载。"
