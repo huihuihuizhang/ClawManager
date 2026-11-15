@@ -15,6 +15,10 @@ const InventoryVersion = "teams-source-inventory.v1"
 
 var ErrInventory = errors.New("teams source inventory incomplete or inconsistent")
 var inventoryID = regexp.MustCompile(`^[a-z][a-z0-9_]{0,95}$`)
+
+// Original Redis source authors use redis-<UID>. Preserve that identity;
+// local mount identifiers retain their separate, narrower grammar.
+var redisSourceID = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,95}$`)
 var digest64 = regexp.MustCompile(`^[a-f0-9]{64}$`)
 var redisServer = regexp.MustCompile(`^[a-f0-9]{40}$`)
 
@@ -65,7 +69,7 @@ type ObjectRef struct {
 }
 
 func (r RedisScope) Validate() error {
-	if !inventoryID.MatchString(r.ID) || !redisServer.MatchString(r.ServerID) || r.Database < 0 || r.Database > 15 || len(r.TeamIDs) == 0 || len(r.TeamIDs) > 10000 {
+	if !redisSourceID.MatchString(r.ID) || !redisServer.MatchString(r.ServerID) || r.Database < 0 || r.Database > 15 || len(r.TeamIDs) == 0 || len(r.TeamIDs) > 10000 {
 		return ErrInventory
 	}
 	seen := map[int]bool{}

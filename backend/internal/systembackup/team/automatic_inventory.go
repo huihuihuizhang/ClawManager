@@ -37,7 +37,7 @@ func ReadAutomaticInventory(ctx context.Context, tx *sql.Tx, storage AutomaticSt
 // BindAutomaticStorage is pure. SQL facts remain distinct from physical
 // identities so callers can perform remote discovery only AFTER ending RR.
 func BindAutomaticStorage(ctx context.Context, facts SourceFacts, storage AutomaticStorageMapping, users map[int]bool, instanceOwners map[int]int) (*Inventory, error) {
-	if ctx == nil || ctx.Err() != nil || facts.Validate(users, instanceOwners) != nil || !inventoryID.MatchString(storage.RedisID) || !redisServer.MatchString(storage.RedisServerID) || storage.RedisDatabase < 0 || storage.RedisDatabase > 15 || len(storage.Claims) > 10000 || len(storage.Objects) > 100000 || len(storage.Writers) > 10000 {
+	if ctx == nil || ctx.Err() != nil || facts.Validate(users, instanceOwners) != nil || !redisSourceID.MatchString(storage.RedisID) || !redisServer.MatchString(storage.RedisServerID) || storage.RedisDatabase < 0 || storage.RedisDatabase > 15 || len(storage.Claims) > 10000 || len(storage.Objects) > 100000 || len(storage.Writers) > 10000 {
 		return nil, ErrInventory
 	}
 	// Detach the independently observed mapping as well as nested writer units.
