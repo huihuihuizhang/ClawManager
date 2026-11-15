@@ -187,7 +187,12 @@ func (x *bootstrapSourceRegistryReader) deriveParts(f *bootstrapSourceSQLFacts, 
 		return nil, install.ErrInstall
 	}
 	parts := []bootstrapSourceRegistryPart{{ce.Part, ce.Part, ce.Operation}, {ce.Part, ce.ProofPart, ce.Operation}, {"deployment_and_secrets", "deployment_resources", "capture-deployment-resources"}, {"deployment_and_secrets", "secret_bundle", "capture-secret-bundle"}, {"skill_hub", b.SkillObjectsPart, "capture-skill-objects"}, {b.SourceRedisPart, b.SourceRedisPart, "capture-source-redis"}, {"users_instances", b.UsersInstancesDatabasePart, "capture-database"}}
-	if _, ok := x.materials.Operations[cd.Operation]; ok {
+	// The authenticated pre-signing author runs before the operational author
+	// adds control evidence and capture description. Reserve their exact parts
+	// now so the later signed inventory has the same shape; this grants no
+	// execution authority. Enrolled readers still require every operation.
+	_, authoring := x.access.(*install.BootstrapSourceRegistryAuthoring)
+	if _, ok := x.materials.Operations[cd.Operation]; ok || authoring {
 		parts = append(parts, bootstrapSourceRegistryPart{cd.Part, cd.Part, cd.Operation})
 	}
 	for _, instance := range f.inventory.Instances {
@@ -251,7 +256,9 @@ func (x *bootstrapSourceRegistryReader) deriveParts(f *bootstrapSourceSQLFacts, 
 		return a.Part < b.Part
 	})
 	for n, p := range parts {
-		if _, ok := x.materials.Operations[p.Operation]; !ok || n > 0 && parts[n-1].Module == p.Module && parts[n-1].Part == p.Part {
+		_, present := x.materials.Operations[p.Operation]
+		deferredControl := authoring && (p.Operation == ce.Operation || p.Operation == cd.Operation)
+		if !present && !deferredControl || n > 0 && parts[n-1].Module == p.Module && parts[n-1].Part == p.Part {
 			return nil, install.ErrInstall
 		}
 	}

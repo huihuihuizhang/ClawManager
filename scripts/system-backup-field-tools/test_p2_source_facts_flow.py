@@ -74,7 +74,21 @@ class SourceFactsFlowTest(unittest.TestCase):
         self.assertEqual({p.name:p.read_bytes() for p in j.iterdir()},before)
     def test_other_failure_cannot_use_vault_resume(self):
         self.vault_failure(step='facts_sql_recheck')
-        with self.assertRaisesRegex(ValueError,'exact pre-output Vault refusal'):self.M.run(8,True)
+        with self.assertRaisesRegex(ValueError,'exact pre-output refusal'):self.M.run(8,True)
+        self.R.once.assert_not_called()
+
+    def test_known_parts_failure_resumes_with_original_selection(self):
+        j=self.vault_failure(step='facts_parts');before={p.name:p.read_bytes() for p in j.iterdir()}
+        with redirect_stdout(io.StringIO()):self.M.run(8,resume_parts_authoring=True)
+        self.assertEqual(self.R.once.call_args.args[2],j.with_name(j.name+'-parts-authoring'))
+        self.assertEqual({p.name:p.read_bytes() for p in j.iterdir()},before)
+    def test_parts_resume_rechecks_expiry_before_native(self):
+        self.vault_failure(step='facts_parts');self.C.live_source.side_effect=ValueError('source expired')
+        with self.assertRaisesRegex(ValueError,'source expired'):self.M.run(8,resume_parts_authoring=True)
+        self.R.once.assert_not_called()
+    def test_parts_resume_rejects_other_failure(self):
+        self.vault_failure()
+        with self.assertRaisesRegex(ValueError,'exact pre-output refusal'):self.M.run(8,resume_parts_authoring=True)
         self.R.once.assert_not_called()
     def test_unknown_exit_cannot_use_vault_resume(self):
         self.vault_failure(exit_code=4)
