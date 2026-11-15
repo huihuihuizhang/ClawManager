@@ -212,6 +212,23 @@ prepare-composition 的 Deployment/Composition 输出读回后，调用：
 
 现场另行只读核对了业务命名空间的 Deployment、StatefulSet 与 Service，未发现独立 registration 服务。代码中的 `/api/v1/admin/system-backup-strong-auth/enroll`、`/confirm` 由独立 `system-backup-registration` HTTPS 服务提供，不是主应用配置一个 MFA 环境变量即可启用。该服务还要求当前安装对应的 provider/strong-auth/RBAC registry、独立签名凭据、TOTP 加密密钥及数据库身份等真实配置。在准备并验证这些依赖之前，不让管理员提交验证码；不得将 lab 专用签发脚本直接用于正式 Vault。
 
+### 本次现场登记前置实际结果
+
+记录根目录为 `/root/sbk/p2-cert-renewal.1KyqMtsd/registration-preflight-20261115`。只读 SQL 核对了原 plan 指向的数据库 UUID、命名空间 UID 和当前 MySQL Pod，原管理员 user ID 为 1 且为 active/local/admin；六张所需 v2 表存在，但 config、installation、已确认 TOTP 记录均为零。`identity.private.json` SHA256 为 `5e82c350a8473ec52c5920e9940795c5b7334009f350fcc89934d73319c0c882`。
+
+仅为该原管理员保存了 `rbac_bindings/p2-admin-20261115` 候选，SHA256 为 `4d5d9097844bafea87c7eb79477db7ad607aeabc86478c3ee0e20848a5f7407a`；没有创建 Kubernetes RBAC 或启用配置。
+
+正式 Vault 的审计已启用且未启用原始日志。核对原有四把密钥后，按持久意图 `issuer-keys/intent.json`（SHA256 `7ff6539835e76ef2f9d12a48056a1677224e7d7018070ef76afedee01efff4f2`）实际创建了两把独立、不可导出的 Ed25519 密钥：
+
+- `sbk-p2-registration-a0aa44b5a12a-strong-auth`，对应 strong_auth_issuers SHA256 `337349bbdd8b60f567a1851ae26c9099348c4d29f8a3029b8dfad8aaff5e1c84`。
+- `sbk-p2-registration-a0aa44b5a12a-provider-proof`，对应 provider_proof_issuers SHA256 `e0bcffbd974505cb70ee5cc73d3f22bbb0143be86715d65bca1ef966996a910f`。
+
+两个 registry 版本均为 `p2-registration-a0aa44b5a12a-20261115`，候选有效窗口截至 `2026-11-22T04:48:24.287188Z`。原有四把密钥完整元数据摘要逐一复核不变。创建回执 `issuer-keys/apply/completed.json` SHA256 为 `4dfb0ef04b668e2ba728df27b5ccb5b975e635e1bf2f8fd55947ed6b99bede8d`；各步骤的 sent、HTTP status 和元数据均保留，不能重复发送创建命令。
+
+随后用独立测试域的随机挑战实际调用 Transit 签名，并通过 registry 公钥验证了两份 Ed25519 签名。回执 `issuer-keys/signature-readback/completed.json` SHA256 为 `68c5a14aad916be8aa1f097689b4160d0d1e2113c58411c5593f1cc2daf175fa`。该测试仅证明专用密钥与公钥匹配，使用原 owner 检查身份，**没有验证运行期最小权限令牌，没有签发用户 MFA 证明，也没有部署登记服务或激活配置**。转发已关闭。
+
+后续应引用实际候选文件继续原配置流程；新增密钥改变了 Vault 密钥清单，新的来源观察必须重新读取真实清单，不能沿用 source-13 的过期材料或旧 metadata 摘要。
+
 ## 4. 环境、ready、启用与当前不能跨过的边界
 
 注册 disabled 配置不是 enabled 接单。正常启用仍须原页面 strong-auth 的配置操作取得真实 `operation-response.raw.json`、确认 config version 2，然后依次调用原 native：`reissue-enabled-forward`、`issue-enabled-publication-authorization`、`system-backup-enabled-provider-materials issue/query` 和原 enabled runtime-materials 作者。准确参数组装来源为 `system-backup-operator-enabled-publication.py` 的 `prepare/provider_materials/runtime_materials`；全部沿用最终 Core/同一 Pod/原 RequestFiles，不能把 version 1 的材料直接改 JSON 变成 version 2。
