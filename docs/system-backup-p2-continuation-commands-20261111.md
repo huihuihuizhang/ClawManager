@@ -229,6 +229,23 @@ prepare-composition 的 Deployment/Composition 输出读回后，调用：
 
 后续应引用实际候选文件继续原配置流程；新增密钥改变了 Vault 密钥清单，新的来源观察必须重新读取真实清单，不能沿用 source-13 的过期材料或旧 metadata 摘要。
 
+### 登记运行凭据的现场验证
+
+两把专用密钥各自增加一个 `-sign` 策略，只允许对本密钥使用显式字符串版本 `1` 签名。实际使用 900 秒临时令牌验证了正常签名、跨密钥拒绝、密钥元数据读取拒绝、缺少/零/错误版本及额外参数拒绝；撤销后签名也被拒绝。临时令牌均已撤销，策略保留，尚未签发生产运行令牌。`issuer-keys/least-privilege-check/completed.json` SHA256 为 `0a2759329d5dc76b89eda4dcb7e6171bbd64df72f84dd74a30fe386b9cc60cfe`。
+
+原 business 账户经原生二进制实际 TLS 连接和只读回滚核验，发现 users 的列级 SELECT 不包含 `password_hash`，不能用于 TOTP 密码验证。未改动该账户。按 `registration-sql-account/plan.json`（SHA256 `afc9ae6a04a8007e6b4a73dfafddf91f5c0b94b5a3943d7c27733bc4349b2c99`）创建了独立 `sbk_registration_a0aa44b5a12a@%`，强制 SSL、最多 4 连接：
+
+- users：仅 SELECT(id,password_hash,role,is_active)。
+- audit_logs：仅 INSERT(user_id,action,resource_type,details)。
+- v2 configs、installation_state、admin_revocations：SELECT。
+- v2 totp_credentials、admin_sessions、metadata_reservations：SELECT、INSERT、UPDATE。
+
+没有全库权限、DDL 或转授权。创建后以该账户运行原生 `--inspect-sql-evidence`，实际数据库 UUID、账户、9 条授权（含 USAGE）、TLS 和只读回滚均通过。`registration-sql-account/native.completed.json` SHA256 为 `7f1c4adff9d26b1dd193e328c93b3fa3000c1e8db0f18547e3453fc14b592f40`。该账户仅准备本次 MFA 登记/配置证明所需权限，不代表所有 provider-registration 操作已具备权限。
+
+确认该安装 TOTP 记录总数为零后，以 UID、resourceVersion、原 data 三重 CAS 向已获批备份的 `clawmanager-secrets` 增加 `system-backup-totp-encryption-key`（32 字节），读回证明原有字段不变。`totp-encryption-key/completed.json` SHA256 为 `327684b5a5fcdb5a7170c4be129f72e689d268fb396e8754271c5a600dfa8172`。这是种子的加密密钥，不是用户的 TOTP 种子或验证码；尚未登记 MFA。新来源必须重新观察此 Secret。
+
+登记原生二进制 SHA256 为 `9648bb915a3eea1f64ad9f7be6ac89744c0984c95fe86cd147cd620b6ac388a5`，已从当前 controller 读取到 `sql-readonly/system-backup-registration` 供后续实际服务部署使用。SQL 私有 DSN 使用 `mysql:3306` 与 `tls=true`，固定原 CA，通过仅对子进程生效的原集群 DNS 解析；未修改主机解析器或原 DSN。服务 TLS、完整 runtime 配置及主应用 logout/session 接线仍需完成，不能将上述前置通过当成登记入口已可使用。
+
 ## 4. 环境、ready、启用与当前不能跨过的边界
 
 注册 disabled 配置不是 enabled 接单。正常启用仍须原页面 strong-auth 的配置操作取得真实 `operation-response.raw.json`、确认 config version 2，然后依次调用原 native：`reissue-enabled-forward`、`issue-enabled-publication-authorization`、`system-backup-enabled-provider-materials issue/query` 和原 enabled runtime-materials 作者。准确参数组装来源为 `system-backup-operator-enabled-publication.py` 的 `prepare/provider_materials/runtime_materials`；全部沿用最终 Core/同一 Pod/原 RequestFiles，不能把 version 1 的材料直接改 JSON 变成 version 2。
