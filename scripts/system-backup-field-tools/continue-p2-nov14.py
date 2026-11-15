@@ -315,6 +315,13 @@ def run(args, package=None):
 
 
 def refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desired,secret,plan,minted,observer,agent):
+    # This owner intent is required by produce-facts. Check it before minting
+    # a source token or spending its finite window on mount observations.
+    if original.get('RedisSourcesVersion'):
+        policy=original.get('Materials',{}).get('Discovery',{}).get('SecretPolicy')
+        A.need(isinstance(policy,dict) and policy.get('protocol')=='system-backup-secret-capture-policy.v1'
+               and policy.get('path') and policy.get('sha256'),'explicit original Secret backup policy required before source renewal')
+        A.read({'File':policy['path'],'SHA256':policy['sha256']})
     journal=SOURCE_JOURNAL;journal.mkdir(mode=0o700,exist_ok=True)
     donefile=journal/'completed.json'
     if donefile.exists():
