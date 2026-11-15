@@ -98,6 +98,7 @@ type NodeObserver struct {
 	CRI                              CRICommand
 	key                              []byte
 	sharedFrozen                     *SharedRuntimeFrozenReaderConfig
+	longhornClientTemplates          map[string]LonghornRWXClientCoordinates
 }
 
 func NewNodeObserver(node, uid, machine, boot, root, proc string, cri CRICommand, key []byte) (*NodeObserver, error) {

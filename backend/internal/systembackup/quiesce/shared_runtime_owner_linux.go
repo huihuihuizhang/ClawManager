@@ -278,7 +278,7 @@ func (o *sharedRuntimeNodeOwner) peers(ctx context.Context, r SharedRuntimeNodeR
 		}
 		var envelope sharedRuntimeOwnerEnvelope
 		var rec sharedRuntimeOwnerRecord
-		if json.Unmarshal(file, &envelope) != nil || !hmac.Equal([]byte(envelope.MAC), []byte(o.mac(envelope.Record))) || json.Unmarshal(envelope.Record, &rec) != nil || rec.ID != a.ID || rec.Anchor != peer.Anchor || rec.Anchor != o.anchor(rec) || rec.Original.Original.OriginalSHA256 != peer.OriginalSHA256 || !reflect.DeepEqual(rec.Original.SourcePaths, r.SourcePaths) {
+		if json.Unmarshal(file, &envelope) != nil || !hmac.Equal([]byte(envelope.MAC), []byte(o.mac(envelope.Record))) || json.Unmarshal(envelope.Record, &rec) != nil || rec.ID != a.ID || rec.Anchor != peer.Anchor || rec.Anchor != o.anchor(rec) || rec.Original.Original.OriginalSHA256 != peer.OriginalSHA256 || !sameSharedRuntimeSourceScope(rec.Original, r) {
 			return nil, ErrNodeObservation
 		}
 		listed[rec.ID] = true
@@ -368,11 +368,15 @@ func (o *sharedRuntimeNodeOwner) run(ctx context.Context, r SharedRuntimeNodeReq
 				return response, observationFailure("shared_original_recovery_pending")
 			}
 		}
-		files, e := o.observer.files(ctx, w.Paths)
-		if e != nil {
-			return response, e
+		fileCount := 0
+		if r.LonghornClient == nil {
+			files, e := o.observer.files(ctx, w.Paths)
+			if e != nil {
+				return response, e
+			}
+			fileCount = len(files)
 		}
-		rec = sharedRuntimeOwnerRecord{Version: SharedRuntimeNodeProtocol, ID: sharedRuntimeOwnerID(r), Phase: "prepared", Original: sharedRuntimeOwnerOriginal(r), Witness: w, Cgroup: pin, Tasks: len(w.Gateways) + 1, Files: len(files)}
+		rec = sharedRuntimeOwnerRecord{Version: SharedRuntimeNodeProtocol, ID: sharedRuntimeOwnerID(r), Phase: "prepared", Original: sharedRuntimeOwnerOriginal(r), Witness: w, Cgroup: pin, Tasks: len(w.Gateways) + 1, Files: fileCount}
 		rec.Anchor = o.anchor(rec)
 		if e = o.save(&rec); e != nil {
 			return response, e
@@ -393,7 +397,7 @@ func (o *sharedRuntimeNodeOwner) run(ctx context.Context, r SharedRuntimeNodeReq
 			if rec.Phase != "prepared" {
 				return response, ErrNodeObservation
 			}
-			w, e := o.observer.sharedRuntimeWitness(ctx, r, r.Original, o.releases)
+			w, e := o.observer.sharedRuntimeWitness(ctx, r, r.Original, o.releases, &rec.Witness)
 			if e != nil || !reflect.DeepEqual(w, rec.Witness) {
 				return response, ErrNodeObservation
 			}
@@ -437,7 +441,7 @@ func (o *sharedRuntimeNodeOwner) run(ctx context.Context, r SharedRuntimeNodeReq
 			// releasing a freeze. Never thaw a successor operation in the same CG.
 			oldAgent, ae := observationProcess(ctx, filepath.Join(o.observer.HostProc, strconv.Itoa(rec.Witness.Agent.PID)))
 			if ae == nil && oldAgent == rec.Witness.Agent {
-				if _, e := o.observer.sharedRuntimeWitness(ctx, r, r.Original, o.releases); e != nil {
+				if _, e := o.observer.sharedRuntimeWitness(ctx, r, r.Original, o.releases, &rec.Witness); e != nil {
 					return response, e
 				}
 			}
@@ -460,7 +464,7 @@ func (o *sharedRuntimeNodeOwner) run(ctx context.Context, r SharedRuntimeNodeReq
 				rec.Phase = "orphan-thawed"
 			} else {
 				rec.Phase = "thawed"
-				w, we := o.observer.sharedRuntimeWitness(ctx, r, r.Original, o.releases)
+				w, we := o.observer.sharedRuntimeWitness(ctx, r, r.Original, o.releases, &rec.Witness)
 				if we != nil || !reflect.DeepEqual(w, rec.Witness) {
 					rec.Phase = "orphan-thawed"
 				}
@@ -473,8 +477,8 @@ func (o *sharedRuntimeNodeOwner) run(ctx context.Context, r SharedRuntimeNodeReq
 			if r.Current == nil || rec.RecoveryBoundarySHA256 != r.RecoveryBoundarySHA256 || r.Action == "recovered" && rec.Phase != "thawed" || r.Action == "complete" && rec.Phase != "recovered" && !alreadyCompleted {
 				return response, ErrNodeObservation
 			}
-			w, e := o.observer.sharedRuntimeWitness(ctx, r, *r.Current, o.releases)
-			if e != nil || w.Container != rec.Witness.Container || w.Agent != rec.Witness.Agent || w.Guard != rec.Witness.Guard || !reflect.DeepEqual(w.Gateways, rec.Witness.Gateways) || !reflect.DeepEqual(w.Paths, rec.Witness.Paths) || !reflect.DeepEqual(w.LoadedEnvironmentSHA256, rec.Witness.LoadedEnvironmentSHA256) {
+			w, e := o.observer.sharedRuntimeWitness(ctx, r, *r.Current, o.releases, &rec.Witness)
+			if e != nil || w.Container != rec.Witness.Container || w.Agent != rec.Witness.Agent || w.Guard != rec.Witness.Guard || !reflect.DeepEqual(w.Gateways, rec.Witness.Gateways) || !reflect.DeepEqual(w.Paths, rec.Witness.Paths) || !reflect.DeepEqual(w.Longhorn, rec.Witness.Longhorn) || !reflect.DeepEqual(w.LoadedEnvironmentSHA256, rec.Witness.LoadedEnvironmentSHA256) {
 				return response, ErrNodeObservation
 			}
 			h, e := openSharedCgroup(ctx, o.cgroupMount, o.observer.HostProc, rec.Cgroup.Root, &rec.Cgroup)
@@ -526,7 +530,7 @@ func (o *sharedRuntimeNodeOwner) run(ctx context.Context, r SharedRuntimeNodeReq
 	if ctx.Err() != nil || !finished.Before(r.Deadline) {
 		return response, ErrNodeObservation
 	}
-	facts := SharedRuntimeNodeFacts(r.Action)
+	facts := sharedRuntimeNodeRequestFacts(r, r.Action)
 	if rec.Phase == "orphan-thawed" && r.Action != "state" {
 		facts = SharedRuntimeNodeFacts("orphan-thawed")
 	}
@@ -549,13 +553,14 @@ func (o *sharedRuntimeNodeOwner) checkFrozenSources(ctx context.Context, r Share
 		return 0, 0, ErrNodeObservation
 	}
 	handles := []*sharedCgroupHandle{}
+	observed := 0
 	defer func() {
 		for _, h := range handles {
 			h.close()
 		}
 	}()
 	for _, p := range peers {
-		if p.Phase != "frozen" && p.Phase != "freezing" || p.CohortSHA256 != SharedRuntimeNodeCohortSHA(r) {
+		if p.Phase != "frozen" && p.Phase != "freezing" || p.CohortSHA256 != SharedRuntimeNodeCohortSHA(r) || !sameSharedRuntimeSourceScope(p.Original, r) {
 			return 0, 0, ErrNodeObservation
 		}
 		h, e := openSharedCgroup(ctx, o.cgroupMount, o.observer.HostProc, p.Cgroup.Root, &p.Cgroup)
@@ -566,10 +571,22 @@ func (o *sharedRuntimeNodeOwner) checkFrozenSources(ctx context.Context, r Share
 		if h.checkFrozen(ctx) != nil {
 			return 0, 0, ErrNodeObservation
 		}
-		w, e := o.observer.sharedRuntimeWitness(ctx, p.Original, p.Original.Original, o.releases)
+		w, e := o.observer.sharedRuntimeWitness(ctx, p.Original, p.Original.Original, o.releases, &p.Witness)
 		if e != nil || !reflect.DeepEqual(w, p.Witness) {
 			return 0, 0, ErrNodeObservation
 		}
+		observed += len(w.Gateways) + 1
+	}
+	if r.LonghornClient != nil {
+		// This bounded component proves original cgroup/mount state only.
+		// Full client drain/sync and provider freeze belong to Longhorn's
+		// separate actor; do not advertise a host scan or filesystem flush.
+		for _, h := range handles {
+			if h.checkFrozen(ctx) != nil {
+				return 0, 0, ErrNodeObservation
+			}
+		}
+		return observed, 0, nil
 	}
 	paths, e := o.observer.paths(ctx, r.SourcePaths)
 	if e != nil {

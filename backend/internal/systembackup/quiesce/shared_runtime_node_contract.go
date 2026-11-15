@@ -38,6 +38,9 @@ type SharedRuntimeNodeRequest struct {
 	// Full native host source roots on this Node, identical across its cohorts.
 	// Supplied on prepare and bound inside Anchor; repeated unchanged thereafter.
 	SourcePaths []string
+	// This site's shared workspace is an installed Longhorn RWX client, not a
+	// host path. This reference authorizes no source flush or filesystem hold.
+	LonghornClient *LonghornRWXClientCoordinates `json:",omitempty"`
 	// Empty for prepare; complete SAME-node original cohort for other actions.
 	Peers  []SharedRuntimeNodePeer
 	Anchor string
@@ -104,7 +107,7 @@ func (p *VerifiedSharedRuntimeNodeObservation) Response() SharedRuntimeNodeRespo
 // Performs NO I/O and never renews the original native observation. Used only
 // inside D's existing original held/recovery SQL verifier after outside I/O.
 func (p *VerifiedSharedRuntimeNodeObservation) Recheck(ctx context.Context, binding ObservationBinding, action, boot, originalSHA, anchor, cohortSHA, sourcePathsSHA string, now time.Time) error {
-	if p == nil || ctx == nil || ctx.Err() != nil || now.IsZero() || observationDigest(binding) != observationDigest(p.response.Binding) || p.response.Action != action || action == "state" || action == "orphan-thawed" || p.response.Phase == "orphan-thawed" || p.response.BootID != boot || boot == "" || p.response.OriginalSHA256 != originalSHA || p.response.Anchor != anchor || anchor == "" || p.response.CohortSHA256 != cohortSHA || p.response.SourcePathsSHA256 != sourcePathsSHA || !validObservationHash(p.response.NativeJournalSHA256) || now.Before(p.response.StartedAt) || !now.Before(p.response.ValidUntil) || !time.Now().Before(p.response.ValidUntil) || !reflect.DeepEqual(p.response.Facts, SharedRuntimeNodeFacts(action)) {
+	if p == nil || ctx == nil || ctx.Err() != nil || now.IsZero() || observationDigest(binding) != observationDigest(p.response.Binding) || p.response.Action != action || action == "state" || action == "orphan-thawed" || p.response.Phase == "orphan-thawed" || p.response.BootID != boot || boot == "" || p.response.OriginalSHA256 != originalSHA || p.response.Anchor != anchor || anchor == "" || p.response.CohortSHA256 != cohortSHA || p.response.SourcePathsSHA256 != sourcePathsSHA || !validObservationHash(p.response.NativeJournalSHA256) || now.Before(p.response.StartedAt) || !now.Before(p.response.ValidUntil) || !time.Now().Before(p.response.ValidUntil) || !reflect.DeepEqual(p.response.Facts, sharedRuntimeNodeRequestFacts(p.originalRequest, action)) {
 		return ErrNodeObservation
 	}
 	return nil
@@ -115,5 +118,18 @@ func SharedRuntimeNodeOriginalSHA(r SharedRuntimeNodeRequest) string {
 }
 func SharedRuntimeNodeCohortSHA(r SharedRuntimeNodeRequest) string { return observationDigest(r.Peers) }
 func SharedRuntimeNodeSourcePathsSHA(r SharedRuntimeNodeRequest) string {
+	if r.LonghornClient != nil {
+		return observationDigest(struct {
+			Paths  []string
+			Client *LonghornRWXClientCoordinates
+		}{r.SourcePaths, r.LonghornClient})
+	}
 	return observationDigest(r.SourcePaths)
+}
+
+func sharedRuntimeNodeRequestFacts(r SharedRuntimeNodeRequest, action string) []string {
+	if r.LonghornClient != nil && action == "check-frozen" {
+		return []string{"all_original_node_cohort_cgroups_frozen", "original_agent_reservations_native_current", "original_longhorn_client_mount_unchanged", "filesystem_hold_requires_separate_longhorn_owner"}
+	}
+	return SharedRuntimeNodeFacts(action)
 }

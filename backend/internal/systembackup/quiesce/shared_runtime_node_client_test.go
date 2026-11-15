@@ -46,7 +46,7 @@ func TestSharedNodeContractSeparatesOriginalTaskAndAgentReservationAndRejectsAli
 // Real mutual TLS/URI and one actual HTTP roundtrip. The response fixture is
 // transport DATA only, never a native freezer/SQL/source-consistency fixture.
 func TestSharedNodeTransportPinsMutualTLSNonceAndNeverRetriesOrFollowsRedirect(t *testing.T) {
-	for _, scenario := range []string{"valid", "wrong-node-uri", "wrong-nonce", "redirect"} {
+	for _, scenario := range []string{"valid", "wrong-node-uri", "wrong-nonce", "redirect", "longhorn-valid", "longhorn-host-claims", "longhorn-files"} {
 		t.Run(scenario, func(t *testing.T) {
 			roots, serverCert, clientCert := proofCertificates(t)
 			calls := 0
@@ -68,6 +68,15 @@ func TestSharedNodeTransportPinsMutualTLSNonceAndNeverRetriesOrFollowsRedirect(t
 					return
 				}
 				out := SharedRuntimeNodeResponse{Version: r.Version, Action: r.Action, Nonce: r.Nonce, RequestSHA256: SharedRuntimeNodeRequestSHA256(r), Binding: r.Binding, Anchor: "opaque-native-owner-anchor", BootID: "original-boot", OriginalSHA256: r.Original.OriginalSHA256, OriginalRawSHA256: observationRawDigest(r.OriginalRaw), CurrentRawSHA256: observationRawDigest(r.CurrentRaw), CohortSHA256: SharedRuntimeNodeCohortSHA(r), SourcePathsSHA256: SharedRuntimeNodeSourcePathsSHA(r), NativeJournalSHA256: strings.Repeat("1", 64), Phase: "prepared", StartedAt: time.Now().UTC(), FinishedAt: time.Now().UTC(), ValidUntil: r.Deadline, TasksChecked: 1, Files: 1, Facts: SharedRuntimeNodeFacts(r.Action)}
+				if r.LonghornClient != nil {
+					out.Phase, out.Files, out.Facts = "frozen", 0, sharedRuntimeNodeRequestFacts(r, r.Action)
+					if scenario == "longhorn-host-claims" {
+						out.Facts = SharedRuntimeNodeFacts(r.Action)
+					}
+					if scenario == "longhorn-files" {
+						out.Files = 1
+					}
+				}
 				if scenario == "wrong-nonce" {
 					out.Nonce = strings.Repeat("0", 64)
 				}
@@ -84,10 +93,18 @@ func TestSharedNodeTransportPinsMutualTLSNonceAndNeverRetriesOrFollowsRedirect(t
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			r := sharedNodeRequestFixture(t)
+			if strings.HasPrefix(scenario, "longhorn-") {
+				r = sharedLonghornRequestFixture(t)
+				r.Action, r.Anchor = "check-frozen", "opaque-native-owner-anchor"
+				r.Peers = []SharedRuntimeNodePeer{{PodUID: r.AgentPod.UID, Anchor: r.Anchor, OriginalSHA256: r.Original.OriginalSHA256}}
+			}
 			proof, raw, err := client.Transition(ctx, r)
-			if scenario == "valid" {
+			if scenario == "valid" || scenario == "longhorn-valid" {
 				if err != nil || proof == nil || len(raw) == 0 || calls != 1 {
 					t.Fatal("actual mutual TLS exchange failed", err)
+				}
+				if proof.Recheck(ctx, r.Binding, r.Action, "original-boot", r.Original.OriginalSHA256, "opaque-native-owner-anchor", SharedRuntimeNodeCohortSHA(r), SharedRuntimeNodeSourcePathsSHA(r), time.Now()) != nil {
+					t.Fatal("verified request-specific facts could not be rechecked")
 				}
 			} else if err == nil || proof != nil || calls > 1 {
 				t.Fatal("foreign/unknown response accepted or retried")

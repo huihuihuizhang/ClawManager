@@ -138,7 +138,7 @@ func ValidateSharedRuntimeNodeRequest(r SharedRuntimeNodeRequest, now time.Time)
 		}
 		seen[e.InstanceID] = true
 	}
-	if len(r.SourcePaths) == 0 || len(r.SourcePaths) > 128 || !sort.StringsAreSorted(r.SourcePaths) {
+	if r.LonghornClient != nil && !validSharedRuntimeLonghornClient(r) || r.LonghornClient == nil && len(r.SourcePaths) == 0 || len(r.SourcePaths) > 128 || !sort.StringsAreSorted(r.SourcePaths) {
 		return ErrNodeObservation
 	}
 	for i, p := range r.SourcePaths {
@@ -288,7 +288,7 @@ func (c *SharedRuntimeNodeClient) Transition(ctx context.Context, in SharedRunti
 		return nil, nil, ErrNodeObservation
 	}
 	want := map[string]string{"prepare": "prepared", "freeze": "frozen", "check-frozen": "frozen", "thaw": "thawed", "recovered": "recovered", "complete": "completed", "orphan-thawed": "orphan-thawed"}[in.Action]
-	facts := SharedRuntimeNodeFacts(in.Action)
+	facts := sharedRuntimeNodeRequestFacts(in, in.Action)
 	if in.Action == "thaw" && out.Phase == "orphan-thawed" {
 		want = "orphan-thawed"
 		facts = SharedRuntimeNodeFacts("orphan-thawed")
@@ -297,7 +297,7 @@ func (c *SharedRuntimeNodeClient) Transition(ctx context.Context, in SharedRunti
 		if out.Phase != "prepared" && out.Phase != "frozen" && out.Phase != "thawed" && out.Phase != "recovered" && out.Phase != "completed" && out.Phase != "orphan-thawed" && out.Phase != "uncertain" {
 			return nil, nil, ErrNodeObservation
 		}
-	} else if out.Phase != want || out.TasksChecked <= 0 || out.Files <= 0 {
+	} else if out.Phase != want || out.TasksChecked <= 0 || in.LonghornClient == nil && out.Files <= 0 || in.LonghornClient != nil && out.Files != 0 {
 		return nil, nil, ErrNodeObservation
 	}
 	if !reflect.DeepEqual(out.Facts, facts) {

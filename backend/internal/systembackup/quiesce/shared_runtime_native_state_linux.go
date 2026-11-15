@@ -30,6 +30,7 @@ type sharedRuntimeNativeWitness struct {
 	JournalSHA256, ExecutableSHA256 string
 	LoadedEnvironmentSHA256         map[string]string
 	Paths                           []observedPath
+	Longhorn                        *sharedRuntimeLonghornWitness `json:",omitempty"`
 }
 type sharedRuntimePrivateJournal struct {
 	State            services.RuntimeSharedNativeState
@@ -39,7 +40,7 @@ type sharedRuntimePrivateJournal struct {
 // Native source DATA only: no reservation, freeze, source flush or authority
 // follows from constructing a witness. The lifecycle owner must additionally
 // authenticate its original persisted operation and maintain all source gates.
-func (o *NodeObserver) sharedRuntimeWitness(ctx context.Context, r SharedRuntimeNodeRequest, expected services.RuntimeSharedNativeState, releases map[string]sharedRuntimeAgentRelease) (sharedRuntimeNativeWitness, error) {
+func (o *NodeObserver) sharedRuntimeWitness(ctx context.Context, r SharedRuntimeNodeRequest, expected services.RuntimeSharedNativeState, releases map[string]sharedRuntimeAgentRelease, originals ...*sharedRuntimeNativeWitness) (sharedRuntimeNativeWitness, error) {
 	var out sharedRuntimeNativeWitness
 	bad := func() (sharedRuntimeNativeWitness, error) {
 		return sharedRuntimeNativeWitness{}, observationFailure("shared_native_source")
@@ -47,7 +48,23 @@ func (o *NodeObserver) sharedRuntimeWitness(ctx context.Context, r SharedRuntime
 	if o == nil || ctx == nil || ctx.Err() != nil || o.hostIdentity(ctx) != nil || expected.Identity.PodUID != r.AgentPod.UID || expected.Identity.Namespace != r.Binding.Namespace || expected.Identity.OperationID != r.Binding.ReservationID || expected.Identity.InventorySHA256 != r.Binding.InventorySHA256 || expected.BootID != o.BootID || expected.OriginalSHA256 != services.SharedRuntimeOriginalSHA(expected) || !validObservationHash(expected.JournalSHA256) || !absoluteObservationPath(r.AgentDataDir) || expected.GuardPath != filepath.Join(r.AgentDataDir, "shared-backup.guard") || expected.JournalPath != filepath.Join(r.AgentDataDir, "shared-backup/current.json") {
 		return bad()
 	}
-	paths, err := o.paths(ctx, r.SourcePaths)
+	if len(originals) > 1 {
+		return bad()
+	}
+	var prior *sharedRuntimeNativeWitness
+	if len(originals) == 1 {
+		prior = originals[0]
+		if prior == nil || (prior.Longhorn == nil) != (r.LonghornClient == nil) {
+			return bad()
+		}
+	}
+	var paths []observedPath
+	var err error
+	if r.LonghornClient == nil {
+		paths, err = o.paths(ctx, r.SourcePaths)
+	} else {
+		out.Longhorn, err = o.sharedRuntimeLonghornMount(ctx, r, prior)
+	}
 	if err != nil {
 		return bad()
 	}
@@ -60,6 +77,12 @@ func (o *NodeObserver) sharedRuntimeWitness(ctx context.Context, r SharedRuntime
 	out.Container, err = observationProcess(ctx, filepath.Join(o.HostProc, strconv.Itoa(roots[0].PID)))
 	if err != nil {
 		return bad()
+	}
+	if out.Longhorn != nil {
+		p := out.Longhorn.Process
+		if p.PID != out.Container.PID || p.Start != out.Container.Start || p.PIDNamespace != out.Container.PIDNamespace || p.MountNamespace != out.Container.MountNamespace {
+			return bad()
+		}
 	}
 	root := filepath.Join(o.HostProc, strconv.Itoa(out.Container.PID), "root")
 	_, guard, _, err := sharedRuntimeNativeRead(ctx, root, expected.GuardPath, 1)
@@ -151,9 +174,16 @@ func (o *NodeObserver) sharedRuntimeWitness(ctx context.Context, r SharedRuntime
 	if !same {
 		return bad()
 	}
-	lastPaths, err := o.paths(ctx, r.SourcePaths)
-	if err != nil || !reflect.DeepEqual(lastPaths, paths) {
-		return bad()
+	if r.LonghornClient == nil {
+		lastPaths, err := o.paths(ctx, r.SourcePaths)
+		if err != nil || !reflect.DeepEqual(lastPaths, paths) {
+			return bad()
+		}
+	} else {
+		last, err := o.sharedRuntimeLonghornMount(ctx, r, &out)
+		if err != nil || !reflect.DeepEqual(last, out.Longhorn) {
+			return bad()
+		}
 	}
 	out.Paths = paths
 	return out, nil

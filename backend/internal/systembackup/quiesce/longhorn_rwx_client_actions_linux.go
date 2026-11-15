@@ -59,6 +59,10 @@ func (h *SharedRuntimeNodeHandler) configureLonghornRWXClients(ctx context.Conte
 		}
 		a.clientTemplates[c.Identity] = c
 	}
+	o.longhornClientTemplates = make(map[string]LonghornRWXClientCoordinates, len(a.clientTemplates))
+	for identity, c := range a.clientTemplates {
+		o.longhornClientTemplates[identity] = c
+	}
 	return nil
 }
 

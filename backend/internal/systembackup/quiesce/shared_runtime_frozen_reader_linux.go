@@ -109,7 +109,7 @@ func (o *NodeObserver) readSharedFrozenRecords(ctx context.Context, a nodeObserv
 		}
 		var envelope sharedRuntimeOwnerEnvelope
 		var rec sharedRuntimeOwnerRecord
-		if json.Unmarshal(raw, &envelope) != nil || !hmac.Equal([]byte(envelope.MAC), []byte(view.mac(envelope.Record))) || json.Unmarshal(envelope.Record, &rec) != nil || rec.Version != SharedRuntimeNodeProtocol || rec.ID != pin.ID || rec.ID != sharedRuntimeOwnerID(rec.Original) || rec.Anchor != s.Anchor || rec.Anchor != view.anchor(rec) || rec.Sequence == 0 || rec.Cgroup.BootID != o.BootID || rec.Phase != "frozen" && rec.Phase != "freezing" || !reflect.DeepEqual(rec.Original.Binding, s.Binding) || !reflect.DeepEqual(rec.Original.AgentPod, s.AgentPod) || !reflect.DeepEqual(rec.Original.SourcePaths, paths) || rec.Original.Original.OriginalSHA256 != s.OriginalSHA256 || rec.Witness.JournalSHA256 != s.NativeJournalSHA256 || rec.CohortSHA256 != s.CohortSHA256 || SharedRuntimeNodeSourcePathsSHA(rec.Original) != s.SourcePathsSHA256 {
+		if json.Unmarshal(raw, &envelope) != nil || !hmac.Equal([]byte(envelope.MAC), []byte(view.mac(envelope.Record))) || json.Unmarshal(envelope.Record, &rec) != nil || rec.Version != SharedRuntimeNodeProtocol || rec.ID != pin.ID || rec.ID != sharedRuntimeOwnerID(rec.Original) || rec.Anchor != s.Anchor || rec.Anchor != view.anchor(rec) || rec.Sequence == 0 || rec.Cgroup.BootID != o.BootID || rec.Phase != "frozen" && rec.Phase != "freezing" || !reflect.DeepEqual(rec.Original.Binding, s.Binding) || !reflect.DeepEqual(rec.Original.AgentPod, s.AgentPod) || rec.Original.LonghornClient == nil && !reflect.DeepEqual(rec.Original.SourcePaths, paths) || rec.Original.LonghornClient != nil && !validSharedRuntimeLonghornClient(rec.Original) || rec.Original.Original.OriginalSHA256 != s.OriginalSHA256 || rec.Witness.JournalSHA256 != s.NativeJournalSHA256 || rec.CohortSHA256 != s.CohortSHA256 || SharedRuntimeNodeSourcePathsSHA(rec.Original) != s.SourcePathsSHA256 {
 			return fail()
 		}
 		h, e := openSharedCgroup(ctx, c.CgroupMount, o.HostProc, rec.Cgroup.Root, &rec.Cgroup)
@@ -120,7 +120,7 @@ func (o *NodeObserver) readSharedFrozenRecords(ctx context.Context, a nodeObserv
 		if h.checkFrozen(ctx) != nil {
 			return fail()
 		}
-		w, e := o.sharedRuntimeWitness(ctx, rec.Original, rec.Original.Original, view.releases)
+		w, e := o.sharedRuntimeWitness(ctx, rec.Original, rec.Original.Original, view.releases, &rec.Witness)
 		if e != nil || !reflect.DeepEqual(w, rec.Witness) {
 			return fail()
 		}
