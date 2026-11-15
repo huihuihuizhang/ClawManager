@@ -21,7 +21,7 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
-	LonghornHostDefinition                                   BootstrapSourceFilePin                `json:",omitempty"`
+	LonghornHostDefinition                                   BootstrapSourceFilePin                `json:",omitempty,omitzero"`
 	LonghornKeeperImage                                      string                                `json:",omitempty"`
 	TeamAttachments                                          []OriginalTeamAttachmentPin           `json:",omitempty"`
 	TenantPro                                                []OriginalTenantProSelection          `json:",omitempty"`

@@ -1,11 +1,28 @@
 package install
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
 	q "clawreef/internal/systembackup/quiesce"
 )
+
+func TestOriginalWriterSelectionRetainsPreKeeperWire(t *testing.T) {
+	old, err := canonical(OriginalWriterSetSelection{Version: OriginalWriterSetSelectionVersion})
+	if err != nil || bytes.Contains(old, []byte(`"LonghornHostDefinition"`)) {
+		t.Fatal("absent keeper material changed the original pinned writer bytes", err)
+	}
+	var decoded OriginalWriterSetSelection
+	if decodeExact(old, &decoded) != nil {
+		t.Fatal("pre-keeper writer cannot pass strict native readback")
+	}
+	decoded.LonghornHostDefinition = BootstrapSourceFilePin{File: "/original/host.json", SHA256: "selected"}
+	selected, err := canonical(decoded)
+	if err != nil || !bytes.Contains(selected, []byte(`"LonghornHostDefinition"`)) {
+		t.Fatal("explicit keeper material lost its wire binding", err)
+	}
+}
 
 func TestOriginalLonghornFrozenClaimPreservesRegistrationAndRejectsReacquisition(t *testing.T) {
 	now := time.Now().UTC()
