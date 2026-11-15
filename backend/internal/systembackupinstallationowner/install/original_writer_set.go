@@ -97,23 +97,33 @@ type PreparedOriginalWriterSet struct {
 
 func (*PreparedOriginalWriterSet) MarshalJSON() ([]byte, error) { return nil, ErrInstall }
 
-// PrepareOriginalWriterSet is the production all-source preflight caller. It
-// performs no source stop or gate acquisition. All original instances are
-// visited before any actor is allowed to mutate a source.
-func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byte, enrollment EnrollmentPin, selectionPin BootstrapSourceFilePin) (*PreparedOriginalWriterSet, error) {
+// This file-only check is shared with the committing C1 entry so unsupported
+// source selections fail before provider installation or history import.
+func readOriginalWriterSetSelection(selectionPin BootstrapSourceFilePin) (OriginalWriterSetSelection, error) {
+	var selection OriginalWriterSetSelection
 	raw, err := readBootstrapSourcePin(selectionPin, 262144)
 	if err != nil {
-		return nil, ErrInstall
+		return selection, ErrInstall
 	}
-	var selection OriginalWriterSetSelection
 	if decodeExact(raw, &selection) != nil || selection.Version != OriginalWriterSetSelectionVersion || selection.Policy.Validate() != nil {
-		return nil, ErrInstall
+		return selection, ErrInstall
 	}
 	// Authoring current controller coordinates is not a native stop/recovery
 	// implementation. Keep the old all-source native factory closed until its
 	// tenant controller lifecycle is explicitly constructed and qualified.
 	if len(selection.TenantPro) != 0 || len(selection.TenantNamespaces) != 0 {
-		return nil, OriginalWriterSourceFailure{Dependency: "tenant_pro_original_native_stop_recovery_owner_required"}
+		return selection, OriginalWriterSourceFailure{Dependency: "tenant_pro_original_native_stop_recovery_owner_required"}
+	}
+	return selection, nil
+}
+
+// PrepareOriginalWriterSet is the production all-source preflight caller. It
+// performs no source stop or gate acquisition. All original instances are
+// visited before any actor is allowed to mutate a source.
+func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byte, enrollment EnrollmentPin, selectionPin BootstrapSourceFilePin) (*PreparedOriginalWriterSet, error) {
+	selection, err := readOriginalWriterSetSelection(selectionPin)
+	if err != nil {
+		return nil, err
 	}
 	p, err := i.PrepareOriginalWriterMaintenance(ctx, password, enrollment, selection.Policy)
 	if err != nil {

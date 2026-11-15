@@ -91,6 +91,12 @@ func (i *Installer) runOriginalFirstAdoptionProductionForSQLProfile(ctx context.
 	}
 	active, cancel := context.WithTimeout(ctx, time.Duration(in.CaptureSeconds)*time.Second)
 	defer cancel()
+	// Reject an unsupported original source before installing provider material
+	// or importing history. This DATA check grants nothing: the authenticated
+	// complete writer preflight below still repeats every live observation.
+	if _, e := readOriginalWriterSetSelection(in.WriterSelection); e != nil {
+		return fail("original_writer_support_preflight", e)
+	}
 	descriptorRaw, e := readBootstrapSourcePin(in.MinIORecoveryDescriptor, 65536)
 	if e != nil {
 		return fail("recovery_descriptor_input_preflight", e)
