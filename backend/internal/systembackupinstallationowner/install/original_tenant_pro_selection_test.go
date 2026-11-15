@@ -55,6 +55,24 @@ func TestOriginalTenantProSelectionUsesActualControllerGraph(t *testing.T) {
 	if err := originalTenantProCensusMatches(census, []OriginalTenantProSelection{record}); err != nil {
 		t.Fatal(err)
 	}
+	t.Run("explicit-team-attachment", func(t *testing.T) {
+		pin := OriginalTeamAttachmentPin{Choice: OriginalTeamAttachmentChoice{TeamID: 1, Namespace: source.Namespace, Pod: "sbk-team-1-readonly"}, NamespaceUID: "tenant-uid", PodUID: "attachment-uid"}
+		withAttachment := census
+		withAttachment.Pods = append(append([]originalMaintenanceObjectPin(nil), census.Pods...), originalMaintenanceObjectPin{Name: pin.Choice.Pod, UID: pin.PodUID})
+		if originalTenantProCensusMatches(withAttachment, []OriginalTenantProSelection{record}, pin) != nil {
+			t.Fatal("explicit attachment omitted from complete census")
+		}
+		if originalTenantProCensusMatches(withAttachment, []OriginalTenantProSelection{record}) == nil {
+			t.Fatal("unselected attachment accepted")
+		}
+		if originalTenantProCensusMatches(withAttachment, []OriginalTenantProSelection{record}, pin, pin) == nil {
+			t.Fatal("duplicate attachment accepted")
+		}
+		pin.PodUID = "replacement"
+		if originalTenantProCensusMatches(withAttachment, []OriginalTenantProSelection{record}, pin) == nil {
+			t.Fatal("replaced attachment accepted")
+		}
+	})
 	for _, kind := range []string{"extra-pod", "extra-deployment", "namespace-uid", "pod-uid", "controller-uid", "autoscaler", "duplicate-source"} {
 		t.Run(kind, func(t *testing.T) {
 			changed := census

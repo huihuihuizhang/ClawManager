@@ -77,6 +77,15 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 	}
 	// Journal and permission/recovery preflight for every actor finished above.
 	// Application admission is already closed before the first source mutation.
+	for _, keeper := range s.longhornKeepers {
+		if err := keeper.create(ctx); err != nil {
+			return nil, err
+		}
+		source := s.longhornSources[keeper.plan.Identity.Namespace+"/"+keeper.plan.Source.Name]
+		if err := keeper.register(ctx, s.longhornClient, source); err != nil {
+			return nil, err
+		}
+	}
 	if s.minioHistory != nil && s.minioHistory.acquireOriginalHistory(ctx) != nil {
 		return nil, ErrInstall
 	}
@@ -97,6 +106,11 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 	}
 	if err := s.freezeSharedRuntimeLifecycle(ctx); err != nil {
 		return nil, err
+	}
+	for _, keeper := range s.longhornKeepers {
+		if err := keeper.acquire(ctx); err != nil {
+			return nil, err
+		}
 	}
 	// A stopped-Pro prepare may run after genuine management writers have
 	// stopped; its original CURRENT SQL/API/volume baseline was read beforehand.
@@ -143,6 +157,11 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 // Every authority check still uses the SAME original context, never an invented
 // context/grant or an extended deadline.
 func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*originalHeldReadiness, error) {
+	for _, keeper := range s.longhornKeepers {
+		if err := keeper.checkHeld(ctx); err != nil {
+			return nil, err
+		}
+	}
 	if err := s.checkSharedRuntimeLifecycle(ctx); err != nil {
 		return nil, err
 	}
@@ -235,6 +254,13 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 		responses = append(responses, source.proof.Response())
 	}
 	proof := &originalHeldReadiness{set: s, digest: originalObjectSHA(responses)}
+	for _, keeper := range s.longhornKeepers {
+		if keeper.recheckHeld(time.Now()) != nil {
+			return nil, ErrInstall
+		}
+		responses = append(responses, keeper.held.Response())
+	}
+	proof.digest = originalObjectSHA(responses)
 	if s.journal.append(ctx, "", "complete_native_paused_observation", nil, struct {
 		InventorySHA256, ObservationSHA256 string
 		Responses                          []any
@@ -245,6 +271,9 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 }
 
 func (s *PreparedOriginalWriterSet) recheckHeldAPI(ctx context.Context) error {
+	if s.recheckTenantLifecycle(ctx, nil, nil) != nil {
+		return ErrInstall
+	}
 	if s == nil || s.owner.checkCurrentGate(ctx, c.GateAcquiring, c.GateHeld) != nil || s.checkApplicationGate(ctx, "acquiring", "held") != nil || s.owner.checkInstances(ctx) != nil || s.recheckVolumePins(ctx) != nil {
 		return ErrInstall
 	}
@@ -276,14 +305,14 @@ func (s *PreparedOriginalWriterSet) recheckHeldAPI(ctx context.Context) error {
 			}
 			continue
 		}
-		writers[w.selection.Name] = w
+		writers[w.namespace+"/"+w.selection.Name] = w
 		d, e := w.current(ctx)
 		if e != nil || *d.Spec.Replicas != 0 || d.Status.Replicas != 0 || d.Status.ObservedGeneration < d.Generation {
 			return ErrInstall
 		}
 	}
 	for _, dep := range current.Deployments {
-		if writers[dep.Name] != nil {
+		if writers[current.Namespace+"/"+dep.Name] != nil {
 			continue
 		}
 		found := false
@@ -429,6 +458,11 @@ func (p *originalHeldReadiness) VerifyParticipantsPaused(ctx context.Context, co
 	}
 	if s.recheckSharedRuntimeHeld(ctx, now) != nil {
 		return ErrInstall
+	}
+	for _, keeper := range s.longhornKeepers {
+		if keeper.recheckHeld(now) != nil {
+			return ErrInstall
+		}
 	}
 	for _, node := range s.nodes {
 		if node.current == nil || node.current.Recheck(ctx, node.request.Binding, "stopped", node.boot, now) != nil {

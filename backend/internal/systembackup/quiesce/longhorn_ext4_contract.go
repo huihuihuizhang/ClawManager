@@ -1,6 +1,9 @@
 package quiesce
 
-import "time"
+import (
+	"encoding/hex"
+	"time"
+)
 
 const LonghornExt4Route = "/shared-runtime-lifecycle/longhorn-ext4/v3"
 const LonghornExt4Protocol = "longhorn-ext4-native-hold.v3"
@@ -21,13 +24,55 @@ type LonghornExt4Claim struct {
 	TaskPublicID, Owner, MaintenanceOwner string
 	EntryRowVersion                       uint64
 	LeaseObservedAt, LeaseExpiresAt       time.Time
+	// Original installation maintenance has no backup task. These fields are
+	// correlation data from its actual acquiring SQL gate, not permission.
+	// Omitting them preserves existing task journal digests byte for byte.
+	OriginalOperationID   string `json:",omitempty"`
+	OriginalReservationID string `json:",omitempty"`
 }
 
 func (c LonghornExt4Claim) valid() bool {
-	return c.TaskPublicID != "" && c.Owner != "" && c.MaintenanceOwner != "" &&
+	identity := c.TaskPublicID != "" && c.OriginalOperationID == "" && c.OriginalReservationID == ""
+	if c.TaskPublicID == "" {
+		identity = longhornOriginalToken(c.OriginalOperationID) && longhornOriginalToken(c.OriginalReservationID) &&
+			c.Owner == "adoption:"+c.OriginalOperationID && c.MaintenanceOwner == c.Owner
+	}
+	return identity && c.Owner != "" && c.MaintenanceOwner != "" &&
 		c.EntryRowVersion > 0 && !c.LeaseObservedAt.IsZero() &&
 		c.LeaseExpiresAt.After(c.LeaseObservedAt) &&
 		c.LeaseExpiresAt.Sub(c.LeaseObservedAt) <= 300*time.Second
+}
+
+func longhornOriginalToken(s string) bool {
+	b, err := hex.DecodeString(s)
+	return err == nil && len(b) == 16 && hex.EncodeToString(b) == s
+}
+
+// The original-operation branch cannot borrow a task's binding or another
+// installation reservation. Authentication and a live SQL gate check remain
+// the caller's responsibility; the Node checks its installed source and mTLS.
+func (c LonghornExt4Claim) matchesBinding(b ObservationBinding) bool {
+	if !c.valid() {
+		return false
+	}
+	if c.OriginalOperationID == "" {
+		return true // Existing task correlation is unchanged.
+	}
+	return b.Kind == LonghornExt4Protocol && b.OperationID == c.OriginalOperationID &&
+		b.ReservationID == c.OriginalReservationID && b.InstallationID != "" &&
+		b.Namespace != "" && b.NamespaceUID != "" && b.Node != "" && b.NodeUID != "" &&
+		b.Generation > 0 && validObservationHash(b.InventorySHA256) &&
+		b.ExpiresAt.After(c.LeaseObservedAt)
+}
+
+func (c LonghornExt4Claim) keeperBinding(b ObservationBinding) bool {
+	if !c.matchesBinding(b) {
+		return false
+	}
+	if c.OriginalOperationID != "" {
+		return true // Original acquisition epochs may be zero.
+	}
+	return c.TaskPublicID == b.OperationID && validObservationHash(b.ReservationID) && b.FenceEpoch != 0
 }
 
 func longhornExt4ForwardUntil(binding ObservationBinding, claim LonghornExt4Claim) time.Time {

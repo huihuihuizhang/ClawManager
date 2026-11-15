@@ -52,8 +52,12 @@ func (p *OriginalWriterMaintenance) readKubernetesCensus(ctx context.Context) (o
 }
 
 func (p *OriginalWriterMaintenance) readKubernetesNamespaceCensus(ctx context.Context, ns, namespaceUID string) (originalMaintenanceKubernetesCensus, []corev1.Pod, []appsv1.Deployment, []corev1.PersistentVolumeClaim, error) {
+	return p.readKubernetesNamespaceCensusWithRecovery(ctx, ns, namespaceUID, nil)
+}
+
+func (p *OriginalWriterMaintenance) readKubernetesNamespaceCensusWithRecovery(ctx context.Context, ns, namespaceUID string, recovery *originalWriterRecoveryFence) (originalMaintenanceKubernetesCensus, []corev1.Pod, []appsv1.Deployment, []corev1.PersistentVolumeClaim, error) {
 	var out originalMaintenanceKubernetesCensus
-	if p.check(ctx) != nil {
+	if originalMaintenanceReadCheck(ctx, p, recovery) != nil {
 		return out, nil, nil, nil, ErrInstall
 	}
 	k := p.operator.installer.kube

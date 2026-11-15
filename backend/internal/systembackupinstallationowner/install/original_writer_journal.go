@@ -32,6 +32,7 @@ type originalWriterJournalRecord struct {
 }
 
 type originalWriterJournal struct {
+	resourceMu                 sync.Mutex
 	directory                  string
 	directoryIdentity          os.FileInfo
 	mu                         sync.Mutex

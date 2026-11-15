@@ -54,7 +54,7 @@ def pinned(path, digest, limit=8 << 20):
     return raw
 
 
-def source_config(data, scope, workspace, credential, ca):
+def source_config(data, scope, workspace, credential, ca, team_attachments=None):
     need(data.get("Version") == "original-initial-source-coordinates.v1" and data.get("Namespace") == NS,
          "unexpected source coordinates")
     need(scope and len(scope) <= 128 and scope in data.get("ApplicationScopes", []), "loaded App scope is absent from original SQL coordinates")
@@ -68,10 +68,23 @@ def source_config(data, scope, workspace, credential, ca):
          and [row["ID"] for row in rows if row["ID"] not in (4, 5, 6)] == [1, 2, 3, 7, 8]
          and all(row["Status"] == "running" for row in rows if row["ID"] not in (4, 5, 6)), "approved runtime roster changed")
     need(test_scope["InstallationID"] == data["InstallationID"] and test_scope["NamespaceUID"] == data["NamespaceUID"], "runtime scope target changed")
-    return {"installation_id": data["InstallationID"], "namespace": data["Namespace"], "namespace_uid": data["NamespaceUID"],
+    config = {"installation_id": data["InstallationID"], "namespace": data["Namespace"], "namespace_uid": data["NamespaceUID"],
         "application_scope": scope, "runtime_sources": {"shared_runtime_protocol": "shared-container-freeze.v1",
             "workspace_root": workspace, "agent_token_file": str(credential), "agent_ca_file": ca["File"], "agent_ca_sha256": ca["SHA256"],
             "current_stopped_pro_layouts": copy.deepcopy(data.get("StoppedProLayouts", [])), "runtime_test_scope": copy.deepcopy(test_scope)}}
+    if team_attachments is not None:
+        need(isinstance(team_attachments, list) and 0 < len(team_attachments) <= 8, "bounded explicit team attachment choices required")
+        seen = set()
+        for choice in team_attachments:
+            need(isinstance(choice, dict) and set(choice) == {"TeamID", "Namespace", "Pod", "Image"}, "team attachment choices must contain names only")
+            team = choice["TeamID"]
+            need(type(team) is int and team > 0 and team not in seen, "unique actual team ID required")
+            seen.add(team)
+            need(all(isinstance(choice[key], str) and choice[key] and not any(c.isspace() for c in choice[key]) for key in ("Namespace", "Pod", "Image")), "attachment coordinates invalid")
+            need(choice["Pod"].startswith("sbk-team-" + str(team) + "-") and "@sha256:" in choice["Image"], "attachment name or image identity invalid")
+            need(any(row.get("Namespace") == choice["Namespace"] and row.get("Mode") == "pro" and row.get("Status") == "running" for row in rows), "attachment namespace absent from actual tenant source inventory")
+        config["original_team_attachments"] = copy.deepcopy(team_attachments)
+    return config
 
 
 def main():

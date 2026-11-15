@@ -14,9 +14,18 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
+
+// Both views share the exact authenticated transport. The resource view is
+// private and is used only by the original keeper's fenced resource runner.
+type originalKubernetesClients struct {
+	kubernetes.Interface
+	resources dynamic.Interface
+}
 
 func validEndpoint(endpoint string) bool {
 	u, e := url.Parse(endpoint)
@@ -126,7 +135,15 @@ func OpenConnections(p Plan, kubeconfigFile, kubeconfigSHA, dsnFile, databaseCAF
 		}
 	}
 	cfg.Timeout = 10 * time.Second
-	kube, e := kubernetes.NewForConfig(cfg)
+	httpClient, e := rest.HTTPClientFor(cfg)
+	if e != nil {
+		return nil, nil, ErrInstall
+	}
+	kube, e := kubernetes.NewForConfigAndClient(cfg, httpClient)
+	if e != nil {
+		return nil, nil, ErrInstall
+	}
+	resources, e := dynamic.NewForConfigAndClient(cfg, httpClient)
 	if e != nil {
 		return nil, nil, ErrInstall
 	}
@@ -166,5 +183,5 @@ func OpenConnections(p Plan, kubeconfigFile, kubeconfigSHA, dsnFile, databaseCAF
 	db := sql.OpenDB(connector)
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
-	return db, kube, nil
+	return db, &originalKubernetesClients{Interface: kube, resources: resources}, nil
 }

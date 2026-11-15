@@ -26,6 +26,7 @@ type originalDeploymentMaintenance struct {
 	journal        *originalWriterJournal
 	selection      OriginalDeploymentSelection
 	namespace      string
+	namespaceUID   string
 	original       flow.State
 	replicas       int32
 	specSHA        string
@@ -46,10 +47,24 @@ func (w *originalDeploymentMaintenance) ID() string {
 }
 
 func (p *OriginalWriterMaintenance) prepareDeployment(ctx context.Context, s OriginalDeploymentSelection, j *originalWriterJournal) (*originalDeploymentMaintenance, error) {
+	if p == nil || p.operator == nil || p.operator.installer == nil {
+		return nil, ErrInstall
+	}
+	target := p.operator.installer.plan.Target
+	return p.prepareDeploymentInNamespace(ctx, s, j, target.Namespace, target.NamespaceUID)
+}
+
+func (p *OriginalWriterMaintenance) prepareDeploymentInNamespace(ctx context.Context, s OriginalDeploymentSelection, j *originalWriterJournal, ns, namespaceUID string) (*originalDeploymentMaintenance, error) {
 	if p.check(ctx) != nil || s.Name == "" || s.UID == "" || s.Role != "writer" || j == nil {
 		return nil, ErrInstall
 	}
-	ns := p.operator.installer.plan.Target.Namespace
+	if ns == "" || namespaceUID == "" || j.operation != p.operation {
+		return nil, ErrInstall
+	}
+	w := &originalDeploymentMaintenance{owner: p, journal: j, selection: s, namespace: ns, namespaceUID: namespaceUID}
+	if w.checkNamespace(ctx) != nil {
+		return nil, ErrInstall
+	}
 	r, err := p.operator.installer.kube.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, &authorizationv1.SelfSubjectAccessReview{Spec: authorizationv1.SelfSubjectAccessReviewSpec{ResourceAttributes: &authorizationv1.ResourceAttributes{Namespace: ns, Verb: "patch", Group: "apps", Resource: "deployments", Name: s.Name}}}, metav1.CreateOptions{})
 	if err != nil || !r.Status.Allowed || r.Status.Denied || r.Status.EvaluationError != "" {
 		return nil, ErrInstall
@@ -58,18 +73,29 @@ func (p *OriginalWriterMaintenance) prepareDeployment(ctx context.Context, s Ori
 	if err != nil || string(d.UID) != s.UID || d.ResourceVersion == "" || d.DeletionTimestamp != nil || d.Spec.Replicas == nil || *d.Spec.Replicas < 0 || *d.Spec.Replicas > 1000 || d.Status.ObservedGeneration < d.Generation || d.Status.ReadyReplicas != *d.Spec.Replicas || d.Annotations[originalDeploymentRecoveryAnnotation] == p.operation {
 		return nil, ErrInstall
 	}
-	w := &originalDeploymentMaintenance{owner: p, journal: j, selection: s, namespace: ns, replicas: *d.Spec.Replicas, specSHA: originalDeploymentSpecSHA(d)}
+	w.replicas, w.specSHA = *d.Spec.Replicas, originalDeploymentSpecSHA(d)
 	w.pods, err = w.currentPods(ctx, d, true)
 	if err != nil || len(w.pods) != int(w.replicas) {
 		return nil, ErrInstall
 	}
 	checkpoint, _ := json.Marshal(struct {
-		Version, Namespace, Name, SpecSHA256 string
-		Replicas                             int32
-		Pods                                 []q.PodIdentity
-	}{"original-deployment-checkpoint.v1", ns, s.Name, w.specSHA, w.replicas, w.pods})
+		Version, Namespace, NamespaceUID, Name, SpecSHA256 string
+		Replicas                                           int32
+		Pods                                               []q.PodIdentity
+	}{"original-deployment-checkpoint.v1", ns, namespaceUID, s.Name, w.specSHA, w.replicas, w.pods})
 	w.original = flow.State{UID: s.UID, Generation: d.Generation, Running: w.replicas > 0, Checkpoint: string(checkpoint)}
 	return w, nil
+}
+
+func (w *originalDeploymentMaintenance) checkNamespace(ctx context.Context) error {
+	if ctx == nil || ctx.Err() != nil || w == nil || w.owner == nil || w.owner.operator == nil || w.owner.operator.installer == nil || w.namespace == "" || w.namespaceUID == "" {
+		return ErrInstall
+	}
+	ns, err := w.owner.operator.installer.kube.CoreV1().Namespaces().Get(ctx, w.namespace, metav1.GetOptions{})
+	if err != nil || string(ns.UID) != w.namespaceUID || ns.DeletionTimestamp != nil {
+		return ErrInstall
+	}
+	return nil
 }
 
 // All ordinary containers and restartable init containers are accounted for.
@@ -102,6 +128,9 @@ func originalMaintenancePodIdentity(p *corev1.Pod) (q.PodIdentity, error) {
 }
 
 func (w *originalDeploymentMaintenance) currentPods(ctx context.Context, d *appsv1.Deployment, ready bool) ([]q.PodIdentity, error) {
+	if d == nil || d.Namespace != w.namespace || string(d.UID) != w.selection.UID || w.checkNamespace(ctx) != nil {
+		return nil, ErrInstall
+	}
 	selector, err := metav1.LabelSelectorAsSelector(d.Spec.Selector)
 	if err != nil || selector.Empty() {
 		return nil, ErrInstall
@@ -138,7 +167,7 @@ func (w *originalDeploymentMaintenance) currentPods(ctx context.Context, d *apps
 }
 
 func (w *originalDeploymentMaintenance) current(ctx context.Context) (*appsv1.Deployment, error) {
-	if w == nil || originalMaintenanceReadCheck(ctx, w.owner, w.recovery) != nil {
+	if w == nil || originalMaintenanceReadCheck(ctx, w.owner, w.recovery) != nil || w.checkNamespace(ctx) != nil {
 		return nil, ErrInstall
 	}
 	d, err := w.owner.operator.installer.kube.AppsV1().Deployments(w.namespace).Get(ctx, w.selection.Name, metav1.GetOptions{})
@@ -149,7 +178,7 @@ func (w *originalDeploymentMaintenance) current(ctx context.Context) (*appsv1.De
 }
 
 func (w *originalDeploymentMaintenance) patch(ctx context.Context, d *appsv1.Deployment, replicas int32, recovery bool) error {
-	if d == nil || string(d.UID) != w.selection.UID {
+	if d == nil || d.Namespace != w.namespace || string(d.UID) != w.selection.UID || w.checkNamespace(ctx) != nil {
 		return ErrInstall
 	}
 	if recovery {

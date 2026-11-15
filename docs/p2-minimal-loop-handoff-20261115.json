@@ -1,0 +1,163 @@
+{
+  "version": "p2-minimal-loop-handoff.v1",
+  "date": "2026-11-15",
+  "objective": "页面发起一单真实完整备份并成功：本次 Pro 卷、团队共享卷停写、完整采集、恢复、上传、独立读回及目录登记。",
+  "user_requested_handoff": true,
+  "complete": false,
+  "continuation_progress": {
+    "state": "本地接线与回归推进中；未提交、未部署、未触发现场停写或正式备份。原 remaining_critical_path 仍需逐项完成。",
+    "implemented": [
+      "VerifiedOriginalAdoptionReservation.LonghornClaim 实际 SQL 重查；注册 claim 保持不变且不能续租；前向请求持久 intent/response。",
+      "租户 Deployment 准备接入工厂，namespace/name 索引，准备/held/recovery 全量 census，恢复 Pod 按节点与 writer 的身份映射。",
+      "团队只读 attachment 复用 Pod spec 校验，真实 SQL/PVC/PV/Node 读取及 census 接线；来源配置和刷新脚本支持显式名称选择及摘要固定的新作者/新 attempt。",
+      "原安装 keeper 资源 journal、同一 HTTP transport 的 typed/dynamic Kubernetes clients、keeper 准备/创建/节点注册/独立释放与恢复后清理入口。"
+    ],
+    "verification": [
+      "Windows 原生 D 盘路径：安装包完整回归 54.580s、system-backup-first-adoption 完整回归 9.803s 通过。",
+      "此前 Windows 团队/租户相关 install 11.743s、systembackupexecution 5.135s 通过。",
+      "此前 Linux WSL + D 盘路径 tmpfs：keeper journal 未知创建/旧 CAS/UID 替换/删除留档、Longhorn claim、租户和原 journal 重开测试通过；之后新增的 keeper 创建/注册/释放入口尚无端到端实测。",
+      "Python 来源配置 5 项、刷新入口 4 项测试通过；未生成字节码。",
+      "本轮 Windows: install 全包 42.504s、first-adoption CLI 6.127s、kube 全包 6.929s 通过；kube 新增 keeper 创建后 Observe 回执丢失和未知创建/404 拒绝清理测试。Linux WSL D 路径 tmpfs 的 keeper journal、claim、tenant、journal 重开、恢复 mutation closure 全部 PASS。上述均为本地协议/回归，不是真实冻结采集证明。"
+    ],
+    "test_cleanup": "本轮测试已结束；D:\\dsh-work\\p2-keeper-flow-20261115 待清理（Linux tmpfs 已由脚本卸载）。",
+    "next_required": [
+      "交付并核实现场对应组件，保留 tenant/CSI guard；不因本地回归通过而声称能完成实际采集。",
+      "本次 Pro RWO 与团队 RWX 尚需接齐物理覆盖、CSI capture/adoption；只补现场涉及的路径，不扩大通用能力。",
+      "正式页面入口为 POST /api/v1/admin/system-backups；旧 /admin/system-backup/tasks 在 server 中拒绝写入。核实正式 action authorizer 是否强制 MFA 后再决定本次登记服务所需最小工作。",
+      "现场组件核实更新后集中续签；正式页任务、完整上传、独立读回、目录登记、业务恢复和 source-disabled 证据仍未完成。"
+    ],
+    "scope_instruction": "仅补本次现场实际路径；当前调用链及必要异常恢复通过后交付并进入现场，先核实更新组件，再集中续签。MFA 仅在正式入口强制要求时补到用户能登记创建任务。不得删除保护条件、漏数据或跳过恢复验证。",
+    "current_wiring": "已接入 keeper create/register → 原 Deployment stop → acquire → check-held → 独立 release → 业务恢复 → cleanup；Pending 仅重读、不重建；创建日志错误仍保留不可变 intent；tenant census 核对本次 keeper Job/Pod。Windows 全包及 Linux 持久日志回归通过，尚未部署或正式采集。",
+    "new_work_acceptance": [
+      {
+        "change": "RWO keeper 调度接入",
+        "blocked_step": "Pro 原 Pod 退出后的物理持锁和恢复",
+        "reuse": "复用现有 Longhorn 节点协议、资源 Runner、独立恢复授权；原函数没有实际调度调用，需补顺序和失败保持。",
+        "finish_check": "注册先于 stop；Pod 实际消失后 acquire；SQL held 校验消费新鲜原生证据；release 成功后才恢复业务；恢复就绪后清理。"
+      },
+      {
+        "change": "keeper 启动等待与未知创建恢复",
+        "blocked_step": "实际 Job 异步启动及创建回执丢失后的恢复",
+        "reuse": "复用 WorkerObserver 和 Runner；单次 Observe 不能代表 Pending 失败，且 Runner 日志错误可能返回空 record，需要调用方保留不可变 intent。",
+        "finish_check": "Pending 只重读、不重复创建；未知创建保留原 intent 并按 UID 核对；不能用 404 证明未知创建已清理。"
+      },
+      {
+        "change": "tenant keeper census",
+        "blocked_step": "held 与恢复的全量租户核对",
+        "reuse": "复用全量 census 和 WorkerObserver；原逻辑拒绝所有 Job，需仅纳入本次 keeper。",
+        "finish_check": "只接纳 journal 同 UID 且 spec/process 核验一致的 keeper；陌生或替换 Job/Pod 仍拒绝。"
+      }
+    ],
+    "latest_read_only_field_check": {
+      "checkedAt": "2026-11-15T08:01:13.494636+00:00",
+      "controllerReady": "1/1 (not evidence of enabled backup)",
+      "proReady": "1/1",
+      "teamAttachment": "Running",
+      "backupSuccessVerified": false
+    }
+  },
+  "workspace": "C:/Users/zhanghui08/Desktop/clawmanager/ClawManager/.worktrees/build-06bf0e89",
+  "branch": "backup",
+  "head_verified": "06c90c97e61d8b5d86dbd22ff038cb254e1b9987",
+  "git_remote": "https://github.com/huihuihuizhang/ClawManager.git",
+  "constraints": [
+    "仅补已确认阻断所需的接口，不扩展通用生命周期平台。",
+    "测试和构建临时产物放 D 盘，结束后清理；不要在 C 盘构建。",
+    "不能伪造任务编号、原生停写证明、MFA 登记、现场回执或签发权限。",
+    "不能移除首单租户/CSI guard 后直接现场停写；先接齐真实权限、物理冻结及恢复。",
+    "保留全部现场 journal、失败记录和原始数据。",
+    "不得在聊天或日志中输出密码、验证码、私钥、Token、TOTP 种子。"
+  ],
+  "authorization_already_given": [
+    "提交及推送到上述仓库 backup 分支。",
+    "本次凭据更新、部署、团队只读挂载及正式现场验证。",
+    "MySQL mysql-data 10Gi 扩到 20Gi，包括停机重挂并恢复；历史记录显示已完成。",
+    "Skills 桶旧对象保留后执行版本化迁移；历史记录显示已完成。",
+    "本次来源 SA 增加只读 list PV/VolumeAttachment/EndpointSlice；历史记录显示已应用。",
+    "采用指定的六个业务 Secret 加密备份白名单。"
+  ],
+  "existing_documentation": "docs/system-backup-p2-continuation-commands-20261111.md",
+  "local_work": {
+    "preserve_unrelated": [
+      "backend/go.mod (原有换行差异)",
+      "scripts/sbk-bootstrap-discover.py (原有未跟踪文件)"
+    ],
+    "uncommitted_tenant": [
+      "backend/internal/systembackupinstallationowner/install/original_deployment_maintenance.go",
+      "backend/internal/systembackupinstallationowner/install/original_tenant_deployment_maintenance.go",
+      "backend/internal/systembackupinstallationowner/install/original_tenant_deployment_maintenance_test.go"
+    ],
+    "tenant_state": "准备阶段检查保留 SQL 来源、租户 namespace UID、Pod→RS→Deployment UID 归属和 SSAR；尚未接入首单工厂，guard 仍保留。安装/恢复包在 Windows 原生 D 盘路径下全包回归通过。",
+    "uncommitted_longhorn": [
+      "backend/internal/systembackup/quiesce/longhorn_ext4_contract.go",
+      "backend/internal/systembackup/quiesce/longhorn_ext4_client.go",
+      "backend/internal/systembackup/quiesce/longhorn_ext4_registration_linux.go",
+      "backend/internal/systembackup/quiesce/longhorn_ext4_actions_linux.go",
+      "backend/internal/systembackup/quiesce/longhorn_ext4_journal_linux_test.go",
+      "backend/internal/systembackup/quiesce/longhorn_original_claim_test.go"
+    ],
+    "longhorn_state": "新增互斥 OriginalOperationID/OriginalReservationID 关联数据；不冒充 TaskPublicID。原安装 owner 必须 adoption:<operation>，绑定同一 operation/reservation/namespace/node/inventory，租约最多 300s。omitempty 保留旧 task claim 的精确 JSON 和日志摘要。客户端、节点注册、keeper、日志读回及 request matching 检查原安装绑定。尚未接入真实原安装维护锁 owner，不可直接部署/宣称可停写。",
+    "verification": "Windows: go test -mod=readonly ./internal/systembackup/quiesce -count=1 通过 (5.589s)。Linux: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c 后，在本地 docker-desktop WSL 以 root 运行 -test.run ^TestLonghorn -test.v -test.timeout=120s，11 个顶层测试全部 PASS，无跳过，包括过期原安装 journal 重开、重新取得锁隔离、冻结中断和旧 task JSON 摘要兼容。Linux 测试使用 D 盘目录上的 256MiB tmpfs，退出已卸载。这是协议/日志/模型验证，不是真实集群物理冻结。",
+    "test_temp": "D:/dsh-work/p2-original-longhorn-20261115",
+    "prior_test_temp_removed": "D:/dsh-work/p2-tenant-native-20261115",
+    "test_temp_cleanup": "已验证 Linux 测试挂载卸载，D:/dsh-work/p2-original-longhorn-20261115 整目录已删除，P2_ORIGINAL_LONGHORN_TEMP_REMOVED。保留交付包和远程队列。",
+    "committed_or_deployed_this_round": false
+  },
+  "last_delivered_package": {
+    "path": "D:/dsh-work/p2-team-continuation-06c90c97.tar.gz",
+    "sha256": "856496ebfa6f9f39540d6d35aa6a0d173d7055916f9a083fbe445f6849520c4f",
+    "receipt": "D:/dsh-work/p2-team-continuation-06c90c97.tar.gz.receipt.json",
+    "remote_stage": "/root/sbk/p2-remote-06c90c97-01",
+    "state": "历史真实回执验证了上传和 38 个文件；仅主机暂存，未更新 controller、未执行新来源续签、未完成备份。本轮未制作新交付包。"
+  },
+  "remote": {
+    "ssh_route": "本地→zhanghui08@10.130.37.2→root@10.130.14.23；node1 也是 root 密码，用户此前已交互登录。",
+    "queue_directory": "D:/dsh-work/p2-remote-session-35ade5b0-01",
+    "queue_rules": "commands.txt 是约 2GB 的 append-only 命令流，不截断、不重启消费者；output.log 尾部读 marker；ssh.log 被锁定且 stderr 在用户交互窗口。远程子进程默认 stdin=DEVNULL，不能吞读队列。命令只输出白名单公共字段。",
+    "ssh_pid_last_verified_live": 29752,
+    "ssh_transport": "ssh -T -p 54323 -o HostKeyAlias=10.130.14.23 root@127.0.0.1 bash --noprofile --norc",
+    "root": "/root/sbk/p2-cert-renewal.1KyqMtsd",
+    "mirror": "/run/system-backup/runtime/p2-renew-1048e373bfe0",
+    "kubeconfig": "/root/sbk-validation-tls-inspect.7LVU7vpE/operator.kubeconfig.yaml",
+    "namespace": "clawmanager-sbk-validation-system",
+    "installation_id": "installation_95392e58fafe1345dc1e4c029ac3674c",
+    "plan_sha256": "a0aa44b5a12a453c352a402e73c4f4d42a675b2430d2cb69972a29df1f859752",
+    "database_uuid": "9e0e40fb-d986-11f1-b30a-9e9a498abc54",
+    "last_actual_database_snapshot": "2026-11-15T05:31Z: heads/grants/v2 configs/operations/backups/legacy tasks 均为 0；是只读诊断，不是原生签发或 cleanup 权限。",
+    "controller": "sbk-d4f51b83b57e-controller，仍 disabled，.ready 不存在；必须重新核实现场当前状态。",
+    "tenant_namespace": "clawmanager-sbk-validation-user-1",
+    "team_readonly_pod": "sbk-team-1-readonly-p2",
+    "team_pvc": "clawreef-team-1-shared",
+    "pro_deployment": "clawreef-2-deployment",
+    "pro_pvc": "clawreef-2-pvc",
+    "source13_until": "2026-11-15T04:02:13.305256Z (已过期)",
+    "expired_predecessor": {
+      "SourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/longhorn-source-20261114-team-attachment-13-read-retry-1/mount-source-selection.json",
+        "SHA256": "b5a5a03eea60d7621ff7ce21b9ee8b0652002dcfa817d9d93a03eab9b53d9e2a"
+      },
+      "FactsReceipt": {
+        "File": "/root/sbk/p2-cert-renewal.1KyqMtsd/source-facts-20261114-team-13-sql-recheck/native.receipt.private.json",
+        "SHA256": "eb36b986704a5763b5d893920a2eee27fec27df04579d4ed8104454caaca6bdc"
+      }
+    },
+    "renewal": "06c90c97 实现未配置安装的有限过期续接，source14 输入链只读预检真实通过，尚未执行 native renewal。先接完首单阻断再申请 30min 来源，避免反复过期。Vault metadata token 已过期；observer/runtime/relay 证书有效期也须重新查验。"
+  },
+  "remaining_critical_path": [
+    "把原安装 Longhorn claim 的构造和每次发送绑定到真实 OriginalAdoptionReservation/当前 SQL 维护锁，保留独立恢复权限和不可续用的旧 claim。当前仅协议数据支持，不是持锁证明。部署时节点 observer 也必须更新；旧 observer 严格解码会拒绝新增 original 字段，不能只更新 controller。",
+    "实现本次 Pro RWO 的实际只读 keeper 及原安装持久 journal，原 writer Pod 退出后仍能观测同一物理设备；RWX 需真实 share-manager/client 同步/冻结和恢复。",
+    "接入 prepareTenantDeployment，完整租户 census 包含已知只读 team attachment；root namespace 的 writer map/census/readiness/restore 不能误用到 tenant。不能忽略陌生 Pod。",
+    "prepareNativeScopes 仍拒绝 CSI persistent_volume_native_fence_required；不能给 Longhorn 捏造 hostPath 或空 SourcePaths。整体 stop→held→恢复证明齐全后才解除 tenant guard。",
+    "C1 实际签发、capture、mixed adoption、恢复、disabled initialization/composition 尚未完成；不能以空数据库计数绕过。需要全部真实 registry 和材料 owner 输出。",
+    "MFA 登记服务尚未部署完整。现有接口 /api/v1/admin/system-backup-strong-auth/enroll、/confirm；需登记服务 TLS、完整 runtime、S3 制品身份/凭据、应用 JWT/session 撤销衔接。用户不知道现成入口；服务就绪后由用户本地真实登记，不能代填验证码或生成假 MFA。",
+    "正式任务及恢复验证产生后，用 retire-p2-team-attachment.py 的真实 task-id、业务恢复、source-disabled 证据清理本次临时挂载；目前没有真实任务，不可伪造编号删除。"
+  ],
+  "mfa_prepared_historical_evidence": {
+    "root": "/root/sbk/p2-cert-renewal.1KyqMtsd/registration-preflight-20261115",
+    "state": "已创建独立 Vault Ed25519 strong-auth/provider-proof 密钥、RBAC 和两份 registry 候选，实际签名及最小权限测试通过。临时测试 Token 已撤销。独立 TLS SQL 登记账号已原生只读验证；六 Secret 范围内已生成 32 字节 TOTP 加密保管密钥，它不是用户 TOTP 种子。",
+    "human_enrolled": false,
+    "service_deployed": false,
+    "configuration_activated": false
+  },
+  "next_chat_instruction": "先读取此交接 JSON、现有 continuation 文档和当前 git diff。沿真实首单链路继续，不重做已验证部署，不重复申请持久授权；重新验证动态现场状态。当前未提交代码可以修改/替换，不把 partial support 视为交付完成。"
+}

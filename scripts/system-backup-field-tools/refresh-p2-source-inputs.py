@@ -70,9 +70,21 @@ def current_ca(tls,rotation,now):
  need(moment(tls['NotBefore'])<=now<moment(tls['NotAfter']),'runtime certificate renewal required')
  return tls['CA']
 
-def main(directory):
+def continuation_inputs(attachment_pin, author_pin, attempt):
+ if attachment_pin is None and author_pin is None and attempt is None:return None,OLD_SELECTION,None
+ need(attachment_pin is not None and author_pin is not None and isinstance(attempt,str) and
+  1<=len(attempt)<=48 and all(c in 'abcdefghijklmnopqrstuvwxyz0123456789-' for c in attempt),'new attachment continuation requires both pinned inputs and a distinct attempt')
+ choices=json.loads(checked(attachment_pin))
+ need(isinstance(choices,list) and 0<len(choices)<=8,'explicit attachment choice list required')
+ checked(author_pin)
+ return choices,Path(author_pin['File']),attempt
+
+def main(directory,attachment_pin=None,author_pin=None,attempt=None):
  os.umask(0o077);need(os.name=='posix','Linux operator required')
- r=ROOT/'current-source-inputs';r.mkdir(mode=0o700,exist_ok=True)
+ choices,selection_author,attempt=continuation_inputs(attachment_pin,author_pin,attempt)
+ r=ROOT/('current-source-inputs' if attempt is None else 'current-source-inputs-'+attempt)
+ if attempt is not None:need(not r.exists(),'continuation directory already exists; reconcile retained sends instead of replaying')
+ r.mkdir(mode=0o700,exist_ok=True)
  need(r.resolve(strict=True)==r and r.stat().st_mode&0o077==0,'original private source records required')
  print('P2_CURRENT_SOURCE_RECORDS',r,flush=True)
  controller=json.loads((ROOT/'controller-relay/completed.json').read_bytes())
@@ -85,7 +97,9 @@ def main(directory):
  coordinate_cli=NATIVE/'system-backup-first-install-materials'
  need(build['SourceRevision']=='eca964d42b96c31cb381531889a39c23a366ffab' and
   sha(coordinate_cli.read_bytes())==build['Binaries'][coordinate_cli.name]['SHA256'],'original coordinate author executable changed')
- need(sha(OLD_SELECTION.read_bytes())==OLD_SELECTION_SHA,'retained original selection author executable changed')
+ if author_pin is None:need(sha(OLD_SELECTION.read_bytes())==OLD_SELECTION_SHA,'retained original selection author executable changed')
+ else:
+  checked(author_pin);retain(r/'team-attachment-inputs.private.json',encode({'Choices':attachment_pin,'Author':author_pin}))
  def once(label,argv):
   result=r/(label+'.receipt.private.json');sent=r/(label+'.sent.private.json')
   if result.exists():return json.loads(result.read_bytes())
@@ -139,14 +153,16 @@ def main(directory):
  ca=current_ca(tls,rotation,datetime.datetime.now(datetime.timezone.utc));checked(ca)
  credential=r/'agent-control-token.private';retain(credential,token)
  projection=module('current_writer_source_projection',directory/'prepare-p2-writer-selection.py')
- config=projection.source_config(data,scope,workspace,credential,ca);config_file=r/'source-config.json';retain(config_file,encode(config))
+ config=projection.source_config(data,scope,workspace,credential,ca,team_attachments=choices);config_file=r/'source-config.json';retain(config_file,encode(config))
  observer=json.loads((ROOT/'observer-host-current-agent/host.definition.json').read_bytes())
  checked(observer['PKIDefinition']);checked(observer['PKIReceipt'])
  startup=Path('/root/sbk/p2-materials-1dd1ae71.lVSEBfl2/runtime-startup-images/runtime-startup-images.json')
  need(sha(startup.read_bytes())=='28e979483e004141f3452f13609057fc0cde5bb82e4ca1d34e299cb536087068','qualified original runtime input bytes changed')
  selected=r/'selection';journal=r/'journal'
  selected.mkdir(mode=0o700,exist_ok=True);journal.mkdir(mode=0o700,exist_ok=True)
- argv=[str(OLD_SELECTION),'--action','prepare-selection',*common,'--source-config-file',str(config_file),'--source-config-sha256',sha(config_file.read_bytes()),
+ if author_pin is not None:
+  checked(author_pin);need(json.loads(checked(attachment_pin))==choices,'attachment choices changed before native send')
+ argv=[str(selection_author),'--action','prepare-selection',*common,'--source-config-file',str(config_file),'--source-config-sha256',sha(config_file.read_bytes()),
   '--runtime-startup-images-file',str(startup),'--runtime-startup-images-sha256',sha(startup.read_bytes()),
   '--observer-definition-file',observer['PKIDefinition']['File'],'--observer-definition-sha256',observer['PKIDefinition']['SHA256'],
   '--observer-receipt-file',observer['PKIReceipt']['File'],'--observer-receipt-sha256',observer['PKIReceipt']['SHA256'],
@@ -187,6 +203,13 @@ def main(directory):
  print('P2_CURRENT_SOURCE_INPUTS_READY_NO_HOLD',r,flush=True)
 
 if __name__=='__main__':
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--tool-directory',type=Path,required=True);a=p.parse_args()
- try:main(a.tool_directory)
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--tool-directory',type=Path,required=True)
+ p.add_argument('--team-attachments-file');p.add_argument('--team-attachments-sha256')
+ p.add_argument('--selection-author-file');p.add_argument('--selection-author-sha256');p.add_argument('--attempt')
+ a=p.parse_args()
+ try:
+  need(bool(a.team_attachments_file)==bool(a.team_attachments_sha256) and bool(a.selection_author_file)==bool(a.selection_author_sha256),'complete file/hash pairs required')
+  attachment={'File':a.team_attachments_file,'SHA256':a.team_attachments_sha256} if a.team_attachments_file else None
+  author={'File':a.selection_author_file,'SHA256':a.selection_author_sha256} if a.selection_author_file else None
+  main(a.tool_directory,attachment,author,a.attempt)
  except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as e:raise SystemExit('P2_CURRENT_SOURCE_INPUTS_UNCONFIRMED '+(str(e) if type(e) is ValueError else type(e).__name__))

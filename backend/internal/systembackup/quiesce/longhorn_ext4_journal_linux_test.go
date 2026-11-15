@@ -82,6 +82,45 @@ func TestLonghornExt4ClaimReacquisitionCannotAdoptOrReleaseOriginalHold(t *testi
 	}
 }
 
+func TestLonghornOriginalInstallationJournalSurvivesExpiryAndSeparatesReacquisition(t *testing.T) {
+	a, event := longhornExt4TestJournal(t)
+	event.Source.Claim, event.Source.Binding = originalLonghornClaimFixture()
+	event.Hold.ExpiresAt = longhornExt4ForwardUntil(event.Source.Binding, event.Source.Claim)
+	event.Key = longhornExt4SourceKey(event.Source)
+	a.sources = map[string]LonghornExt4Source{event.Key: event.Source}
+	event.Hold.Phase = "freeze-intent"
+	if err := a.persist(&event); err != nil {
+		t.Fatal(err)
+	}
+	// Reopen the actual MAC-protected journal after the original lease expired.
+	reconnected := &longhornExt4Actions{parent: a.parent, directory: a.directory, sources: a.sources}
+	got, found, err := reconnected.load(event.Key)
+	if err != nil || !found || got.Hold.Phase != "freeze-intent" || got.Source.Claim.TaskPublicID != "" {
+		t.Fatal("original installation journal lost or promoted", err)
+	}
+	release := LonghornExt4Request{Binding: event.Source.Binding, Claim: event.Source.Claim,
+		Attempt: event.Source.Attempt, SourceIdentity: event.Source.Identity, Action: "release"}
+	if !longhornExt4RequestMatches(got.Source, release) {
+		t.Fatal("original expired recovery identity lost")
+	}
+	for _, mutate := range []func(*LonghornExt4Source){
+		func(s *LonghornExt4Source) { s.Claim.EntryRowVersion++ },
+		func(s *LonghornExt4Source) { s.Binding.Generation++ },
+		func(s *LonghornExt4Source) { s.Binding.FenceEpoch++ },
+		func(s *LonghornExt4Source) { s.Claim.TaskPublicID = "task" },
+	} {
+		next := event.Source
+		mutate(&next)
+		key := longhornExt4SourceKey(next)
+		if key == event.Key || longhornExt4RequestMatches(next, release) {
+			t.Fatal("new claim inherited old installation recovery")
+		}
+		if err := reconnected.checkDeviceObligations(key, next); err == nil {
+			t.Fatal("unconfirmed original freeze was bypassed")
+		}
+	}
+}
+
 func TestLonghornExt4JournalRetainsUnconfirmedPhysicalWindow(t *testing.T) {
 	a, event := longhornExt4TestJournal(t)
 	for _, phase := range []string{"prepared", "ro-intent", "ro-applied", "held", "rw-intent", "released"} {

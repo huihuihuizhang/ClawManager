@@ -14,6 +14,19 @@ SPEC.loader.exec_module(HELPER)
 
 
 class SourceConfigTests(unittest.TestCase):
+    def test_explicit_team_choices_are_data_not_observed_identity(self):
+        data = self.fixture()
+        data["Instances"][1].update(Namespace="actual-user-1", Mode="pro")
+        choice = {"TeamID": 1, "Namespace": "actual-user-1", "Pod": "sbk-team-1-readonly", "Image": "registry/image@sha256:" + "a" * 64}
+        args = (data, "actual-app-scope", "/workspaces", "/private/token", {"File": "/private/ca", "SHA256": "b" * 64})
+        config = HELPER.source_config(*args, team_attachments=[choice])
+        self.assertEqual(config["original_team_attachments"], [choice])
+        config["original_team_attachments"][0]["Pod"] = "changed"
+        self.assertEqual(choice["Pod"], "sbk-team-1-readonly")
+        for choices in ([choice, choice], [dict(choice, PodUID="invented")], [dict(choice, Namespace="foreign")], []):
+            with self.subTest(choices=choices), self.assertRaises(RuntimeError):
+                HELPER.source_config(*args, team_attachments=choices)
+
     def fixture(self):
         rows = [{"ID": number, "Status": "running" if number in (1, 2, 3, 7, 8)
                  else "stopped" if number == 5 else "error"} for number in range(1, 9)]

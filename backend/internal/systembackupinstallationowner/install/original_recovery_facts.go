@@ -12,6 +12,10 @@ import (
 // counted as source mutations. New source operations must join this closed set.
 func originalSourceMutationIntent(action string) bool {
 	switch action {
+	case "longhorn_keeper_resource_record":
+		return true
+	case "longhorn_register_intent", "longhorn_qualify_intent", "longhorn_acquire_intent", "longhorn_register-client_intent", "longhorn_sync-client_intent", "longhorn_release_intent":
+		return true
 	case "shared_reservation_send_unknown", "shared_node_prepare_send_unknown", "shared_node_freeze_send_unknown", "shared_node_thaw_send_unknown", "shared_agent_resume_send_unknown", "shared_agent_complete_send_unknown", "shared_node_complete_send_unknown":
 		return true
 	case "minio_native_gate_send_unknown", "minio_native_restore_send_unknown", "redis_acl_gate_send_unknown", "redis_acl_restore_send_unknown", "scale_zero_send_unknown", "restore_replicas_send_unknown",

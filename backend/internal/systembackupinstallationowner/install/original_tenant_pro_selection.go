@@ -33,7 +33,7 @@ func originalTenantProCapture(source domain.SourceInstance, identity OriginalIni
 	return OriginalTenantProSelection{Source: source, Identity: identity, Deployment: deployment.Name}, nil
 }
 
-func originalTenantProCensusMatches(census originalMaintenanceKubernetesCensus, sources []OriginalTenantProSelection) error {
+func originalTenantProCensusMatches(census originalMaintenanceKubernetesCensus, sources []OriginalTenantProSelection, attachments ...OriginalTeamAttachmentPin) error {
 	if census.Namespace == "" || census.NamespaceUID == "" || len(sources) == 0 ||
 		len(census.StatefulSets)+len(census.DaemonSets)+len(census.Jobs)+len(census.CronJobs)+len(census.Autoscalers) != 0 {
 		return ErrInstall
@@ -47,6 +47,15 @@ func originalTenantProCensusMatches(census originalMaintenanceKubernetesCensus, 
 		}
 		instances[source.Source.ID] = true
 		pods[source.Source.Pod], deployments[source.Deployment] = source.Identity.PodUID, source.Identity.DeploymentUID
+	}
+	for _, attachment := range attachments {
+		if attachment.Choice.Namespace != census.Namespace {
+			continue
+		}
+		if attachment.NamespaceUID != census.NamespaceUID || attachment.PodUID == "" || pods[attachment.Choice.Pod] != "" {
+			return ErrInstall
+		}
+		pods[attachment.Choice.Pod] = attachment.PodUID
 	}
 	if len(census.Pods) != len(pods) || len(census.Deployments) != len(deployments) {
 		return ErrInstall
@@ -105,10 +114,15 @@ func (p *OriginalWriterMaintenance) collectOriginalTenantProSelections(ctx conte
 	sort.Strings(names)
 	for _, name := range names {
 		census, _, _, _, err := p.readKubernetesNamespaceCensus(ctx, name, groups[name][0].Identity.NamespaceUID)
-		if err != nil || originalTenantProCensusMatches(census, groups[name]) != nil {
+		if err != nil || originalTenantProCensusMatches(census, groups[name], selection.TeamAttachments...) != nil {
 			return nil, nil, OriginalWriterSourceFailure{Dependency: "complete_tenant_pro_controller_census_required"}
 		}
 		selection.TenantNamespaces = append(selection.TenantNamespaces, census)
+	}
+	for _, attachment := range selection.TeamAttachments {
+		if len(groups[attachment.Choice.Namespace]) == 0 {
+			return nil, nil, ErrInstall
+		}
 	}
 	return selected, aliases, nil
 }

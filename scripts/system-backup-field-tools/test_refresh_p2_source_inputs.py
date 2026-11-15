@@ -4,6 +4,7 @@ import datetime
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parent
 def load(name):
@@ -11,6 +12,14 @@ def load(name):
 P=load('refresh-p2-source-inputs.py');C=load('prepare-p2-configuration-data.py')
 
 class SourceInputChecks(unittest.TestCase):
+ def test_attachment_continuation_requires_distinct_attempt_and_both_pins(self):
+  attachment={'File':'/fixture/choices','SHA256':'a'*64};author={'File':'/fixture/author','SHA256':'b'*64}
+  self.assertEqual(P.continuation_inputs(None,None,None),(None,P.OLD_SELECTION,None))
+  for args in [(attachment,None,'next'),(None,author,'next'),(attachment,author,'../old'),(attachment,author,None)]:
+   with self.subTest(args=args),self.assertRaises(ValueError):P.continuation_inputs(*args)
+  with patch.object(P,'checked',side_effect=[b'[{"TeamID":1}]',b'ELF-test-data-only']) as checked:
+   self.assertEqual(P.continuation_inputs(attachment,author,'team-15'),([{'TeamID':1}],Path('/fixture/author'),'team-15'))
+   self.assertEqual(checked.call_count,2)
  def loaded(self):
   token=b'fixture-credential-only-0123456789abcdef'
   return [[b'installation',token,b'/workspaces',P.CA_SHA.encode()] for _ in range(2)],[[b'',token,b'/workspaces',b''] for _ in range(2)]

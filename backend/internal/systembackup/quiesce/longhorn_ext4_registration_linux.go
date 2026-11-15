@@ -15,7 +15,7 @@ import (
 // installation inputs. The boundary digest is retained as correlation data.
 func longhornExt4RegistrationMatches(installed LonghornExt4Source, r LonghornExt4Request) bool {
 	a, b := installed.Binding, r.Binding
-	return r.Claim.valid() && r.Attempt > 0 && b.OperationID != "" && b.Generation > 0 &&
+	return r.Claim.matchesBinding(b) && r.Attempt > 0 && b.OperationID != "" && b.Generation > 0 &&
 		validObservationHash(b.InventorySHA256) && !b.ExpiresAt.IsZero() &&
 		a.Kind == b.Kind && a.InstallationID == b.InstallationID && a.Namespace == b.Namespace &&
 		a.NamespaceUID == b.NamespaceUID && a.Node == b.Node && a.NodeUID == b.NodeUID &&
@@ -73,7 +73,7 @@ func (a *longhornExt4Actions) sourceForRequest(ctx context.Context, r LonghornEx
 
 func (a *longhornExt4Actions) registerKeeperSource(ctx context.Context, r LonghornExt4Request, original LonghornExt4Source, originalVolume longhornExt4Volume) (string, error) {
 	keeper := *r.Keeper
-	if r.Claim.TaskPublicID != r.Binding.OperationID || !validObservationHash(r.Binding.ReservationID) || r.Binding.FenceEpoch == 0 ||
+	if !r.Claim.keeperBinding(r.Binding) ||
 		keeper.OriginalPodUID != original.ProviderPodUID ||
 		keeper.PodUID == "" || keeper.PodUID == original.ProviderPodUID || keeper.PodName == "" || keeper.PodName == original.ProviderPodName ||
 		keeper.ContainerID == "" || keeper.ContainerID == original.ProviderContainerID || original.ProviderNamespace != original.Binding.Namespace {

@@ -242,7 +242,7 @@ func (a *longhornExt4Actions) load(key string) (longhornExt4Event, bool, error) 
 			!hmac.Equal([]byte(envelope.MAC), []byte(a.parent.owner.mac(envelope.Record))) ||
 			sharedRuntimeNodeJSON(envelope.Record, &event) != nil || event.Version != LonghornExt4Protocol ||
 			event.Key != key || event.Sequence != uint64(i+1) || event.Hold.Pin != event.Source.Pin ||
-			!event.Source.Claim.valid() || !event.Hold.ExpiresAt.Equal(longhornExt4ForwardUntil(event.Source.Binding, event.Source.Claim)) ||
+			!event.Source.Claim.matchesBinding(event.Source.Binding) || !event.Hold.ExpiresAt.Equal(longhornExt4ForwardUntil(event.Source.Binding, event.Source.Claim)) ||
 			event.Key != longhornExt4SourceKey(event.Source) ||
 			(i > 0 && observationDigest(event.Source) != observationDigest(out.Source)) ||
 			name != fmt.Sprintf("%s-%020d-%s.event", key, event.Sequence, observationDigest(event)) {
@@ -571,7 +571,7 @@ func longhornExt4JournalResponse(r LonghornExt4Request, event longhornExt4Event,
 }
 
 func longhornExt4RequestMatches(s LonghornExt4Source, r LonghornExt4Request) bool {
-	return s.Claim.valid() && r.Claim.valid() && s.Identity == r.SourceIdentity && s.Attempt == r.Attempt &&
+	return s.Claim.matchesBinding(s.Binding) && r.Claim.matchesBinding(r.Binding) && s.Identity == r.SourceIdentity && s.Attempt == r.Attempt &&
 		observationDigest(s.Claim) == observationDigest(r.Claim) && observationDigest(s.Binding) == observationDigest(r.Binding) &&
 		observationDigest(s.Keeper) == observationDigest(r.Keeper)
 }

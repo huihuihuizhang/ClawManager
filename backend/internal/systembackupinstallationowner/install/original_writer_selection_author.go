@@ -70,11 +70,14 @@ type OriginalInitialSourceCoordinates struct {
 // This finite projection is ordinary SOURCE configuration, not a final Forward
 // grant, enabled config, signed source observation or reconstructed Pod spec.
 type originalWriterSourceConfig struct {
-	InstallationID   string `json:"installation_id"`
-	Namespace        string `json:"namespace"`
-	NamespaceUID     string `json:"namespace_uid"`
-	ApplicationScope string `json:"application_scope"`
-	RuntimeSources   *struct {
+	LonghornHostDefinition BootstrapSourceFilePin         `json:"original_longhorn_host_definition,omitempty"`
+	LonghornKeeperImage    string                         `json:"original_longhorn_keeper_image,omitempty"`
+	TeamAttachments        []OriginalTeamAttachmentChoice `json:"original_team_attachments,omitempty"`
+	InstallationID         string                         `json:"installation_id"`
+	Namespace              string                         `json:"namespace"`
+	NamespaceUID           string                         `json:"namespace_uid"`
+	ApplicationScope       string                         `json:"application_scope"`
+	RuntimeSources         *struct {
 		SharedRuntimeProtocol    string                        `json:"shared_runtime_protocol,omitempty"`
 		WorkspaceRoot            string                        `json:"workspace_root"`
 		AgentTokenFile           string                        `json:"agent_token_file"`
@@ -285,6 +288,22 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 		agentPinsRead = true
 	}
 	stage = "tenant_pro_controllers"
+	s.LonghornHostDefinition, s.LonghornKeeperImage = config.LonghornHostDefinition, config.LonghornKeeperImage
+	if len(config.TeamAttachments) > 8 {
+		return zero, census, nil, ErrInstall
+	}
+	seenTeams := map[int]bool{}
+	for _, choice := range config.TeamAttachments {
+		if seenTeams[choice.TeamID] {
+			return zero, census, nil, ErrInstall
+		}
+		seenTeams[choice.TeamID] = true
+		pin, e := p.observeTeamAttachment(ctx, choice, nil)
+		if e != nil {
+			return zero, census, nil, e
+		}
+		s.TeamAttachments = append(s.TeamAttachments, pin)
+	}
 	tenantSources, tenantAliases, err := p.collectOriginalTenantProSelections(ctx, &s, physical)
 	if err != nil {
 		return zero, census, nil, err

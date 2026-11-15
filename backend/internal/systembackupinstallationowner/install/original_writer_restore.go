@@ -58,6 +58,9 @@ func (s *PreparedOriginalWriterSet) RestoreOriginalSources(ctx context.Context, 
 	if err := s.restoreSharedRuntimeLifecycle(ctx, fence); err != nil {
 		return err
 	}
+	if err := s.releaseLonghornKeepers(ctx, fence); err != nil {
+		return err
+	}
 	// Deployment controllers are restored before their workload consumers.
 	// Each restore changes the exact RV, fencing a delayed original stop patch.
 	for _, writer := range s.deployments {
@@ -119,6 +122,9 @@ type originalRecoveredReadiness struct {
 }
 
 func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context, fence *originalWriterRecoveryFence) (*originalRecoveredReadiness, error) {
+	if s.cleanupLonghornKeepers(ctx, fence) != nil {
+		return nil, ErrOriginalRecoveryNativeProof
+	}
 	if s.refreshSharedRuntimeRecovered(ctx, fence) != nil {
 		return nil, ErrOriginalRecoveryNativeProof
 	}
@@ -365,6 +371,38 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 // controllers retain the original exact pins; no newly introduced controller,
 // workload or persistent claim is omitted by a label filter.
 func (s *PreparedOriginalWriterSet) recheckOriginalRecoveredAPI(ctx context.Context, fence *originalWriterRecoveryFence, recovered map[string][]q.PodIdentity) error {
+	byWriter := map[string][]q.PodIdentity{}
+	tenantUIDs := map[string]bool{}
+	for _, writer := range s.deployments {
+		if writer.namespace == s.initial.Namespace {
+			continue
+		}
+		writer.recovery = fence
+		deployment, err := writer.current(ctx)
+		if err != nil {
+			return ErrInstall
+		}
+		pods, err := writer.currentPods(ctx, deployment, true)
+		if err != nil {
+			return ErrInstall
+		}
+		for _, pod := range pods {
+			matches := 0
+			for _, observed := range recovered[pod.Node] {
+				if reflect.DeepEqual(pod, observed) {
+					matches++
+				}
+			}
+			if matches != 1 || tenantUIDs[pod.UID] {
+				return ErrInstall
+			}
+			tenantUIDs[pod.UID] = true
+		}
+		byWriter[writer.ID()] = pods
+	}
+	if s.recheckTenantLifecycle(ctx, fence, byWriter) != nil {
+		return ErrInstall
+	}
 	if fence.check(ctx) != nil {
 		return ErrInstall
 	}
@@ -405,10 +443,10 @@ func (s *PreparedOriginalWriterSet) recheckOriginalRecoveredAPI(ctx context.Cont
 			}
 			continue
 		}
-		writers[writer.selection.Name] = writer
+		writers[writer.namespace+"/"+writer.selection.Name] = writer
 	}
 	for _, dep := range deps.Items {
-		if writer := writers[dep.Name]; writer != nil {
+		if writer := writers[ns+"/"+dep.Name]; writer != nil {
 			if string(dep.UID) != writer.selection.UID || dep.DeletionTimestamp != nil || dep.Spec.Replicas == nil || *dep.Spec.Replicas != writer.replicas || originalDeploymentSpecSHA(&dep) != writer.specSHA {
 				return ErrInstall
 			}
@@ -484,6 +522,9 @@ func (s *PreparedOriginalWriterSet) recheckOriginalRecoveredAPI(ctx context.Cont
 	}
 	for _, pods := range recovered {
 		for _, pod := range pods {
+			if tenantUIDs[pod.UID] {
+				continue
+			}
 			if allowed[pod.UID] {
 				return ErrInstall
 			}

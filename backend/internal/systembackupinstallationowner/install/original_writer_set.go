@@ -21,6 +21,9 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
+	LonghornHostDefinition                                   BootstrapSourceFilePin                `json:",omitempty"`
+	LonghornKeeperImage                                      string                                `json:",omitempty"`
+	TeamAttachments                                          []OriginalTeamAttachmentPin           `json:",omitempty"`
 	TenantPro                                                []OriginalTenantProSelection          `json:",omitempty"`
 	TenantNamespaces                                         []originalMaintenanceKubernetesCensus `json:",omitempty"`
 	RuntimeTestScope                                         *domain.RuntimeTestScope              `json:",omitempty"`
@@ -60,6 +63,9 @@ func (e OriginalWriterSourceFailure) Error() string {
 }
 
 type PreparedOriginalWriterSet struct {
+	longhornKeepers       []*originalLonghornKeeper
+	longhornClient        *q.SharedRuntimeNodeClient
+	longhornSources       map[string]q.LonghornExt4SourceCoordinates
 	minioHistory          *originalMinIOHistoryLifecycle
 	sharedLifecycle       []*originalSharedRuntimeLifecycle
 	sharedRuntimes        []*OriginalSharedRuntimeReservation
@@ -289,6 +295,13 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		stopped[s.InstanceID] = s
 	}
 	var sourceFailures []OriginalWriterSourceFailure
+	tenantPro := map[int]OriginalTenantProSelection{}
+	for _, selectedTenant := range selection.TenantPro {
+		if selectedTenant.Source.ID <= 0 || tenantPro[selectedTenant.Source.ID].Source.ID != 0 {
+			return nil, ErrInstall
+		}
+		tenantPro[selectedTenant.Source.ID] = selectedTenant
+	}
 	runningPro := map[int]OriginalProPodSelection{}
 	for _, s := range selection.RunningPro {
 		if s.InstanceID <= 0 || runningPro[s.InstanceID].InstanceID != 0 {
@@ -302,6 +315,18 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 	}
 	for _, source := range p.instances {
 		if selection.RuntimeTestScope.IsDeferred(source) {
+			continue
+		}
+		if selectedTenant, ok := tenantPro[source.ID]; ok {
+			if !reflect.DeepEqual(selectedTenant.Source, source) || runningPro[source.ID].InstanceID != 0 || stopped[source.ID].InstanceID != 0 || gateways[source.ID].InstanceID != 0 {
+				return nil, ErrInstall
+			}
+			writer, e := p.prepareTenantDeployment(ctx, selectedTenant, j)
+			if e != nil {
+				return nil, OriginalWriterSourceFailure{source.ID, source.Mode, source.Status, "tenant_deployment_owner_chain_preflight_rejected"}
+			}
+			set.deployments = append(set.deployments, writer)
+			delete(tenantPro, source.ID)
 			continue
 		}
 		// The shared factory has retained every lite source, including unbound errors.
@@ -359,7 +384,7 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 	if len(sourceFailures) > 0 {
 		return nil, sourceFailures[0]
 	}
-	if len(gateways)+len(stopped)+len(runningPro) != 0 {
+	if len(gateways)+len(stopped)+len(runningPro)+len(tenantPro) != 0 {
 		return nil, ErrInstall
 	}
 	redisSelections := map[string]OriginalRedisReadKeeperSelection{}
@@ -412,6 +437,9 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		return nil, ErrInstall
 	}
 	sort.Slice(set.deployments, func(i, j int) bool { return set.deployments[i].ID() < set.deployments[j].ID() })
+	if set.prepareLonghornKeepers(ctx, password, enrollment) != nil {
+		return nil, OriginalWriterSourceFailure{Dependency: "original_longhorn_keeper_material_preflight_required"}
+	}
 	// Refuse key/cert/token drift across constructor reads. The originals stay
 	// pinned for every later boundary; clients are not exposed to callers.
 	if set.recheckPreflight(ctx) != nil {
@@ -456,6 +484,9 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 
 func (s *PreparedOriginalWriterSet) recheckPreflight(ctx context.Context) error {
 	if s == nil || s.origin != s || s.used || s.owner.check(ctx) != nil || s.owner.checkInstances(ctx) != nil {
+		return ErrInstall
+	}
+	if s.recheckTenantPreflight(ctx) != nil {
 		return ErrInstall
 	}
 	raw, err := readBootstrapSourcePin(s.selectionPin, 262144)

@@ -26,7 +26,7 @@ func (p *VerifiedLonghornExt4Observation) Response() LonghornExt4Response {
 // No transport retry. After an unknown acquire/release, query the same source
 // with state before the controller chooses its recovery action.
 func (c *SharedRuntimeNodeClient) LonghornExt4Transition(ctx context.Context, in LonghornExt4Request) (*VerifiedLonghornExt4Observation, []byte, error) {
-	if c == nil || c.proof == nil || ctx == nil || ctx.Err() != nil || !in.Claim.valid() {
+	if c == nil || c.proof == nil || ctx == nil || ctx.Err() != nil || !in.Claim.matchesBinding(in.Binding) {
 		return nil, nil, ErrNodeObservation
 	}
 	deadline, ok := ctx.Deadline()
