@@ -204,6 +204,14 @@ prepare-composition 的 Deployment/Composition 输出读回后，调用：
 
 `--apply` 是实际创建 disabled config 的原子事务，不是 DATA check。只在所有原 owner 完成、同一 target/idempotency key 已明确时发送一次。失败/断线走 `query-original` 与实际原 journal；不直接 SQL 插行，不删已有 producer 表，不把旧 `PrepareOriginalWriterSet` 的 TenantPro 拒绝 guard 移除，不拿虚构 task 通过旧冷接管分支。若真实 C1 owner 在所选 tenant 范围拒绝，就停在其真实 Phase；没有合法 producer 输出不能跨到 compose。
 
+## 2026-11-15 来源事实到配置输入的衔接
+
+`system-backup-initial-input-assembly.py` 现在可读取原生 `original-source-registry-facts-receipt.v1`，绑定本轮 `materials.result.json` 的 `SourceSelection`，核对选择、部署、材料及四份 registry 文件的摘要、身份与有效期，再生成配置作者所需的数据引用。不会根据最新文件猜测当前来源。读取结束及调用配置作者前均再次核对；成功记录过期也必须先核对原来源状态再走合法续接，不能修改 Until 或重用旧材料。
+
+该衔接仅覆盖 parts、source_writers、redis_sources、secret_allowlist 四类引用。其他五类 registry 和二十类 reference 仍需真实原 owner 输出，缺失时不调用配置作者。离线串联测试中配置作者为测试替身，不代表现场签发、启用或采集成功。
+
+现场另行只读核对了业务命名空间的 Deployment、StatefulSet 与 Service，未发现独立 registration 服务。代码中的 `/api/v1/admin/system-backup-strong-auth/enroll`、`/confirm` 由独立 `system-backup-registration` HTTPS 服务提供，不是主应用配置一个 MFA 环境变量即可启用。该服务还要求当前安装对应的 provider/strong-auth/RBAC registry、独立签名凭据、TOTP 加密密钥及数据库身份等真实配置。在准备并验证这些依赖之前，不让管理员提交验证码；不得将 lab 专用签发脚本直接用于正式 Vault。
+
 ## 4. 环境、ready、启用与当前不能跨过的边界
 
 注册 disabled 配置不是 enabled 接单。正常启用仍须原页面 strong-auth 的配置操作取得真实 `operation-response.raw.json`、确认 config version 2，然后依次调用原 native：`reissue-enabled-forward`、`issue-enabled-publication-authorization`、`system-backup-enabled-provider-materials issue/query` 和原 enabled runtime-materials 作者。准确参数组装来源为 `system-backup-operator-enabled-publication.py` 的 `prepare/provider_materials/runtime_materials`；全部沿用最终 Core/同一 Pod/原 RequestFiles，不能把 version 1 的材料直接改 JSON 变成 version 2。

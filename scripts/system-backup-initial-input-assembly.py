@@ -5,6 +5,7 @@ No key, grant, signature, scope, config, or native success is manufactured here.
 """
 from pathlib import Path
 import base64
+import datetime as dt
 import re
 
 
@@ -153,6 +154,62 @@ def original_selectors(value, registries, references):
                 original_selectors(json.loads(decoded), registries, references)
 
 
+def source_fact_selectors(m, receipt, selection_pin, now=None):
+    """Translate the native facts receipt into DATA refs, never authority.
+
+    Bind to the selected material delivery, not whichever fact files happen
+    to be newest. The native config/source owners still validate these refs.
+    """
+    m.need(set(receipt) == {"Version", "SelectionSHA256", "PartsRegistry", "SourceWritersRegistry", "NativeRegistries"} and
+           receipt["Version"] == "original-source-registry-facts-receipt.v1" and
+           receipt["SelectionSHA256"] == selection_pin["SHA256"], "same_native_source_facts_receipt_required")
+    selected = m.decode(m.pinned(selection_pin))
+    m.need(selected.get("Version") == "original-source-registry-authoring-selection.v1", "native_source_selection_required")
+    def moment(value):
+        parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+        m.need(parsed.tzinfo is not None, "source_window_timezone_required")
+        return parsed
+    clock = lambda: now if now is not None else dt.datetime.now(dt.timezone.utc)
+    before, until = moment(selected["NotBefore"]), moment(selected["Until"])
+    m.need(before <= clock() < until,
+           "source_facts_expired_reconcile_original_source_before_successor")
+    core = m.decode(m.pinned(selected["Deployment"]))
+    materials = m.decode(m.pinned(selected["MaterialsTemplate"]))
+    native = receipt["NativeRegistries"]
+    m.need(set(native) == {"RedisSources", "SecretAllowlist"}, "complete_native_source_registries_required")
+    policy_ref = materials["Discovery"]["SecretPolicy"]
+    policy_pin = native["SecretAllowlist"]
+    m.need(set(policy_pin) == {"File", "SHA256"} and policy_ref == {"protocol": "system-backup-secret-capture-policy.v1", "path": policy_pin["File"], "sha256": policy_pin["SHA256"]},
+           "same_original_secret_policy_required")
+    selectors, pins = set(), [selection_pin, selected["Deployment"], selected["MaterialsTemplate"]]
+    for kind, pin, path_key, version_key, schema in (
+        ("parts", receipt["PartsRegistry"], "PartsFile", "PartsVersion", "system-backup-original-source-parts.v2"),
+        ("source_writers", receipt["SourceWritersRegistry"], "SourceWritersFile", "SourceWritersVersion", "system-backup-original-source-writers.v2"),
+        ("redis_sources", native["RedisSources"], "RedisSourcesFile", "RedisSourcesVersion", "system-backup-original-redis-sources.v1"),
+    ):
+        m.need(set(pin) == {"File", "SHA256"} and pin["File"] == selected[path_key], "same_native_fact_output_required:" + kind)
+        value = m.decode(m.pinned(pin, limit=8 << 20))
+        m.need(value.get("SchemaVersion") == schema and value.get("Installation") == core["installation_id"] and
+               value.get("Version") == selected[version_key] and bool(selected[version_key]), "native_fact_identity_differs:" + kind)
+        if kind != "parts":
+            m.need(value.get("ApplicationScope") == selected["ApplicationScope"], "native_fact_application_scope_differs")
+        else:
+            m.need(value["Secrets"]["namespace"] == core["namespace"] and value["Secrets"]["namespace_uid"] == core["namespace_uid"],
+                   "native_fact_secret_namespace_differs")
+        selectors.add((kind, value["Version"], pin["SHA256"]))
+        pins.append(pin)
+    policy = m.decode(m.pinned(policy_pin))
+    m.need(policy.get("schema_version") == "system-backup-secret-capture-policy.v1" and
+           policy.get("registry_kind") == "secret_allowlist" and policy.get("registry_version") and
+           policy.get("namespace_scope") == "installation_namespace", "original_secret_registry_required")
+    selectors.add(("secret_allowlist", policy["registry_version"], policy_pin["SHA256"]))
+    pins.append(policy_pin)
+    for pin in pins:
+        m.pinned(pin, limit=8 << 20)
+    m.need(before <= clock() < until, "source_facts_expired_during_assembly")
+    return selectors, pins
+
+
 def retain_original_bytes(m, path, raw):
     if path.exists():
         m.need(m.read(path) == raw, "original_source_bytes_changed_no_replacement")
@@ -256,6 +313,7 @@ def prepare_disabled_config(m, stages):
     # or machine-wide search. No credential bytes are returned or logged.
     directories.extend(p for p in (stages.run / "production-adoption", stages.runtime_mirror()) if p.exists())
     registries, references, source_pins = set(), set(), []
+    native_facts = []
     paths = set()
     for directory in directories:
         for path in directory.rglob("*.json"):
@@ -268,6 +326,14 @@ def prepare_disabled_config(m, stages):
                 continue
             value = m.decode(m.read(path, limit=8 << 20))
             original_selectors(value, registries, references)
+            if isinstance(value, dict) and value.get("Version") == "original-source-registry-facts-receipt.v1":
+                material = m.decode(m.read(stages.directory / "materials.result.json"))
+                m.need(material["version"] == "operator-materials-result.v1", "actual_material_delivery_required_for_facts")
+                stages.check_host(material["host"])
+                facts, pins = source_fact_selectors(m, value, material["SourceSelection"])
+                native_facts.append((value, material["SourceSelection"]))
+                registries.update(facts)
+                source_pins.extend(pins)
             relative = path.relative_to(directory).parts
             if len(relative) >= 3 and relative[-3] in REGISTRY_KINDS and re.fullmatch(r"[a-f0-9]{64}\.json", relative[-1]):
                 actual = m.pin(path)
@@ -297,6 +363,8 @@ def prepare_disabled_config(m, stages):
     selection = stages.retain("initial-disabled-config.selections.json", {"Version": "original-disabled-config-selections.v1",
         "Registries": selected_registries, "References": selected_references, "StagingBytes": int(match[1]) * scale})
     target = stages.runtime_mirror() / "original-disabled-config.json"
+    for facts, source_selection in native_facts:
+        source_fact_selectors(m, facts, source_selection)
     result, receipt = stages.call("initial-disabled-config-author", [stages.binary("system-backup-first-install-materials"), "author-disabled-config",
         "--definition-file", selection["File"], "--definition-sha256", selection["SHA256"], "--output-file", target])
     m.need(result["Version"] == "original-disabled-config-authored.v1" and result["AuthorityIssued"] is False and
