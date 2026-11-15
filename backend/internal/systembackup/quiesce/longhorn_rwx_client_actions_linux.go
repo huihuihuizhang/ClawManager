@@ -247,12 +247,5 @@ func (o *NodeObserver) originalLonghornRWXClientExited(ctx context.Context, clie
 	if ctx == nil || ctx.Err() != nil || client.original.PID != s.MountOwnerPID || client.original.Start != s.MountOwnerStart || client.original.MountNamespace != s.MountNamespace || client.original.PIDNamespace == "" || client.original.Cgroup == "" || !client.pin.matchesMountTable(client.mountTable) {
 		return ErrNodeObservation
 	}
-	pod := PodIdentity{Name: s.ProviderPodName, UID: s.ProviderPodUID, Node: s.Binding.Node, Containers: []string{s.ProviderContainerID}}
-	if (CRIProver{Node: o.Node, Inspector: o.CRI}).Confirm(ctx, []PodIdentity{pod}) != nil {
-		return observationFailure("longhorn_rwx_original_client_exit_unconfirmed")
-	}
-	if _, _, err := o.scan(ctx, nodeObservationAnchor{Binding: s.Binding, BootID: o.BootID, Processes: []observedProcess{client.original}}, nil); err != nil {
-		return err
-	}
-	return ctx.Err()
+	return o.originalLonghornContainerExited(ctx, s, client.original)
 }

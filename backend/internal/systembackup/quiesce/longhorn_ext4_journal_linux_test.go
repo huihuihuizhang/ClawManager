@@ -6,10 +6,34 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 )
+
+func TestLonghornKeeperOriginalHolderSurvivesNativeJournalReopen(t *testing.T) {
+	a, event := longhornExt4TestJournal(t)
+	event.Source.Keeper = &LonghornExt4Keeper{OriginalPodUID: "original-pod", PodUID: "keeper-pod"}
+	event.Source.OriginalHolder = &longhornExt4OriginalHolder{Namespace: "tenant", PodName: "pro", PodUID: "original-pod", ContainerID: "containerd://" + strings.Repeat("c", 64), Process: observedProcess{PID: 42, Start: "original-start", PIDNamespace: "original-pidns", MountNamespace: "original-mountns", Cgroup: "/kubepods/original-pod"}}
+	event.Key = longhornExt4SourceKey(event.Source)
+	a.sources = map[string]LonghornExt4Source{event.Key: event.Source}
+	if err := a.persist(&event); err != nil {
+		t.Fatal(err)
+	}
+	reopened := &longhornExt4Actions{parent: a.parent, directory: a.directory, sources: a.sources}
+	actual, found, err := reopened.load(event.Key)
+	if err != nil || !found || !reflect.DeepEqual(actual.Source.OriginalHolder, event.Source.OriginalHolder) {
+		t.Fatal("native authenticated journal lost original process identity", err)
+	}
+	changed := event.Source
+	holder := *changed.OriginalHolder
+	holder.Process.PIDNamespace = "replacement-pidns"
+	changed.OriginalHolder = &holder
+	if longhornExt4SourceKey(changed) == event.Key {
+		t.Fatal("replacement original process retained the same native source key")
+	}
+}
 
 func longhornExt4TestJournal(t *testing.T) (*longhornExt4Actions, longhornExt4Event) {
 	t.Helper()

@@ -102,8 +102,15 @@ func TestLonghornRWXStoppedClientNeedsCRIAndActualProcessExit(t *testing.T) {
 	client := longhornRWXClient{fd: fd, pin: pin, original: original, mountTable: table,
 		source: LonghornExt4Source{Binding: ObservationBinding{Node: "node1"}, ProviderPodName: "app", ProviderPodUID: "original-app", ProviderContainerID: "containerd://" + strings.Repeat("a", 64), MountOwnerPID: original.PID, MountOwnerStart: original.Start, MountNamespace: original.MountNamespace}}
 	o := &NodeObserver{Node: "node1", HostProc: "/proc", HostRoot: "/", CRI: CRICommand{Binary: inspector, Endpoint: "unix:///fixture.sock"}}
+	keeper := client.source
+	keeper.Keeper = &LonghornExt4Keeper{OriginalPodUID: client.source.ProviderPodUID}
+	keeper.OriginalHolder = &longhornExt4OriginalHolder{Namespace: client.source.ProviderNamespace, PodName: client.source.ProviderPodName, PodUID: client.source.ProviderPodUID, ContainerID: client.source.ProviderContainerID, Process: original}
+	keeper.ProviderPodName, keeper.ProviderPodUID, keeper.ProviderContainerID = "keeper", "keeper-pod", "containerd://"+strings.Repeat("b", 64)
 	if err := o.originalLonghornRWXClientExited(ctx, client); err == nil {
 		t.Fatal("a CRI EXITED claim hid the actual live original process")
+	}
+	if err := o.originalLonghornKeeperHolderExited(ctx, keeper); err == nil {
+		t.Fatal("keeper accepted the same CRI lie while the actual original holder was live")
 	}
 	if err := unix.Kill(child, unix.SIGKILL); err != nil {
 		t.Fatal(err)
@@ -113,6 +120,38 @@ func TestLonghornRWXStoppedClientNeedsCRIAndActualProcessExit(t *testing.T) {
 	if err := o.originalLonghornRWXClientExited(ctx, client); err != nil {
 		t.Fatal("original exit could not be independently confirmed", err)
 	}
+	if err := o.originalLonghornKeeperHolderExited(ctx, keeper); err != nil {
+		t.Fatal("keeper original exit could not be independently confirmed", err)
+	}
+	for _, change := range []func(*LonghornExt4Source){
+		func(s *LonghornExt4Source) { s.OriginalHolder = nil },
+		func(s *LonghornExt4Source) {
+			h := *s.OriginalHolder
+			h.PodUID = "another-original"
+			s.OriginalHolder = &h
+		},
+		func(s *LonghornExt4Source) {
+			h := *s.OriginalHolder
+			h.Namespace = "another-namespace"
+			s.OriginalHolder = &h
+		},
+		func(s *LonghornExt4Source) {
+			h := *s.OriginalHolder
+			h.ContainerID = s.ProviderContainerID
+			s.OriginalHolder = &h
+		},
+		func(s *LonghornExt4Source) {
+			h := *s.OriginalHolder
+			h.Process.PIDNamespace = ""
+			s.OriginalHolder = &h
+		},
+	} {
+		changed := keeper
+		change(&changed)
+		if err := o.originalLonghornKeeperHolderExited(ctx, changed); err == nil {
+			t.Fatal("keeper accepted missing or changed original identity")
+		}
+	}
 	if err := syncPinnedLonghornRWXClientMount(ctx, fd, client.mountTable, client.pin); err != nil {
 		t.Fatal("the same retained mount FD could not sync after process exit", err)
 	}
@@ -120,10 +159,16 @@ func TestLonghornRWXStoppedClientNeedsCRIAndActualProcessExit(t *testing.T) {
 	if err := o.originalLonghornRWXClientExited(ctx, client); err == nil {
 		t.Fatal("host absence alone replaced the required original CRI evidence")
 	}
+	if err := o.originalLonghornKeeperHolderExited(ctx, keeper); err == nil {
+		t.Fatal("keeper accepted host absence while the original CRI state was running")
+	}
 	if err := os.WriteFile(stateFile, []byte(`{}`), 0600); err != nil {
 		t.Fatal(err)
 	}
 	if err := o.originalLonghornRWXClientExited(ctx, client); err == nil {
 		t.Fatal("a missing CRI record was promoted to stopped")
+	}
+	if err := o.originalLonghornKeeperHolderExited(ctx, keeper); err == nil {
+		t.Fatal("keeper promoted missing CRI data to an exit proof")
 	}
 }

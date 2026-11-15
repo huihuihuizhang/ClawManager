@@ -33,9 +33,10 @@ type LonghornExt4Source struct {
 	MountFD, BlockFD, HostRootFD                                            int
 	MountOwnerPID                                                           int
 	MountOwnerStart, MountNamespace                                         string
-	OriginalSourceSHA256                                                    string              `json:",omitempty"`
-	ProviderNamespaceUID                                                    string              `json:",omitempty"`
-	Keeper                                                                  *LonghornExt4Keeper `json:",omitempty"`
+	OriginalSourceSHA256                                                    string                      `json:",omitempty"`
+	ProviderNamespaceUID                                                    string                      `json:",omitempty"`
+	Keeper                                                                  *LonghornExt4Keeper         `json:",omitempty"`
+	OriginalHolder                                                          *longhornExt4OriginalHolder `json:",omitempty"`
 }
 
 // These fields are read from the qualified provider namespace, device and
@@ -67,6 +68,9 @@ func longhornExt4SourceKey(s LonghornExt4Source) string {
 	key := []any{LonghornExt4Protocol, s.Binding, s.Attempt, s.Claim, s.Identity, s.VolumeHandle, s.PVCUID, s.PVUID, s.Pin}
 	if s.Keeper != nil {
 		key = append(key, s.Keeper)
+	}
+	if s.OriginalHolder != nil {
+		key = append(key, s.OriginalHolder)
 	}
 	return observationDigest(key)
 }
@@ -114,7 +118,7 @@ func (h *SharedRuntimeNodeHandler) ConfigureLonghornExt4(ctx context.Context, re
 		if b.Node != o.Node || b.NodeUID != o.NodeUID || b.InstallationID == "" ||
 			b.Namespace == "" || b.NamespaceUID == "" || b.OperationID != "" || b.Generation != 0 || b.InventorySHA256 != "" ||
 			!b.ExpiresAt.IsZero() || s.Attempt != 0 || s.Claim != (LonghornExt4Claim{}) || !validObservationHash(s.Identity) || s.Pin.BootID != o.BootID || s.MountOwnerPID <= 0 ||
-			!strings.HasPrefix(s.VolumeHandle, "pvc-") || strings.ContainsAny(s.VolumeHandle, "/\\\x00\r\n") || s.PVCUID == "" || s.PVUID == "" {
+			!strings.HasPrefix(s.VolumeHandle, "pvc-") || strings.ContainsAny(s.VolumeHandle, "/\\\x00\r\n") || s.PVCUID == "" || s.PVUID == "" || s.OriginalHolder != nil {
 			return ErrNodeObservation
 		}
 		proc := filepath.Join(o.HostProc, fmt.Sprint(s.MountOwnerPID))
@@ -488,6 +492,15 @@ func (a *longhornExt4Actions) run(r LonghornExt4Request) (LonghornExt4Response, 
 			return response, observationFailure("longhorn_ext4_freeze_custody_lost")
 		}
 	}
+	// A zero-replica Deployment or missing Pod is only the caller's drain
+	// correlation. Verify the registered original process independently before
+	// any keeper freeze and every held acknowledgement. Recovery never needs
+	// this forward-only predicate in order to release an existing obligation.
+	if s.Keeper != nil && (r.Action == "acquire" || r.Action == "check-held") {
+		if err := o.originalLonghornKeeperHolderExited(ctx, s); err != nil {
+			return response, err
+		}
+	}
 	save := func(next longhornExt4Hold) error { event.Hold = next; return a.persist(&event) }
 	switch r.Action {
 	case "register", "qualify":
@@ -552,6 +565,11 @@ func (a *longhornExt4Actions) run(r LonghornExt4Request) (LonghornExt4Response, 
 		heldAt, err = v.freezeRecheck(ctx, event.Hold)
 		if err != nil {
 			return response, err
+		}
+		if s.Keeper != nil {
+			if err := o.originalLonghornKeeperHolderExited(ctx, s); err != nil {
+				return response, err
+			}
 		}
 	}
 	if s.Keeper != nil && event.Hold.Phase == "released" && native != "unconfirmed" {

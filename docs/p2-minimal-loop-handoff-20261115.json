@@ -5,7 +5,7 @@
   "user_requested_handoff": true,
   "complete": false,
   "continuation_progress": {
-    "state": "Image registry digest, controller four ELF readbacks, both native running owner ELF hashes, and new-Pod relay mTLS/readonly SQL verified. Full backup not started; CSI physical coverage/C1 capture/adoption remain blocked.",
+    "state": "Pro RWO original-holder exit proof now wired before keeper freeze and held ACK, and native regression passed. Current deployed b4b553c3 image/relay remain verified. New Pro patch not deployed; CSI/shared-runtime/C1 capture/adoption remain the unique critical path. No real backup task/capture.",
     "runtime_binding_recovery_current": {
       "Root": "/root/sbk/p2-remote-1a466c69-01/runtime-instance3-recovery-current",
       "Cause": "Instance 3 still referenced old Hermes Pod ebbccb4b-967d-49e9-874c-bc479743c321 after certificate rollout. New Pod reused its IP, so healthy agent endpoint prevented automatic stale-pod failover. Original mount author correctly refused the draining old binding.",
@@ -97,7 +97,7 @@
     ],
     "test_cleanup": "本轮 D:\\dsh-work\\p2-keeper-flow-20261115 已整体删除并确认不存在；Linux tmpfs 已卸载。只保留正式交付目录/归档与上传记录。无运行中的本轮测试或构建。",
     "next_required": [
-      "只补当前 actualPodPersistentRoots 的真实 CSI 物理覆盖、共享运行时观测及原 C1 capture/adoption/config 组合；tenant/CSI guard 不可移除，不能用空路径、伪造冷 Pod 或遗漏五个 RWX 客户端绕过。",
+      "下一项只接实际 CSI 卷覆盖与共享运行时/C1 采集接管；Pro keeper 原退出证明本地已通过。不要再扩展生命周期或重复本轮 CRI/日志基础测试。共享 runtime 当前 hostPath paths/files/Syncfs 不能直接接受 NFS；须由实际 CSI/Longhorn actor 证明物理来源与完整客户端，不返回空路径或伪造冷 Pod。",
       "通过当前调用链和必要异常恢复后，集中刷新实际需要的短期来源。新组件和新 relay 已验收，不重做镜像、组件更新或仍充足有效期的证书轮换；旧 facts/selection 不覆盖、不盲重放。",
       "页面真实首单：完整采集、业务恢复、上传、独立读回、目录登记全部留存原始回执后才完成目标。当前仍未停写、采集或创建任务。"
     ],
@@ -155,6 +155,13 @@
         "blocked_step": "旧补层只替换三个 controller 工具，会留下旧 Longhorn 客户端处理程序；两个 CLI 未引用 buildinfo，严格 ELF 身份核对无法完成。",
         "reuse": "复用现有 OCI 摘要链、buildinfo、ELF 身份检查及 registry 读回；仅补原生 owner 文件和只读 --version 出口。未降低任何身份、tenant、CSI、恢复保护。",
         "finish_check": "已完成：六 ELF 原链接身份检查、Linux 两版本出口实际执行、Linux first-adoption 七主测试与 Python 镜像十测试；registry 精确摘要、controller 四个 ELF 和双节点 /proc/PID/exe 真实读回匹配。组件交付验收结束，不代表完整备份。"
+      },
+      {
+        "change": "Pro RWO keeper acquire/check-held 接入节点派生的原进程退出证明",
+        "blocked_step": "现场 Pro 原 Deployment/Pod API 消失不证明旧容器已退出；此前 keeper 仅核对自身设备和 freeze，不能补齐原写进程物理退出证明。",
+        "reuse": "复用现有 RWX 的 CRI EXITED 与两轮完整 host task scan；注册 keeper 前后实际读取同一原 PID/start/PID namespace/mount namespace/Pod cgroup，并写入既有认证事件。未新增认证或生命周期入口。",
+        "finish_check": "原进程真活且 CRI 谎报 EXITED 必须拒绝；真退出且 CRI 同 UID/CID EXITED 可通过；运行/缺失 CRI、身份漂移拒绝；MAC 日志重开保留原身份；正向 acquire/check-held 前后检查，独立 release 不增加退出前提。本地 17 主测试通过；现场设备冻结及完整采集尚未完成。",
+        "not_yet_complete": "该修正未部署；tenant/CSI guard 保持，继续接齐实际 CSI 物理覆盖和共享运行时/C1 capture/adoption。"
       }
     ],
     "latest_read_only_field_check": {
@@ -804,6 +811,39 @@
         "Reconciled": "Archive had exactly 232886178 bytes; no verified record/build outputs and no component update intent.",
         "Recovery": "Validated literal-stage Python syntax locally, checked original complete archive SHA256 remotely, then first extraction/build and first controller CAS update. Previous failed callback records preserved."
       }
+    },
+    "rwo_original_exit_validation": {
+      "State": "PASS",
+      "LinuxTopLevelPasses": 17,
+      "LinuxSubtestPasses": 30,
+      "Command": "quiesce.test -test.v -test.run ^(TestLonghorn|TestOriginalLonghorn|TestCRI) -test.timeout=180s",
+      "ActualIsolatedKernelProcessAndNamespaces": true,
+      "ActualHMACFsyncJournalReopen": true,
+      "CRIAndNFSMetaAreFixtures": true,
+      "KernelFreezeSyscallsSimulated": true,
+      "SiteProHoldOrCaptureVerified": false,
+      "Deployed": false,
+      "BackupCompleted": false,
+      "TestLogSHA256": "c5712b54e5d4e722f2a64378c4b4588853d158a37df9843dc144fed63bd9bd87",
+      "BuildLogSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "SourceSHA256": {
+        "longhorn_ext4_actions_linux.go": "1dfeb82d5ccc921703fc9685d4774b17572299431c7c5d6cebc5535fadeedaf0",
+        "longhorn_ext4_registration_linux.go": "a98dcc0f6fff42c7e11a865f254057d3e71e731ae4a24ccb2c902ec0dd670420",
+        "longhorn_ext4_original_exit_linux.go": "f01fd5a88a73646d4e0bab8d3af49e5b2fbfe04833527c1d7782ad6666e95492",
+        "longhorn_rwx_client_actions_linux.go": "fa4297028308ae3a8a4be6bcaf5a31e1571026f963dbadffab12f92fd97160e9",
+        "longhorn_ext4_journal_linux_test.go": "7cae56dfd0d346b211ef5d7159d47a87030f55144ecb3b41ce5e63e211182995",
+        "longhorn_rwx_client_exit_linux_test.go": "451dbd547a2170ffe1efcc84f0bbf62a94b8fc52dd1101ccd57f48071f87ba0d"
+      },
+      "TemporaryRoot": "D:\\dsh-work\\p2-rwo-exit-20261115",
+      "Cleanup": "Linux native tmpfs confirmed unmounted (mountpoint exit32); D:/dsh-work/p2-rwo-exit-20261115 removed and verified absent. No build/test from this round remains running."
+    },
+    "source_window_status_after_local_validation": {
+      "RecordedUntil": "2026-11-15T14:34:20.594508Z",
+      "ObservedAt": "2026-11-15T14:37:05.651827+00:00",
+      "Expired": true,
+      "Reissued": false,
+      "OldFactsPreserved": true,
+      "Reason": "finish current call chain and necessary recovery before a single short-lived source refresh"
     }
   },
   "workspace": "C:/Users/zhanghui08/Desktop/clawmanager/ClawManager/.worktrees/build-06bf0e89",

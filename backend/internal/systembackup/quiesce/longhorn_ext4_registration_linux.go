@@ -5,6 +5,7 @@ package quiesce
 import (
 	"context"
 	"path/filepath"
+	"reflect"
 	"strconv"
 
 	"golang.org/x/sys/unix"
@@ -82,7 +83,8 @@ func (a *longhornExt4Actions) registerKeeperSource(ctx context.Context, r Longho
 	bounded, cancel := context.WithDeadline(ctx, r.Deadline)
 	defer cancel()
 	o := a.parent.owner.observer
-	if longhornExt4ProviderCurrent(bounded, o, original) != nil || originalVolume.qualify(bounded) != nil {
+	originalHolder, err := o.observeLonghornOriginalHolder(bounded, original)
+	if err != nil || originalVolume.qualify(bounded) != nil {
 		return "", ErrNodeObservation
 	}
 	source, err := o.openLonghornExt4Source(bounded, LonghornExt4SourceCoordinates{
@@ -107,7 +109,12 @@ func (a *longhornExt4Actions) registerKeeperSource(ctx context.Context, r Longho
 		fs.Flags&unix.ST_RDONLY == 0 || volume.qualify(bounded) != nil || longhornExt4ProviderCurrent(bounded, o, original) != nil {
 		return "", ErrNodeObservation
 	}
+	again, err := o.observeLonghornOriginalHolder(bounded, original)
+	if err != nil || !reflect.DeepEqual(again, originalHolder) {
+		return "", ErrNodeObservation
+	}
 	source.Binding, source.Attempt, source.Claim, source.Keeper = r.Binding, r.Attempt, r.Claim, &keeper
+	source.OriginalHolder = originalHolder
 	source = longhornExt4StableSource(source)
 	key := longhornExt4SourceKey(source)
 	if err := a.checkDeviceObligations(key, source); err != nil {
