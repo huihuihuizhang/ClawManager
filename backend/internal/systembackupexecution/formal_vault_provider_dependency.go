@@ -8,6 +8,7 @@ import (
 	"io"
 	"path/filepath"
 	"reflect"
+	"sync/atomic"
 	"time"
 
 	d "clawreef/internal/systembackupdispatch"
@@ -191,23 +192,28 @@ func (x *bootstrapSourceRegistryReader) observeBootstrapVaultDependencies(client
 		return nil, install.ErrInstall
 	}
 	defer db.Close()
+	conn, e := bootstrapVaultSQLConnection(x.physical, db, verified)
+	if e != nil {
+		return nil, writerAPIReadFailure(install.ErrInstall, x.physical, "facts_vault_sql_connect", "SourceSQL", e)
+	}
+	defer conn.Close()
 	floor := time.Time{}
-	if x.checkSQLIdentity(x.physical, db, binding, verified, &floor) != nil {
-		return nil, install.ErrInstall
+	if x.checkSQLIdentity(x.physical, conn, binding, verified, &floor) != nil {
+		return nil, writerAPIReadFailure(install.ErrInstall, x.physical, "facts_vault_sql_identity", "SourceSQL", nil)
 	}
 	out := make([]formalVaultProviderFacts, 0, len(x.config.ProviderDependencies))
 	for _, selected := range x.config.ProviderDependencies {
 		cfg, e := readFormalVaultObserver(selected.Observer)
 		if e != nil {
-			return nil, install.ErrInstall
+			return nil, writerAPIReadFailure(install.ErrInstall, x.physical, "facts_vault_observer_file", "VaultProvider", e)
 		}
 		o, e := owner.NewInstalledVaultMetadataObserverWithLocalForward(cfg, clients.API, x.config.Namespace, x.config.NamespaceUID, x.providerLocalForward)
 		if e != nil {
-			return nil, install.ErrInstall
+			return nil, writerAPIReadFailure(install.ErrInstall, x.physical, "facts_vault_observer_transport", "VaultProvider", e)
 		}
 		actual, e := func() (formalVaultProviderFacts, error) {
 			defer o.Close()
-			scope, e := install.ObserveInstalledVaultProviderScope(x.physical, db, clients.API, x.association.Target, selected.Workload, cfg.Endpoint)
+			scope, e := install.ObserveInstalledVaultProviderScope(x.physical, conn, clients.API, x.association.Target, selected.Workload, cfg.Endpoint)
 			if e != nil || x.checkPhysical(x.physical) != nil {
 				return formalVaultProviderFacts{}, writerAPIReadFailure(install.ErrInstall, x.physical, "facts_vault_scope", "VaultProvider", e)
 			}
@@ -219,7 +225,7 @@ func (x *bootstrapSourceRegistryReader) observeBootstrapVaultDependencies(client
 			if e != nil {
 				return formalVaultProviderFacts{}, install.ErrInstall
 			}
-			repeated, e := install.ObserveInstalledVaultProviderScope(x.physical, db, clients.API, x.association.Target, selected.Workload, cfg.Endpoint)
+			repeated, e := install.ObserveInstalledVaultProviderScope(x.physical, conn, clients.API, x.association.Target, selected.Workload, cfg.Endpoint)
 			again, e2 := readFormalVaultObserver(selected.Observer)
 			if e != nil || e2 != nil || !reflect.DeepEqual(scope, repeated) || !reflect.DeepEqual(cfg, again) || proof.Recheck(x.physical, time.Now().UTC()) != nil || x.checkPhysical(x.physical) != nil {
 				return formalVaultProviderFacts{}, install.ErrInstall
@@ -231,7 +237,7 @@ func (x *bootstrapSourceRegistryReader) observeBootstrapVaultDependencies(client
 		}
 		out = append(out, actual)
 	}
-	if x.checkSQLIdentity(x.physical, db, binding, verified, &floor) != nil || x.checkPhysical(x.physical) != nil {
+	if x.checkSQLIdentity(x.physical, conn, binding, verified, &floor) != nil || x.checkPhysical(x.physical) != nil {
 		return nil, install.ErrInstall
 	}
 	return out, nil
@@ -314,4 +320,21 @@ func (x *sourceSQLObservation) observeSourceVaultDependencies(ctx context.Contex
 		return nil, ErrSourceWriterObservationIncomplete
 	}
 	return out, nil
+}
+
+// sql.OpenDB is lazy: acquire the physical TLS connection before checking its
+// verification flag, then retain it for both identity and provider scope reads.
+func bootstrapVaultSQLConnection(ctx context.Context, db *sql.DB, verified *atomic.Bool) (*sql.Conn, error) {
+	if ctx == nil || db == nil || verified == nil {
+		return nil, install.ErrInstall
+	}
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return nil, install.ErrInstall
+	}
+	if !verified.Load() {
+		conn.Close()
+		return nil, install.ErrInstall
+	}
+	return conn, nil
 }

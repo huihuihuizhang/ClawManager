@@ -3,7 +3,6 @@ package install
 import (
 	owner "clawreef/internal/systembackupinstallationowner"
 	"context"
-	"database/sql"
 	"k8s.io/client-go/kubernetes"
 	"net"
 	"net/url"
@@ -206,9 +205,9 @@ func (p *originalVaultProviderDependency) readScope(ctx context.Context) (origin
 // ObserveInstalledVaultProviderScope returns observed comparison DATA only.
 // Its concrete callers independently authenticate installer/task/recovery
 // authority. It never manufactures an Installer, owner, grant or source hold.
-func ObserveInstalledVaultProviderScope(ctx context.Context, source *sql.DB, k kubernetes.Interface, target owner.Target, input VaultProviderWorkloadSelection, endpointURL string) (VaultProviderScopeData, error) {
+func ObserveInstalledVaultProviderScope(ctx context.Context, source sqlRead, k kubernetes.Interface, target owner.Target, input VaultProviderWorkloadSelection, endpointURL string) (VaultProviderScopeData, error) {
 	var out originalVaultProviderScope
-	if ctx == nil || ctx.Err() != nil || source == nil || nilClient(k) || target.Namespace == "" || target.NamespaceUID == "" {
+	if ctx == nil || ctx.Err() != nil || source == nil || (reflect.ValueOf(source).Kind() == reflect.Ptr && reflect.ValueOf(source).IsNil()) || nilClient(k) || target.Namespace == "" || target.NamespaceUID == "" {
 		return out, ErrInstall
 	}
 	ns := target.Namespace
