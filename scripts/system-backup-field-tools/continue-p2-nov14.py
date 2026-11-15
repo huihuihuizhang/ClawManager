@@ -314,6 +314,24 @@ def run(args, package=None):
     mount(A,L,H,R,D,site,package,done,fresh,pod,desired)
 
 
+def approved_secret_scope(A,original):
+    # The user selected these six business Secrets on 2026-11-15. The pinned
+    # document is independent owner intent, not generated from API enumeration.
+    pin={'File':str(ROOT/'secret-policy-20261115/business-secrets.policy.json'),
+         'SHA256':'72360a4b05df37b8ca685e9d964fab64beaf7dae1e07786775f6902db4df6d59'}
+    policy=A.obj(pin)
+    A.need(policy['schema_version']=='system-backup-secret-capture-policy.v1' and len(policy['entries'])==6,
+           'approved six-Secret policy differs')
+    result=copy.deepcopy(original);material=result['Materials']
+    existing=[v for v in material['ResourceTypes'] if v['Part']=='secret_bundle']
+    A.need(existing==[{'Group':'','LabelSelector':'','Part':'secret_bundle','Resource':'secrets','Version':'v1'}],
+           'original Secret selection changed; reconcile before narrowing')
+    material['ResourceTypes']=[v for v in material['ResourceTypes'] if v['Part']!='secret_bundle']+[
+        dict(existing[0],FieldSelector='metadata.name='+entry['secret_name']) for entry in policy['entries']]
+    A.need(not material['Discovery'].get('SecretPolicy'),'original Secret policy already bound')
+    material['Discovery']['SecretPolicy']={'protocol':policy['schema_version'],'path':pin['File'],'sha256':pin['SHA256']}
+    return result
+
 def refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desired,secret,plan,minted,observer,agent):
     # This owner intent is required by produce-facts. Check it before minting
     # a source token or spending its finite window on mount observations.

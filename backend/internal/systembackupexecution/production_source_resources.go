@@ -11,6 +11,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/validation"
+	"strings"
 )
 
 func (x *originalSourceMetadataAuthority) resourceMetadata(ctx context.Context, clients *productionMetadataClients) (worker.ResourceCaptureSpec, worker.ResourceCaptureSpec, error) {
@@ -40,7 +42,7 @@ func (x sourceMetadataReadAccess) resourceMetadata(ctx context.Context, clients 
 	for _, selection := range m.ResourceTypes {
 		part := parts[selection.Part]
 		probe := root.KubernetesSelection{Group: selection.Group, Version: selection.Version, Resource: selection.Resource, Name: "source-metadata-probe", UID: "source-metadata-probe"}
-		if part == nil || !root.ValidKubernetesSelection(probe, selection.Part) {
+		if part == nil || !root.ValidKubernetesSelection(probe, selection.Part) || !sourceMetadataFieldSelectorValid(selection) {
 			return zero, zero, d.ErrNotReady
 		}
 		if _, err := labels.Parse(selection.LabelSelector); err != nil {
@@ -56,7 +58,7 @@ func (x sourceMetadataReadAccess) resourceMetadata(ctx context.Context, clients 
 			}
 			// Explicit PartialObjectMetadata avoids fetching plaintext Secret data
 			// while enumerating original names and UIDs for the separate GET worker.
-			objects, err := clients.Metadata.Resource(gvr).Namespace(s.Config.Namespace).List(ctx, metav1.ListOptions{LabelSelector: selection.LabelSelector, Limit: 1000, Continue: continuation})
+			objects, err := clients.Metadata.Resource(gvr).Namespace(s.Config.Namespace).List(ctx, metav1.ListOptions{LabelSelector: selection.LabelSelector, FieldSelector: selection.FieldSelector, Limit: 1000, Continue: continuation})
 			if err != nil || x.Recheck(ctx) != nil {
 				return zero, zero, d.ErrNotReady
 			}
@@ -66,6 +68,9 @@ func (x sourceMetadataReadAccess) resourceMetadata(ctx context.Context, clients 
 				return zero, zero, d.ErrNotReady
 			}
 			for _, object := range objects.Items {
+				if selection.FieldSelector != "" && selection.FieldSelector != "metadata.name="+object.Name {
+					return zero, zero, d.ErrNotReady
+				}
 				key := selection.Group + "/" + selection.Resource + "/" + object.Name
 				if object.Namespace != s.Config.Namespace || object.UID == "" || object.Name == "" || object.DeletionTimestamp != nil || seen[key] || len(part.Selections) >= part.MaxItems {
 					return zero, zero, d.ErrNotReady
@@ -93,6 +98,19 @@ func (x sourceMetadataReadAccess) resourceMetadata(ctx context.Context, clients 
 		return zero, zero, d.ErrNotReady
 	}
 	return *parts["deployment_resources"], *parts["secret_bundle"], nil
+}
+
+// Only an exact Secret name can narrow the existing metadata-only LIST.
+// Keep this identical for initial facts and subsequent production observation.
+func sourceMetadataFieldSelectorValid(s productionResourceType) bool {
+	if s.FieldSelector == "" {
+		return true
+	}
+	const prefix = "metadata.name="
+	if s.Part != "secret_bundle" || s.Group != "" || s.Version != "v1" || s.Resource != "secrets" || s.LabelSelector != "" || !strings.HasPrefix(s.FieldSelector, prefix) {
+		return false
+	}
+	return len(validation.IsDNS1123Subdomain(strings.TrimPrefix(s.FieldSelector, prefix))) == 0
 }
 
 func sourceMetadataResourceRules(types []productionResourceType, status authzv1.SubjectRulesReviewStatus) bool {

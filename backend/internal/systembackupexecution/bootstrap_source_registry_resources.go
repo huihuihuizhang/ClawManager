@@ -36,7 +36,7 @@ func (x *bootstrapSourceRegistryReader) readResourceMetadata(ctx context.Context
 	for _, selection := range m.ResourceTypes {
 		part := parts[selection.Part]
 		probe := root.KubernetesSelection{Group: selection.Group, Version: selection.Version, Resource: selection.Resource, Name: "source-metadata-probe", UID: "source-metadata-probe"}
-		if part == nil || !root.ValidKubernetesSelection(probe, selection.Part) {
+		if part == nil || !root.ValidKubernetesSelection(probe, selection.Part) || !sourceMetadataFieldSelectorValid(selection) {
 			return zero, zero, install.ErrInstall
 		}
 		if _, err := labels.Parse(selection.LabelSelector); err != nil {
@@ -52,7 +52,7 @@ func (x *bootstrapSourceRegistryReader) readResourceMetadata(ctx context.Context
 			}
 			// Explicit PartialObjectMetadata avoids fetching plaintext Secret data
 			// while enumerating original names and UIDs for the separate GET worker.
-			objects, err := clients.Metadata.Resource(gvr).Namespace(x.config.Namespace).List(ctx, metav1.ListOptions{LabelSelector: selection.LabelSelector, Limit: 1000, Continue: continuation})
+			objects, err := clients.Metadata.Resource(gvr).Namespace(x.config.Namespace).List(ctx, metav1.ListOptions{LabelSelector: selection.LabelSelector, FieldSelector: selection.FieldSelector, Limit: 1000, Continue: continuation})
 			if err != nil || x.checkPhysical(ctx) != nil {
 				return zero, zero, install.ErrInstall
 			}
@@ -62,6 +62,9 @@ func (x *bootstrapSourceRegistryReader) readResourceMetadata(ctx context.Context
 				return zero, zero, install.ErrInstall
 			}
 			for _, object := range objects.Items {
+				if selection.FieldSelector != "" && selection.FieldSelector != "metadata.name="+object.Name {
+					return zero, zero, install.ErrInstall
+				}
 				key := selection.Group + "/" + selection.Resource + "/" + object.Name
 				if object.Namespace != x.config.Namespace || object.UID == "" || object.Name == "" || object.DeletionTimestamp != nil || seen[key] || len(part.Selections) >= part.MaxItems {
 					return zero, zero, install.ErrInstall

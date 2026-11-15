@@ -16,8 +16,9 @@ L.verify_metadata(A,F,site,api,native,token,minted['Workload'],dt.datetime.now(d
 parent=A.decode((T.PARENT/'completed.json').read_bytes());A.need(parent['Receipt']['SHA256']==T.RECEIPT_SHA and parent['Definition']['SHA256']==T.DEFINITION_SHA and parent['SourceSelection']['SHA256']==T.SELECTION_SHA,'parent pins differ');A.read(parent['Receipt'])
 original=A.obj(parent['Definition']);selected=A.obj(parent['SourceSelection']);observer,agent=C.renewed_credentials(A)
 original=C.renewed_source(A,N,original,observer,agent);original=C.renewed_team_writer(A,original);original=C.capture_resource_types(A,original);original=C.renewed_scope(A,original)
+original=C.approved_secret_scope(A,original)
 old=A.obj({'File':str(C.ROOT/'controller-relay/relay-pki.receipt.private.json'),'SHA256':'ce9ad004c051b52969c52c632c29e74bffc9fba617c52316c288662bd58cfc0a'})
-new=A.obj({'File':str(C.ROOT/'controller-relay-renewal-20261115/relay-pki.receipt.private.json'),'SHA256':'fc9a11b7f149b8bf86f014b27fb8aedc7cc4842808bf16341cedd596f9b75969'})
+new=A.obj({'File':str(C.ROOT/'controller-relay-renewal-20261115-secret-policy/directory-ready/relay-pki.receipt.private.json'),'SHA256':'4493883b7f4cd20e75f4bc2a7ceba99d2990f58df65b36eb38bbe2425b70942c'})
 A.need(new['Version']=='original-relay-pki-result.v1' and new['State']=='original_relay_pki_material_issued_service_tls_not_yet_verified' and all(new[k]==old[k] for k in ('DeploymentUID','ServiceUID','Endpoint')) and N.moment(new['Until'])>dt.datetime.now(dt.timezone.utc)+dt.timedelta(minutes=45),'relay identity/window differs')
 replacements={};digest_paths={}
 for key in ('Manifest','Signature','CA','IssuerKey','ServerCertificate','ServerKey','ClientCertificate','ClientKey'):

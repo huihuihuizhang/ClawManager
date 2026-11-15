@@ -64,6 +64,7 @@ type productionCaptureMaterials struct {
 
 type productionResourceType struct {
 	Part, Group, Version, Resource, LabelSelector string
+	FieldSelector                                 string `json:",omitempty"`
 }
 
 func (r ProductionCaptureReference) validate() error {
