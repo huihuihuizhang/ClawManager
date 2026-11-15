@@ -25,6 +25,9 @@ type authoritySQLState struct {
 	writes, commits int
 	commitLost      bool
 	failGrantInsert bool
+	refreshState    *freshSQLIdentityState
+	refreshPresent  map[string]bool
+	refreshError    string
 }
 type authorityConnector struct{ s *authoritySQLState }
 
@@ -131,6 +134,32 @@ func grantKey(id string, revision driver.Value) string {
 func (c *authorityConn) QueryContext(ctx context.Context, q string, args []driver.NamedValue) (driver.Rows, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
+	}
+	if c.s.refreshState != nil {
+		if q == c.s.refreshError {
+			return nil, errors.New("refresh read failed")
+		}
+		for _, table := range []string{"system_backup_config_versions", "system_backup_tasks", "system_backup_operations", "system_backup_v2_installation_state", "system_backup_v2_configs", "system_backup_v2_operations", "system_backup_v2_backups", "system_backup_v2_restore_drills", "system_backup_installation_owner_heads", "system_backup_installation_owner_grants"} {
+			if q == "SELECT EXISTS(SELECT 1 FROM "+table+" LIMIT 1)" {
+				return row(c.s.refreshPresent[table]), nil
+			}
+		}
+		s := c.s.refreshState
+		if q == "SELECT origin_installation_id,config_version,controller_seen_at IS NULL FROM system_backup_installation_state WHERE singleton_id=1" {
+			if !s.Present {
+				return empty(3), nil
+			}
+			return row(s.InstallationID, int64(s.ConfigVersion), s.ControllerUnseen), nil
+		}
+		if q == "SELECT COUNT(*) FROM system_backup_v2_engine_bindings" {
+			if s.EnginePresent {
+				return row(int64(1)), nil
+			}
+			return row(int64(0)), nil
+		}
+		if q == "SELECT scope,engine,row_version FROM system_backup_v2_engine_bindings" {
+			return row(s.EngineScope, s.Engine, int64(s.EngineVersion)), nil
+		}
 	}
 	if q == `SELECT UTC_TIMESTAMP(6)` {
 		return row(time.Now().UTC().Truncate(time.Microsecond)), nil

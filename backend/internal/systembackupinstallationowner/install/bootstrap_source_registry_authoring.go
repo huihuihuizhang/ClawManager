@@ -45,6 +45,7 @@ type BootstrapSourceRegistryAuthoring struct {
 	floor, start, until time.Time
 	selection           BootstrapSourceAuthoringSelection
 	files               []consumerPinnedFile
+	unconfiguredRefresh bool
 }
 
 func (*BootstrapSourceRegistryAuthoring) MarshalJSON() ([]byte, error) { return nil, ErrInstall }
@@ -280,6 +281,9 @@ func (p *BootstrapSourceRegistryAuthoring) RecheckAuthority(ctx context.Context)
 	if p.local(ctx) != nil || p.operator.authority(p.physical, p.enrollment) != nil {
 		return p.reject()
 	}
+	if p.unconfiguredRefresh && p.checkUnconfiguredSourceRefresh() != nil {
+		return p.reject()
+	}
 	current, now, err := snapshot(p.physical, p.operator)
 	if err != nil || current.cas != p.initial || current.cas.State == "revoked" || now.Before(p.floor) || now.Before(p.selection.NotBefore) || !now.Before(p.selection.Until) || observeBootstrapSourceController(p.physical, p.operator.installer.kube, p.operator.installer.plan.Target, p.selection.Controller) != nil || p.local(ctx) != nil {
 		return p.reject()
@@ -291,6 +295,9 @@ func (p *BootstrapSourceRegistryAuthoring) RecheckAuthority(ctx context.Context)
 		return p.reject()
 	}
 	p.floor = after
+	if p.unconfiguredRefresh && p.checkUnconfiguredSourceRefresh() != nil {
+		return p.reject()
+	}
 	return nil
 }
 func (p *BootstrapSourceRegistryAuthoring) Close() {

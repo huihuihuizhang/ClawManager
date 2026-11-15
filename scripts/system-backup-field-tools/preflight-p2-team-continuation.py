@@ -112,12 +112,13 @@ def owner_ttl(A,F,site,records,owner,token,workload,until):
             owner_covers_window(A,A.decode(raw)['data'],until)
         finally:connection.close()
 
-def run(package,attempt,load_only=False):
+def run(package,attempt,load_only=False,expired_facts=None):
     A,C,L,H,R,T,N,F,O,D=[load(n) for n in ('assemble-p2-installation-candidate','continue-p2-nov14','load-p2-formal-vault','prepare-p2-longhorn-provider-loaded','resume-p2-recovered-source','resume-p2-tenant-team-source','renew-p2-source-preparation','p2-vault-local-forward','build-p2-controller-overlay','p2-source-dns')]
     for name in ('kubectl','ctr','unshare','mount','python3'):A.need(shutil.which(name),'required executable missing: '+name)
     build=A.decode((package/'BUILD_RECEIPT.json').read_bytes());A.need(build['SourceRevision']==(package/'SOURCE_REVISION').read_text().strip(),'package revision mismatch')
     linked_release(A,package,build,O.TOOLS)
-    if not load_only:C.select_attempt(A,attempt,stage_attachment=False)
+    A.need(not load_only or expired_facts is None,'expired source pins require source preparation')
+    if not load_only:C.select_attempt(A,attempt,stage_attachment=False,expired_facts=expired_facts)
     parent=A.decode((T.PARENT/'completed.json').read_bytes())
     for key,digest in [('Receipt',T.RECEIPT_SHA),('Definition',T.DEFINITION_SHA),('SourceSelection',T.SELECTION_SHA)]:
         A.need(parent[key]['SHA256']==digest,'original source receipt differs');A.read(parent[key])
@@ -175,8 +176,11 @@ def run(package,attempt,load_only=False):
     return report
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--source-attempt',type=int,default=1);p.add_argument('--load-controller-only',action='store_true');args=p.parse_args()
-    os.umask(0o077);run(Path(__file__).resolve().parent,args.source_attempt,args.load_controller_only)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--source-attempt',type=int,default=1);p.add_argument('--load-controller-only',action='store_true')
+    p.add_argument('--expired-source-facts-file');p.add_argument('--expired-source-facts-sha256');args=p.parse_args()
+    if bool(args.expired_source_facts_file)!=bool(args.expired_source_facts_sha256):raise ValueError('both expired facts pins required')
+    os.umask(0o077);run(Path(__file__).resolve().parent,args.source_attempt,args.load_controller_only,
+        {'File':args.expired_source_facts_file,'SHA256':args.expired_source_facts_sha256} if args.expired_source_facts_file else None)
 if __name__=='__main__':
     try:main()
     except Exception as e:raise SystemExit('P2_PREFLIGHT_REFUSED_BEFORE_IMAGE_BUILD '+(str(e) if isinstance(e,ValueError) else type(e).__name__))

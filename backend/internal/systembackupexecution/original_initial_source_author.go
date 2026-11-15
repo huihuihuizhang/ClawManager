@@ -27,11 +27,13 @@ type OriginalInitialSourceAuthorInputs struct {
 	RuntimeAgent                                            *install.BootstrapSourceRuntimeAgentV2
 	PartsVersion, SourceWritersVersion, RedisSourcesVersion string
 	NotBefore, Until                                        time.Time
+	ExpiredPredecessor                                      *OriginalExpiredSourcePredecessor `json:",omitempty"`
 }
 type OriginalInitialSourceAuthorReceipt struct {
 	Version                                                          string
 	Deployment, MaterialsTemplate, ExecutionProfile, SourceSelection install.BootstrapSourceFilePin
 	NativeSourceQualified, GrantsIssued, BackupReady                 bool
+	ExpiredPredecessor                                               *OriginalExpiredSourcePredecessor `json:",omitempty"`
 }
 
 func ProduceOriginalInitialSourceInputs(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, in OriginalInitialSourceAuthorInputs, directory string) (OriginalInitialSourceAuthorReceipt, error) {
@@ -40,6 +42,9 @@ func ProduceOriginalInitialSourceInputs(ctx context.Context, installer *install.
 		return zero, install.ErrInstall
 	}
 	cfg := in.Deployment
+	if in.ExpiredPredecessor != nil && checkOriginalExpiredSourcePredecessor(in, directory, time.Now().UTC()) != nil {
+		return zero, install.ErrInstall
+	}
 	corePath, templatePath, profilePath := filepath.Join(directory, "deployment-core.json"), filepath.Join(directory, "capture-materials-template.json"), filepath.Join(directory, "execution-profile.json")
 	if cfg.ProfileFile != profilePath || cfg.CaptureModules == nil || cfg.CaptureModules.Path != filepath.Join(directory, "capture-materials.json") || cfg.PublicationSigners != nil || cfg.PublisherVerifier != nil || cfg.Validate() != nil {
 		return zero, install.ErrInstall
@@ -117,6 +122,9 @@ func ProduceOriginalInitialSourceInputs(ctx context.Context, installer *install.
 		return zero, err
 	}
 	defer authority.Close()
+	if in.ExpiredPredecessor != nil && authority.RequireUnconfiguredSourceRefresh(ctx) != nil {
+		return zero, install.ErrInstall
+	}
 	// The real original constructor checks the complete source tuple/core/
 	// schema-census/template consistency, controller graph and original admin.
 	// It issues no source grant and performs no substitution for native facts.
@@ -126,5 +134,8 @@ func ProduceOriginalInitialSourceInputs(ctx context.Context, installer *install.
 	if authority.RecheckAuthority(ctx) != nil {
 		return zero, install.ErrInstall
 	}
-	return OriginalInitialSourceAuthorReceipt{Version: "original-initial-source-inputs-authored.v1", Deployment: corePin, MaterialsTemplate: materialPin, ExecutionProfile: profilePin, SourceSelection: selectionPin}, nil
+	if in.ExpiredPredecessor != nil && checkOriginalExpiredSourcePredecessor(in, directory, time.Now().UTC()) != nil {
+		return zero, install.ErrInstall
+	}
+	return OriginalInitialSourceAuthorReceipt{Version: "original-initial-source-inputs-authored.v1", Deployment: corePin, MaterialsTemplate: materialPin, ExecutionProfile: profilePin, SourceSelection: selectionPin, ExpiredPredecessor: in.ExpiredPredecessor}, nil
 }

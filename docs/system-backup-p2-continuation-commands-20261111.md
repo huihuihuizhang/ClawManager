@@ -206,6 +206,24 @@ prepare-composition 的 Deployment/Composition 输出读回后，调用：
 
 ## 2026-11-15 来源事实到配置输入的衔接
 
+### 已产出事实但尚未配置的过期续接
+
+现场只读复核显示：原安装 head/grant、legacy 配置/任务/操作、v2 配置/安装/操作/备份/恢复记录均为零，原 installation 身份仍为 config_version=0、controller 未见、engine=legacy/version 1。这是选择续接分支的诊断，不能代替执行时的原生认证。
+
+本次 `author-initial-source-inputs` 增加可选 `ExpiredPredecessor`，只接受旧最终 SourceSelection 和成功 FactsReceipt 的文件摘要。原生作者核对已经过期、窗口不重叠、同一安装/应用/控制器部署/SA、旧部署/材料/profile/三份事实及 Secret 策略的完整摘要链；新输出使用独立空目录。认证后的原 Installer 使用实际 SQL 再次检查原身份未配置、所有相关配置/任务/授权记录不存在，并在观察前后重复检查。只产出新的未签发来源材料，不删除旧事实、不撤销挂载、不伪造任务或停用回执。
+
+已更新运行凭据且新包已校验后，本现场续接参数为：
+
+```sh
+python3 -B resume-p2-nov15-source.py --source-attempt 14 \
+  --expired-source-facts-file /root/sbk/p2-cert-renewal.1KyqMtsd/source-facts-20261114-team-13-sql-recheck/native.receipt.private.json \
+  --expired-source-facts-sha256 eb36b986704a5763b5d893920a2eee27fec27df04579d4ed8104454caaca6bdc
+```
+
+该入口依次执行来源作者、挂载材料和事实采集。后续独立 `produce-p2-source-facts.py --source-attempt 14` 从第 14 轮实际成功的作者回执恢复同一前驱引用，并重新验证旧文件链；不需要重复猜测路径。任何未知发送、部分输出、状态已使用或摘要变化都保留日志并拒绝重发。若该轮也已过期，不复用其完成记录；有真实配置/任务的来源仍必须走原恢复及停用流程。
+
+离线覆盖：22 项入口串联测试、20 项镜像/来源预检回归，以及原生认证、安装状态变化、过期前驱摘要/身份/窗口校验。离线 Kubernetes/Vault/native 边界使用测试替身，SQL 协议测试不等同现场 MySQL 验收。此续接尚未现场执行；C1 的租户控制器/CSI 停写恢复支持仍是独立阻断，正式闭环尚未完成。
+
 `system-backup-initial-input-assembly.py` 现在可读取原生 `original-source-registry-facts-receipt.v1`，绑定本轮 `materials.result.json` 的 `SourceSelection`，核对选择、部署、材料及四份 registry 文件的摘要、身份与有效期，再生成配置作者所需的数据引用。不会根据最新文件猜测当前来源。读取结束及调用配置作者前均再次核对；成功记录过期也必须先核对原来源状态再走合法续接，不能修改 Until 或重用旧材料。
 
 该衔接仅覆盖 parts、source_writers、redis_sources、secret_allowlist 四类引用。其他五类 registry 和二十类 reference 仍需真实原 owner 输出，缺失时不调用配置作者。离线串联测试中配置作者为测试替身，不代表现场签发、启用或采集成功。

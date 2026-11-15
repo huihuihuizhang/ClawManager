@@ -159,13 +159,36 @@ def live_source(A, done, now=None):
     return selected
 
 
-def select_attempt(A, number, stage_attachment=True):
-    global SOURCE_JOURNAL,MOUNT_JOURNAL,SOURCE_OUT
+EXPIRED_PREDECESSOR=None
+
+def expired_predecessor(A, facts_pin, selection_pin):
+    selected=A.obj(selection_pin);facts=A.obj(facts_pin)
+    A.need(facts.get('Version')=='original-source-registry-facts-receipt.v1' and
+           facts.get('SelectionSHA256')==selection_pin['SHA256'],'expired facts receipt belongs to another selection')
+    native=facts.get('NativeRegistries') or {}
+    for field,pin in (('PartsFile',facts.get('PartsRegistry')),('SourceWritersFile',facts.get('SourceWritersRegistry')),('RedisSourcesFile',native.get('RedisSources'))):
+        A.need(pin and selected.get(field)==pin['File'],'expired facts output differs')
+        A.read(pin,8<<20)
+    A.read(native['SecretAllowlist'],8<<20)
+    return {'SourceSelection':selection_pin,'FactsReceipt':facts_pin}
+
+def select_attempt(A, number, stage_attachment=True, expired_facts=None):
+    global SOURCE_JOURNAL,MOUNT_JOURNAL,SOURCE_OUT,EXPIRED_PREDECESSOR
+    EXPIRED_PREDECESSOR=None
     A.need(1<=number<=99,'source-attempt must be 1..99')
+    A.need(expired_facts is None or number>1,'expired predecessor requires a successor attempt')
     def paths(n):
         suffix='' if n==1 else '-'+str(n)
         return JOURNAL/('source'+suffix),ROOT/('longhorn-source-20261114-team-attachment'+suffix),MIRROR/('initial-source-20261114-team'+suffix)
     SOURCE_JOURNAL,MOUNT_JOURNAL,SOURCE_OUT=paths(number)
+    retained_predecessor=None
+    if (SOURCE_JOURNAL/'completed.json').exists():
+        current=A.decode((SOURCE_JOURNAL/'completed.json').read_bytes());native=A.obj(current['Receipt'])
+        A.need(native['SourceSelection']==current['SourceSelection'],'current source receipt chain differs')
+        retained_predecessor=native.get('ExpiredPredecessor')
+        if retained_predecessor is not None:
+            A.need(A.obj(current['Definition']).get('ExpiredPredecessor')==retained_predecessor,'retained predecessor definition differs')
+            if expired_facts is None:expired_facts=retained_predecessor['FactsReceipt']
     if number>1:
         previous,oldmount,_=paths(number-1)
         A.need(not (oldmount/'team-attachment.retired.json').exists(),'previous source retired; do not recreate attachment')
@@ -189,18 +212,28 @@ def select_attempt(A, number, stage_attachment=True):
         else:selected={'Until':draft['Until']}
         A.need(dt.datetime.now(dt.timezone.utc)>=load('renew-p2-source-preparation').moment(selected['Until']),'previous source must expire before a successor attempt')
         selections=[selected]
+        final_pin=receipt['SourceSelection'] if receipt else None
         if (oldmount/'completed.json').exists():
             old=A.decode((oldmount/'completed.json').read_bytes());A.read(old['Receipt']);selections.append(A.obj(old['SourceSelection']))
+            A.need(A.obj(old['Receipt'])['SourceSelection']==old['SourceSelection'],'previous mount receipt chain differs')
+            final_pin=old['SourceSelection']
         elif (oldmount/'native.receipt.private.json').exists():
             A.need(A.decode((oldmount/'native.exit.json').read_bytes())=={'ExitCode':0},'previous mount outcome differs')
             native=A.decode((oldmount/'native.receipt.private.json').read_bytes())
             A.need(native['SelectionSHA256']==receipt['SourceSelection']['SHA256'],'previous mount parent differs')
             selections.append(A.obj(native['SourceSelection']))
+            final_pin=native['SourceSelection']
         elif (oldmount/'native.sent.private.json').exists():
             load('prepare-p2-team-attachment').rollback_native_output(oldmount,A)
+        if expired_facts is not None:
+            A.need(final_pin is not None,'expired predecessor lacks successful source material')
+            EXPIRED_PREDECESSOR=expired_predecessor(A,expired_facts,final_pin)
+            A.need(retained_predecessor is None or retained_predecessor==EXPIRED_PREDECESSOR,'retained expired predecessor differs')
         for selection in selections:
             for k in ('PartsFile','SourceWritersFile','RedisSourcesFile'):
-                A.need(not selection.get(k) or not Path(selection[k]).exists(),'source facts already produced; retire actual task/source before renewal')
+                if selection.get(k) and Path(selection[k]).exists():
+                    A.need(EXPIRED_PREDECESSOR is not None and selection[k]==A.obj(final_pin)[k],
+                           'source facts already produced; reconcile unconfigured source or retire actual task/source before renewal')
         record=oldmount/'team-attachment.created.private.json'
         if record.exists() and stage_attachment:
             MOUNT_JOURNAL.mkdir(mode=0o700,exist_ok=True)
@@ -221,6 +254,8 @@ def main():
     parser.add_argument('--image-receipt',required=True);parser.add_argument('--image-sha256',required=True)
     parser.add_argument('--source-attempt',type=int,default=1)
     parser.add_argument('--load-controller-only',action='store_true')
+    parser.add_argument('--expired-source-facts-file')
+    parser.add_argument('--expired-source-facts-sha256')
     run(parser.parse_args())
 
 
@@ -236,7 +271,10 @@ def run(args, package=None):
     release_mode=bool(build.get('LinkedBuildIdentity'))
     load_only=getattr(args,'load_controller_only',False)
     if load_only:A.need(release_mode,'versioned release package required for controller-only load')
-    else:select_attempt(A,args.source_attempt)
+    else:
+        facts_file=getattr(args,'expired_source_facts_file',None);facts_sha=getattr(args,'expired_source_facts_sha256',None)
+        A.need(bool(facts_file)==bool(facts_sha),'both expired facts pins required')
+        select_attempt(A,args.source_attempt,expired_facts={'File':facts_file,'SHA256':facts_sha} if facts_file else None)
     # The already confirmed, unsigned recovered source remains the source of business scope.
     parent=A.decode((T.PARENT/'completed.json').read_bytes())
     A.need(parent['Receipt']['SHA256']==T.RECEIPT_SHA and parent['Definition']['SHA256']==T.DEFINITION_SHA and parent['SourceSelection']['SHA256']==T.SELECTION_SHA and parent['GrantsIssued'] is False,'recovered parent differs')
@@ -343,7 +381,9 @@ def refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desi
     journal=SOURCE_JOURNAL;journal.mkdir(mode=0o700,exist_ok=True)
     donefile=journal/'completed.json'
     if donefile.exists():
-        done=A.decode(donefile.read_bytes());A.read(done['Receipt']);live_source(A,done);A.need(done['Controller']==fresh,'source controller changed');return done
+        done=A.decode(donefile.read_bytes())
+        A.need(A.obj(done['Receipt']).get('ExpiredPredecessor')==EXPIRED_PREDECESSOR,'retained expired predecessor differs')
+        live_source(A,done);A.need(done['Controller']==fresh,'source controller changed');return done
     api=A.obj(parent['SourceAPI']);connection=api['connection'];sa=site.get('serviceaccount',api['service_account'])
     A.need(sa['metadata']['uid']==api['service_account_uid']==connection['Account'] and not sa['metadata'].get('deletionTimestamp'),'source account changed')
     tokenfile=journal/'token.private.json'
@@ -357,6 +397,7 @@ def refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desi
     now=dt.datetime.now(dt.timezone.utc);before,until=T.window(now,N.moment(response['status']['expirationTimestamp']),N.moment(observer['NotAfter']),N.moment(agent['NotAfter']),30)
     new=copy.deepcopy(connection);new['Credential']=A.retain(journal/'source-api.jwt',token.encode())
     out=SOURCE_OUT;definition=N.successor_definition(original,connection,new,Path(parent['SourceSelection']['File']).parent,out,before,until)
+    if EXPIRED_PREDECESSOR is not None:definition['ExpiredPredecessor']=copy.deepcopy(EXPIRED_PREDECESSOR)
     definition['Controller']=fresh
     providers=definition['Deployment']['provider_dependencies'];A.need(len(providers)==1 and providers[0]['workload']==minted['Workload'],'source provider role changed')
     providers[0]['observer']={'File':L.MOUNT+'/observer.json','SHA256':plan['ObserverSHA256']}
@@ -374,6 +415,7 @@ def refresh(A,L,H,R,N,D,F,T,site,package,parent,original,selected,fresh,pod,desi
     else:A.need((journal/'author.receipt.private.json').exists(),'source output exists without successful receipt; reconcile outcome')
     result=R.once(A,dns,journal,'author',[str(package/'system-backup-first-install-materials'),'author-initial-source-inputs',*old[2:old.index('--definition-file')],'--definition-file',pin['File'],'--definition-sha256',pin['SHA256'],'--output-directory',str(out)])
     actual=A.obj(result['SourceSelection'])
+    A.need(result.get('ExpiredPredecessor')==definition.get('ExpiredPredecessor'),'native expired predecessor binding differs')
     A.need(result['Version']=='original-initial-source-inputs-authored.v1' and result['GrantsIssued'] is False and result['BackupReady'] is False and actual['Controller']==fresh and
            actual['Connections']==definition['Connections'] and N.moment(actual['Until'])==N.moment(definition['Until']) and N.moment(actual['NotBefore'])==N.moment(definition['NotBefore']) and
            A.obj(result['Deployment'])==definition['Deployment'],'native refreshed source differs')

@@ -109,7 +109,11 @@ class FlowTest(unittest.TestCase):
                     selected[key]=value.replace('Z','+00:00')
                 if self.fail=='changed-window':selected['Until']=(self.N.moment(selected['Until'])+dt.timedelta(microseconds=1)).isoformat()
             if self.fail=='wrong-source-token':selected['Connections']=[]
-            return {'Version':'original-initial-source-inputs-authored.v1','GrantsIssued':False,'BackupReady':False,'Deployment':core,'SourceSelection':self.put(out/'source-selection.json',selected)}
+            result={'Version':'original-initial-source-inputs-authored.v1','GrantsIssued':False,'BackupReady':False,'Deployment':core,'SourceSelection':self.put(out/'source-selection.json',selected)}
+            if definition.get('ExpiredPredecessor'):
+                if self.fail=='native-refresh-used':raise ValueError('native installation already used')
+                result['ExpiredPredecessor']=definition['ExpiredPredecessor']
+            return result
         self.assertEqual(action,'prepare-mount-materials');self.assertTrue(self.created)
         selected=self.A.obj({'File':val('--source-selection-file'),'SHA256':val('--source-selection-sha256')});layout=self.A.obj({'File':val('--mount-layouts-file'),'SHA256':val('--mount-layouts-sha256')})
         self.assertEqual(layout['TeamAttachments'][0]['TeamID'],1)
@@ -224,6 +228,47 @@ class FlowTest(unittest.TestCase):
         self.run_flow();done=self.A.decode((self.M.SOURCE_JOURNAL/'completed.json').read_bytes())
         Path(self.A.obj(done['SourceSelection'])['PartsFile']).write_bytes(b'collected')
         with self.assertRaisesRegex(ValueError,'facts already produced'):self.run_flow()
+        self.assertEqual(len(self.native_calls),3)
+    def expired_facts(self):
+        done=self.A.decode((self.M.MOUNT_JOURNAL/'completed.json').read_bytes())
+        selected=self.A.obj(done['SourceSelection'])
+        # The fixture does not capture real Redis. Add its selected DATA output
+        # so the receipt-chain test covers all three retained fact files.
+        if not selected.get('RedisSourcesFile'):
+            selected['RedisSourcesFile']=str(Path(selected['PartsFile']).with_name('redis.json'))
+            raw=self.A.encode(selected);Path(done['SourceSelection']['File']).write_bytes(raw)
+            done['SourceSelection']['SHA256']=self.A.sha(raw)
+            receipt=self.A.obj(done['Receipt']);receipt['SourceSelection']=done['SourceSelection']
+            raw=self.A.encode(receipt);Path(done['Receipt']['File']).write_bytes(raw);done['Receipt']['SHA256']=self.A.sha(raw)
+            (self.M.MOUNT_JOURNAL/'completed.json').write_bytes(self.A.encode(done))
+        facts={'Version':'original-source-registry-facts-receipt.v1','SelectionSHA256':done['SourceSelection']['SHA256'],
+               'PartsRegistry':self.put(Path(selected['PartsFile']),{'parts':'old'}),'SourceWritersRegistry':self.put(Path(selected['SourceWritersFile']),{'writers':'old'}),
+               'NativeRegistries':{'RedisSources':self.put(Path(selected['RedisSourcesFile']),{'redis':'old'}),'SecretAllowlist':self.put(self.root/'secret-policy.json',{'policy':'old'})}}
+        pin=self.put(self.root/'expired-facts.json',facts)
+        self.args.expired_source_facts_file=pin['File'];self.args.expired_source_facts_sha256=pin['SHA256'];self.args.source_attempt=2
+        return done,pin,facts
+    def test_expired_facts_refresh_feeds_native_author_and_preserves_old_chain(self):
+        self.run_flow();old,pin,facts=self.expired_facts()
+        retained={p:Path(p).read_bytes() for p in (pin['File'],old['SourceSelection']['File'],facts['PartsRegistry']['File'])}
+        with self.expire():self.run_flow();self.run_flow()
+        new=self.A.decode((self.M.SOURCE_JOURNAL/'completed.json').read_bytes())
+        expected={'SourceSelection':old['SourceSelection'],'FactsReceipt':pin}
+        self.assertEqual(self.A.obj(new['Definition'])['ExpiredPredecessor'],expected)
+        self.assertEqual(self.A.obj(new['Receipt'])['ExpiredPredecessor'],expected)
+        self.assertEqual(self.native_calls.count('author-initial-source-inputs'),2)
+        for p,raw in retained.items():self.assertEqual(Path(p).read_bytes(),raw)
+        # produce-facts runs in a new process with only --source-attempt. It
+        # must recover the exact native-bound predecessor from this attempt.
+        with self.expire():self.M.select_attempt(self.A,2,stage_attachment=False)
+        self.assertEqual(self.M.EXPIRED_PREDECESSOR,expected)
+    def test_expired_facts_native_refusal_does_not_reach_new_mount(self):
+        self.run_flow();self.expired_facts();self.fail='native-refresh-used'
+        with self.expire(),self.assertRaisesRegex(ValueError,'native installation already used'):self.run_flow()
+        self.assertEqual(self.native_calls.count('prepare-mount-materials'),1)
+    def test_expired_facts_changed_bytes_refused_before_native(self):
+        self.run_flow();_,_,facts=self.expired_facts()
+        Path(facts['PartsRegistry']['File']).write_bytes(b'changed')
+        with self.expire(),self.assertRaises(ValueError):self.run_flow()
         self.assertEqual(len(self.native_calls),3)
     def test_expired_unissued_draft_can_continue_in_new_attempt(self):
         original_probe=DNS.probe

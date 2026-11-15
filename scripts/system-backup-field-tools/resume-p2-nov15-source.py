@@ -1,13 +1,15 @@
 import os,json,copy,importlib.util,datetime as dt,subprocess,argparse
 from pathlib import Path
 os.umask(0o077)
-parser=argparse.ArgumentParser();parser.add_argument('--source-attempt',type=int,required=True);parser.add_argument('--prepare-only',action='store_true');args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--source-attempt',type=int,required=True);parser.add_argument('--prepare-only',action='store_true')
+parser.add_argument('--expired-source-facts-file');parser.add_argument('--expired-source-facts-sha256');args=parser.parse_args()
 package=Path(__file__).resolve().parent;s=importlib.util.spec_from_file_location('C',package/'continue-p2-nov14.py');C=importlib.util.module_from_spec(s);s.loader.exec_module(C)
 A,L,H,R,N,D,F,T=[C.load(n) for n in ('assemble-p2-installation-candidate','load-p2-formal-vault','prepare-p2-longhorn-provider-loaded','resume-p2-recovered-source','renew-p2-source-preparation','p2-source-dns','p2-vault-local-forward','resume-p2-tenant-team-source')]
 build=A.decode((package/'BUILD_RECEIPT.json').read_bytes())
 for name in ('system-backup-source-registries','system-backup-first-install-materials'):
  A.read({'File':str(package/name),'SHA256':build['Binaries'][name]['SHA256']},256<<20)
-C.select_attempt(A,args.source_attempt)
+A.need(bool(args.expired_source_facts_file)==bool(args.expired_source_facts_sha256),'both expired facts pins required')
+C.select_attempt(A,args.source_attempt,expired_facts={'File':args.expired_source_facts_file,'SHA256':args.expired_source_facts_sha256} if args.expired_source_facts_file else None)
 j=C.ROOT/'controller-secret-scope-20261115';api=j/('source-'+str(args.source_attempt)+'-api');api.mkdir(mode=0o700,exist_ok=True);site=L.Site(api,A)
 loaded=A.decode((j/'loaded.json').read_bytes());plan=A.decode((j/'delivery-plan.private.json').read_bytes());desired=A.obj(plan['DesiredSpec']);secret=A.obj(plan['Secret'])
 fresh,pod=C.controller_ref(A,site,L,loaded,desired);L.verify_secret(site.get('secret',secret['metadata']['name']),secret)
