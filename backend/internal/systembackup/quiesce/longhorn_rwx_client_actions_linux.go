@@ -14,9 +14,11 @@ import (
 )
 
 type longhornRWXClient struct {
-	source LonghornExt4Source
-	pin    longhornRWXClientMountPin
-	fd     int
+	source     LonghornExt4Source
+	pin        longhornRWXClientMountPin
+	fd         int
+	original   observedProcess
+	mountTable []byte
 }
 
 func longhornRWXClientKey(c longhornRWXClient) string {
@@ -64,7 +66,7 @@ func (a *longhornExt4Actions) registerClient(r LonghornExt4Request) (LonghornExt
 	var out LonghornExt4Response
 	c, exists := a.clientTemplates[r.SourceIdentity]
 	installed := LonghornExt4Source{Binding: c.Binding, Identity: c.Identity}
-	if !exists || !longhornExt4RegistrationMatches(installed, r) ||
+	if !validLonghornRWXClientTransition(r) || !exists || !longhornExt4RegistrationMatches(installed, r) ||
 		r.RecoveryBoundarySHA256 != "" || r.DrainBoundarySHA256 != "" ||
 		!validObservationHash(r.RegistrationBoundarySHA256) || r.ClientPodUID == "" || r.ClientPodName == "" ||
 		r.ClientContainerID == "" || !time.Now().Before(longhornExt4ForwardUntil(r.Binding, r.Claim)) {
@@ -164,7 +166,12 @@ func (a *longhornExt4Actions) openClient(ctx context.Context, c LonghornRWXClien
 		unix.Close(fd)
 		return zero, ErrNodeObservation
 	}
-	return longhornRWXClient{source: source, pin: pin, fd: fd}, nil
+	p.Cgroup, err = observationPodCgroup(p.Cgroup, c.PodUID)
+	if err != nil {
+		unix.Close(fd)
+		return zero, err
+	}
+	return longhornRWXClient{source: source, pin: pin, fd: fd, original: p, mountTable: append([]byte(nil), raw...)}, nil
 }
 
 func longhornRWXClientReply(r LonghornExt4Request, phase string) LonghornExt4Response {
@@ -174,7 +181,7 @@ func longhornRWXClientReply(r LonghornExt4Request, phase string) LonghornExt4Res
 }
 func (a *longhornExt4Actions) syncClient(r LonghornExt4Request) (LonghornExt4Response, error) {
 	var out LonghornExt4Response
-	if r.ClientPodUID == "" || r.ClientContainerID == "" || !validObservationHash(r.DrainBoundarySHA256) || r.RecoveryBoundarySHA256 != "" {
+	if !validLonghornRWXClientTransition(r) {
 		return out, ErrNodeObservation
 	}
 	var client longhornRWXClient
@@ -195,23 +202,57 @@ func (a *longhornExt4Actions) syncClient(r LonghornExt4Request) (LonghornExt4Res
 	ctx, cancel := context.WithDeadline(context.Background(), until)
 	defer cancel()
 	o := a.parent.owner.observer
-	if o.hostIdentity(ctx) != nil || longhornExt4ProviderCurrent(ctx, o, client.source) != nil {
+	if o.hostIdentity(ctx) != nil {
 		return out, ErrNodeObservation
 	}
 	proc := filepath.Join(o.HostProc, fmt.Sprint(client.source.MountOwnerPID))
-	table, err := observationRead(ctx, filepath.Join(proc, "mountinfo"), observationReadLimit)
-	if err != nil {
-		return out, err
+	stopped := longhornExt4ProviderCurrent(ctx, o, client.source) != nil
+	var table []byte
+	var err error
+	if stopped {
+		if err = o.originalLonghornRWXClientExited(ctx, client); err != nil {
+			return out, err
+		}
+		// The FD and table were pinned while the original process was live.
+		// Namespace exit does not authorize opening a successor's mount.
+		table = client.mountTable
+	} else {
+		table, err = observationRead(ctx, filepath.Join(proc, "mountinfo"), observationReadLimit)
+		if err != nil {
+			return out, err
+		}
 	}
 	if err := syncPinnedLonghornRWXClientMount(ctx, client.fd, table, client.pin); err != nil {
 		return out, err
 	}
-	if longhornExt4ProviderCurrent(ctx, o, client.source) != nil {
-		return out, ErrNodeObservation
+	if stopped {
+		err = o.originalLonghornRWXClientExited(ctx, client)
+	} else {
+		err = longhornExt4ProviderCurrent(ctx, o, client.source)
+		if err == nil {
+			table, err = observationRead(ctx, filepath.Join(proc, "mountinfo"), observationReadLimit)
+		}
 	}
-	table, err = observationRead(ctx, filepath.Join(proc, "mountinfo"), observationReadLimit)
-	if err != nil || !client.pin.matchesMountTable(table) || !time.Now().Before(until) {
+	if err != nil || o.hostIdentity(ctx) != nil || !client.pin.matchesMountTable(table) || !time.Now().Before(until) {
 		return out, ErrNodeObservation
 	}
 	return longhornRWXClientReply(r, "client-synced"), nil
+}
+
+// This is process-exit evidence only, never a filesystem hold. Both the CRI
+// record and two complete host task scans must exclude the registered original
+// before its retained mount FD can be synced after Deployment scale-down.
+func (o *NodeObserver) originalLonghornRWXClientExited(ctx context.Context, client longhornRWXClient) error {
+	s := client.source
+	if ctx == nil || ctx.Err() != nil || client.original.PID != s.MountOwnerPID || client.original.Start != s.MountOwnerStart || client.original.MountNamespace != s.MountNamespace || client.original.PIDNamespace == "" || client.original.Cgroup == "" || !client.pin.matchesMountTable(client.mountTable) {
+		return ErrNodeObservation
+	}
+	pod := PodIdentity{Name: s.ProviderPodName, UID: s.ProviderPodUID, Node: s.Binding.Node, Containers: []string{s.ProviderContainerID}}
+	if (CRIProver{Node: o.Node, Inspector: o.CRI}).Confirm(ctx, []PodIdentity{pod}) != nil {
+		return observationFailure("longhorn_rwx_original_client_exit_unconfirmed")
+	}
+	if _, _, err := o.scan(ctx, nodeObservationAnchor{Binding: s.Binding, BootID: o.BootID, Processes: []observedProcess{client.original}}, nil); err != nil {
+		return err
+	}
+	return ctx.Err()
 }

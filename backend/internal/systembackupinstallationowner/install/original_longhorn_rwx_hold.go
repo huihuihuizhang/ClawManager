@@ -13,17 +13,18 @@ import (
 )
 
 type originalLonghornRWXHold struct {
-	set          *PreparedOriginalWriterSet
-	source       q.LonghornExt4SourceCoordinates
-	clients      []originalLonghornRWXClient
-	registration *q.LonghornExt4Request
-	reservation  c.OriginalAdoptionReservation
-	synced       []q.LonghornExt4Request
-	registered   bool
-	syncSent     bool
-	acquireSent  bool
-	held         *q.VerifiedLonghornExt4Observation
-	released     *q.VerifiedLonghornExt4Observation
+	set                 *PreparedOriginalWriterSet
+	source              q.LonghornExt4SourceCoordinates
+	clients             []originalLonghornRWXClient
+	registration        *q.LonghornExt4Request
+	reservation         c.OriginalAdoptionReservation
+	synced              []q.LonghornExt4Request
+	clientRegistrations []q.LonghornExt4Request
+	registered          bool
+	syncSent            bool
+	acquireSent         bool
+	held                *q.VerifiedLonghornExt4Observation
+	released            *q.VerifiedLonghornExt4Observation
 }
 
 func (h *originalLonghornRWXHold) ID() string { return "longhorn-rwx/" + h.source.Identity }
@@ -62,11 +63,32 @@ func (h *originalLonghornRWXHold) register(ctx context.Context) error {
 		return ErrInstall
 	}
 	h.registered = true
+	// App replicas also mount this site's workspace. Register their original
+	// mount descriptors while live, before any Deployment is scaled down.
+	for _, client := range h.clients {
+		request := originalLonghornRWXClientRegistration(*h.registration, client)
+		h.clientRegistrations = append(h.clientRegistrations, request)
+		proof, _, err := p.forwardLonghorn(ctx, h.set.longhornClient, h.set.journal, claim, &request)
+		if err != nil || proof.Response().Phase != "client-prepared" || proof.Response().NativeState != "nfs-client" {
+			return ErrInstall
+		}
+	}
 	return nil
 }
 
-// This site's live clients are frozen shared runtimes or the recorded read-only
-// team attachment. A declared native template alone cannot prove writer drain.
+func originalLonghornRWXClientRegistration(provider q.LonghornExt4Request, client originalLonghornRWXClient) q.LonghornExt4Request {
+	request := provider
+	request.Action = "register-client"
+	request.Binding.Node, request.Binding.NodeUID = client.Template.Binding.Node, client.Template.Binding.NodeUID
+	request.SourceIdentity = client.Template.Identity
+	request.ClientPodName, request.ClientPodUID, request.ClientContainerID = client.PodName, client.PodUID, client.ContainerID
+	request.RegistrationBoundarySHA256 = originalObjectSHA([]any{provider, client})
+	return request
+}
+
+// The original App clients may have exited; their entries remain in the sync
+// cohort. Remaining live clients must be frozen runtimes or the recorded
+// read-only attachment. A template alone never proves writer drain.
 func (h *originalLonghornRWXHold) checkDrainedClients(ctx context.Context) error {
 	if h == nil || h.set == nil || h.set.longhornMaterials == nil {
 		return ErrInstall
@@ -75,10 +97,26 @@ func (h *originalLonghornRWXHold) checkDrainedClients(ctx context.Context) error
 		return ErrInstall
 	}
 	current, err := originalLonghornRWXClients(ctx, h.set.owner.operator.installer.kube, *h.set.longhornMaterials)
-	if err != nil || !reflect.DeepEqual(current, h.set.longhornRWXClients) {
+	if err != nil {
+		return ErrInstall
+	}
+	exited := map[string]bool{}
+	for _, client := range h.set.longhornRWXClients {
+		stopped, err := h.clientDeploymentStopped(ctx, client)
+		if err != nil {
+			return err
+		}
+		if stopped {
+			exited[originalObjectSHA(client)] = true
+		}
+	}
+	if !originalLonghornRWXLiveCohortMatches(h.set.longhornRWXClients, current, exited) {
 		return ErrInstall
 	}
 	for _, client := range h.clients {
+		if exited[originalObjectSHA(client)] {
+			continue // Native sync independently requires original CRI/task exit.
+		}
 		frozen := false
 		for _, actor := range h.set.sharedLifecycle {
 			if originalLonghornRWXProcessCovered(client, actor.request.AgentPod) && actor.current != nil && actor.current.Response().Phase == "frozen" {
@@ -116,6 +154,42 @@ func (h *originalLonghornRWXHold) checkDrainedClients(ctx context.Context) error
 	return nil
 }
 
+func originalLonghornRWXLiveCohortMatches(original, current []originalLonghornRWXClient, exited map[string]bool) bool {
+	expected := []originalLonghornRWXClient{}
+	for _, client := range original {
+		if !exited[originalObjectSHA(client)] {
+			expected = append(expected, client)
+		}
+	}
+	return reflect.DeepEqual(expected, current)
+}
+
+func (h *originalLonghornRWXHold) clientDeploymentStopped(ctx context.Context, client originalLonghornRWXClient) (bool, error) {
+	for _, writer := range h.set.deployments {
+		if writer.namespace != client.Template.PodNamespace {
+			continue
+		}
+		for _, pod := range writer.pods {
+			if !originalLonghornRWXProcessCovered(client, pod) {
+				continue
+			}
+			if !writer.stopDispatched {
+				return false, nil
+			}
+			dep, err := writer.current(ctx)
+			if err != nil || dep.Spec.Replicas == nil || *dep.Spec.Replicas != 0 || dep.Status.Replicas != 0 || dep.Status.ObservedGeneration < dep.Generation {
+				return false, ErrInstall
+			}
+			pods, err := writer.currentPods(ctx, dep, false)
+			if err != nil || len(pods) != 0 {
+				return false, ErrInstall
+			}
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // A shared owner freezes one container cgroup, not arbitrary extra containers
 // in the same Pod. Pod UID equality alone cannot cover a debug/sidecar writer.
 func originalLonghornRWXProcessCovered(client originalLonghornRWXClient, agent q.PodIdentity) bool {
@@ -131,29 +205,20 @@ func originalLonghornRWXProcessCovered(client originalLonghornRWXClient, agent q
 }
 
 func (h *originalLonghornRWXHold) syncClients(ctx context.Context) error {
-	if h == nil || !h.registered || h.registration == nil || h.syncSent || len(h.synced) != 0 || h.checkDrainedClients(ctx) != nil {
+	if h == nil || !h.registered || h.registration == nil || len(h.clientRegistrations) != len(h.clients) || h.syncSent || len(h.synced) != 0 || h.checkDrainedClients(ctx) != nil {
 		return ErrInstall
 	}
 	h.syncSent = true
-	for _, client := range h.clients {
-		request := *h.registration
-		request.Binding.Node, request.Binding.NodeUID = client.Template.Binding.Node, client.Template.Binding.NodeUID
-		request.SourceIdentity = client.Template.Identity
-		request.ClientPodName, request.ClientPodUID, request.ClientContainerID = client.PodName, client.PodUID, client.ContainerID
-		request.RegistrationBoundarySHA256 = originalObjectSHA([]any{*h.registration, client})
-		for _, action := range []string{"register-client", "sync-client"} {
-			request.Action = action
-			proof, _, err := h.set.owner.forwardLonghorn(ctx, h.set.longhornClient, h.set.journal, h.reservation, &request)
-			if err != nil {
-				return err
-			}
-			want := "client-prepared"
-			if action == "sync-client" {
-				want = "client-synced"
-			}
-			if proof.Response().Phase != want || proof.Response().NativeState != "nfs-client" {
-				return ErrInstall
-			}
+	for _, registered := range h.clientRegistrations {
+		request := registered
+		request.Action = "sync-client"
+		request.DrainBoundarySHA256 = originalObjectSHA([]any{*h.registration, h.clients, h.clientRegistrations})
+		proof, _, err := h.set.owner.forwardLonghorn(ctx, h.set.longhornClient, h.set.journal, h.reservation, &request)
+		if err != nil {
+			return err
+		}
+		if proof.Response().Phase != "client-synced" || proof.Response().NativeState != "nfs-client" {
+			return ErrInstall
 		}
 		h.synced = append(h.synced, request)
 	}

@@ -5,7 +5,7 @@
   "user_requested_handoff": true,
   "complete": false,
   "continuation_progress": {
-    "state": "RWX original registration -> complete client sync -> provider acquire/check-held -> independent release wired. Full install regression PASS 42.500s; Linux original cancellation/journal/freeze-interruption regression 13 top-level + 21 subtests PASS. Frozen runtime coverage checks exact container identity; unknown original register can be durably closed before its late arrival without inverse ioctl. Both recovery branches release volumes before runtime thaw. No deployment or real hold/capture/page task; CSI physical scope guard remains the next blocker.",
+    "state": "Actual App RWX mount handling corrected and 3 Windows packages + Linux isolated process/FD regressions PASS. Real no-business-volume probe confirmed original CRI EXITED and retained record across UID-fenced Pod deletion; own Pod absent and runtime record GC/absence verified. No App stopped, no real NFS sync/freeze/capture or page task. CSI physical coverage remains the next blocker.",
     "runtime_binding_recovery_current": {
       "Root": "/root/sbk/p2-remote-1a466c69-01/runtime-instance3-recovery-current",
       "Cause": "Instance 3 still referenced old Hermes Pod ebbccb4b-967d-49e9-874c-bc479743c321 after certificate rollout. New Pod reused its IP, so healthy agent endpoint prevented automatic stale-pod failover. Original mount author correctly refused the draining old binding.",
@@ -97,9 +97,10 @@
     ],
     "test_cleanup": "本轮 D:\\dsh-work\\p2-keeper-flow-20261115 已整体删除并确认不存在；Linux tmpfs 已卸载。只保留正式交付目录/归档与上传记录。无运行中的本轮测试或构建。",
     "next_required": [
-      "本轮 RWX native 调用与异常恢复回归已通过；先接完 actualPodPersistentRoots 的实际 CSI 物理覆盖及 C1/capture/adoption，保持 tenant/CSI guard。",
-      "不得重复 native source facts 或凭据签发；当前源事实已有正式产物。完成调用链后核实更新组件，再集中续签本次确实到期的凭据。",
-      "页面首单完整采集、业务恢复、上传、独立读回、目录登记全部真实通过后才完成目标。"
+      "保持本次两个 App、两个 runtime、团队只读附件共五个 RWX 客户端完整登记/同步；本轮修正已本地通过及现场 CRI 前置抽样，不等同真实业务停写。",
+      "接齐 actualPodPersistentRoots 所需真实 CSI 物理覆盖与原 C1/capture/adoption。注意 whole-node scope 当前按 Node 汇总，CRI namespace 比较绑定安装 Namespace；租户 Pro 和纯 shared-runtime 节点仍需实际原生范围证明，不能放开 guard 或伪造 cold Pod/空路径。",
+      "完成调用链和必要异常恢复后再构建/更新现场组件，随后集中续签实际需要的凭据。旧 source-facts 已有原生产物，不可覆盖或盲重放。",
+      "页面真实首单：完整采集、业务恢复、上传、独立读回、目录登记全部留存回执后才完成目标。"
     ],
     "scope_instruction": "仅补本次现场实际路径；当前调用链及必要异常恢复通过后交付并进入现场，先核实更新组件，再集中续签。MFA 仅在正式入口强制要求时补到用户能登记创建任务。不得删除保护条件、漏数据或跳过恢复验证。",
     "current_wiring": "已接入 keeper create/register → 原 Deployment stop → acquire → check-held → 独立 release → 业务恢复 → cleanup；Pending 仅重读、不重建；创建日志错误仍保留不可变 intent；tenant census 核对本次 keeper Job/Pod。Windows 全包及 Linux 持久日志回归通过，尚未部署或正式采集。",
@@ -142,6 +143,13 @@
         "reuse": "复用原 recovery mTLS URI、固定原安装 claim、source key、设备义务检查、HMAC/fsync 节点事件。原 RWO/普通任务保护分支不变；仅在原安装、精确注册/恢复边界、无原事件且没有任何未闭设备操作或 volatile freeze/thaw 的条件下写 released tombstone，不发 freeze/thaw ioctl。",
         "finish_check": "Linux 实际私有持久日志重开仍 released；同一迟到 register 被拒绝；过期 Forward 不阻断恢复；未知冻结/不同 acquisition/其他未闭设备操作不可被转成 released。Linux 私有 HMAC/fsync 日志实际重开和拒绝用例通过；本地计数/冻结 syscall 故障注入不代替现场物理验证。",
         "not_yet_complete": "本地 native journal 回归不代替现场物理冻结、完整采集或业务恢复。"
+      },
+      {
+        "change": "覆盖两个实际 App 副本退出后的 RWX 原挂载同步，并补齐原协议 drain 边界",
+        "blocked_step": "App 两副本实际写 clawmanager-workspaces。上一轮只接受保持运行的 runtime/只读附件，停机后比较完整活跃客户端集合会拒绝 App 消失；sync-client 还缺少协议必需的 DrainBoundarySHA256。",
+        "reuse": "复用现有原 SQL gate、register-client、保留 mount FD 的 syncPinnedLonghornRWXClientMount、CRIProver 与完整 host task scan。旧 native sync 要求提供者进程始终存在，不能在 App 退出后复用；现在退出前固定原 FD/table/进程范围，退出后必须原 CRI EXITED 且原 PID/namespace/cgroup 全部消失才同步同一 FD。正式任务现有 sync 调用也补必需 drain correlation，不改变认证范围。",
+        "finish_check": "原 5 客户端条目仍全部保留；只允许原 Deployment 已停的客户端离开实时 API 集合；未知消失/同名替换拒绝；注册先于 stop、sync 带固定原注册和 drain 边界；Linux 真实隔离 PID/mount namespace/cgroup 验证 CRI 先报 EXITED 仍拒绝活进程、原进程真退出后同一 FD 可同步、缺失或仍运行 CRI 记录拒绝。NFS 表/CRI 响应为协议夹具，不能冒充现场 NFS 验收。 验证结果：Windows 三包全部 PASS；Linux 实际隔离 namespace/cgroup/原进程退出与保留 FD syncfs 测试 PASS，协议中 CRI/NFS 元数据仍为夹具。没有现场停写成功声明。",
+        "not_yet_complete": "本地回归已通过；尚需现场真实 CRI 保留窗口与 CSI 物理覆盖，tenant/CSI guard 仍在；未部署补丁或创建真实备份任务。"
       }
     ],
     "latest_read_only_field_check": {
@@ -569,11 +577,102 @@
       "Deployed": false,
       "PhysicalHoldVerified": false,
       "BackupCompleted": false
+    },
+    "rwx_app_site_readback": {
+      "AppDeploymentUID": "8ebd4d4c-57b6-4a82-b310-fae596681a4e",
+      "Namespace": "clawmanager-sbk-validation-system",
+      "Claim": "clawmanager-workspaces",
+      "MountPoint": "/workspaces",
+      "ReadOnly": false,
+      "AppPods": [
+        {
+          "Name": "clawmanager-app-84559969c-6j9v9",
+          "UID": "85aedf4a-dd65-4f82-828c-38b1b22bf8dc",
+          "Node": "node1",
+          "Ready": true
+        },
+        {
+          "Name": "clawmanager-app-84559969c-mclpw",
+          "UID": "1a89c5a8-0af8-499c-be78-1d9a9cadc830",
+          "Node": "node1",
+          "Ready": true
+        }
+      ],
+      "Evidence": "P2_CSI_APP_VOLUME_TOPOLOGY and P2_CSI_APP_POD_PLACEMENT in D:/dsh-work/p2-remote-session-35ade5b0-01/output.log",
+      "ExpectedRWXClientCohortByTopology": 5,
+      "NativeNewCodeCensusExecuted": false
+    },
+    "rwx_app_validation": {
+      "State": "PASS",
+      "WindowsPackageSeconds": {
+        "install": 49.733,
+        "systembackupexecution": 56.649,
+        "quiesce": 5.533
+      },
+      "LinuxTopLevelPasses": 16,
+      "LinuxSubtestPasses": 30,
+      "KernelIsolatedProcessCgroupMountNamespaceAndRetainedFDActuallyTested": true,
+      "CRIReplyAndNFSMountTableAreProtocolFixtures": true,
+      "RealSiteNFSDrainVerified": false,
+      "LinuxIsolatedProcessAndCgroupCleanup": "test defers verified success; no fixture process/group retained",
+      "LogSHA256": {
+        "windows-tests.log": "8ce0468519de9994aaeb5972c6f6ae4ea768a4514374a729dc97c6894c7f9dc3",
+        "linux-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linux-tests.log": "b3a89319c4da92f174c75532a28c85eff246cb0e99540499b4985da7554f29bb"
+      },
+      "SourceSHA256": {
+        "systembackup/quiesce/longhorn_rwx_client_actions_linux.go": "6d6a53e9ad6e22810740cb155f725b4312cb253108055f8cf3f7cff144e03c78",
+        "systembackup/quiesce/longhorn_rwx_client_contract.go": "948f5364ee1f5dee1d502e9a1b90b865ff086e25e883e23751ae3a7b00497f25",
+        "systembackup/quiesce/longhorn_rwx_client_contract_test.go": "8648a94a9112b2802e1fd9421a6224c88acde538325e7c891a466c7bec1f5ad9",
+        "systembackup/quiesce/longhorn_rwx_client_exit_linux_test.go": "4fcd2eafe85f14136ef34d5ed73c193cce0686656de147d6a101dfae93a305af",
+        "systembackup/quiesce/longhorn_ext4_client.go": "39fd98dc8f74439d56bc2162c7fc97255cc4a32be7612e8d3eea4f4e23b017f1",
+        "systembackupinstallationowner/install/original_longhorn_rwx_hold.go": "0b573d89302cf0a46a29aa044b5a0a0492e230fabc209c92ea6f00f029cf02ca",
+        "systembackupinstallationowner/install/original_longhorn_rwx_hold_test.go": "9c9803390bc08f51a432e006c38239d019b93d54a1f88b6c51ab098e65f9b8de",
+        "systembackupexecution/production_longhorn_native.go": "96ee4363d1c1c71d1769b5311155cb3eb4dbab54627baa813f21892ad2085d0d"
+      },
+      "TemporaryRoot": "D:\\dsh-work\\p2-rwx-app-clients-20261115",
+      "Cleanup": "Linux tmpfs confirmed unmounted; D:/dsh-work/p2-rwx-app-clients-20261115 removed and verified absent. Kernel test child process/cgroup cleaned by verified test defers.",
+      "Deployed": false,
+      "PhysicalHoldVerified": false,
+      "BackupCompleted": false
+    },
+    "cri_retention_site_probe": {
+      "MasterJournal": "/root/sbk/p2-remote-1a466c69-01/cri-retention-probe-20261115",
+      "NodeJournal": "/root/sbk/p2-keeper-node1-1a466c69/cri-retention-probe-20261115",
+      "Name": "sbk-cri-retention-p2-09b562a4",
+      "PodUID": "757bc49a-8f96-4867-ad15-385205f85fdd",
+      "CID": "d24e8c7375c127bb267104703e05efca33e677017dcd728c6c492d0ba727071f",
+      "Node": "node1",
+      "BusinessVolumes": 0,
+      "BackupTask": false,
+      "ControllerDisabledVerified": true,
+      "ObservedNativeExitedBeforeDelete": {
+        "At": "2026-11-15T13:05:43.776868Z",
+        "FinishedAt": "2026-11-15T13:02:32.044750684Z",
+        "State": "CONTAINER_EXITED",
+        "UIDMatched": true
+      },
+      "UIDRVFencedPodDeletionAndAbsenceVerified": true,
+      "Watch": {
+        "Samples": 45,
+        "FirstAt": "2026-11-15T13:07:18.537625Z",
+        "LastAt": "2026-11-15T13:07:43.998287Z",
+        "AllObserved": "same UID/CID, CONTAINER_EXITED"
+      },
+      "Cleanup": {
+        "At": "2026-11-15T13:16:40.173889Z",
+        "PodAbsent": true,
+        "ContainerRecordAlreadyGarbageCollected": true,
+        "ContainerAbsenceVerified": true,
+        "BusinessPodStopped": false
+      },
+      "Limit": "Probe exited naturally and mounted no business/NFS volume. CRI retained in this observation window; no universal retention-duration guarantee or real App/NFS sync/backup proof.",
+      "WrapperCorrection": "Initial kubectl create succeeded with plain-text output; wrapper JSON parse failed. Same private nonce/UID reconciled without another create. Original intent/stdout retained."
     }
   },
   "workspace": "C:/Users/zhanghui08/Desktop/clawmanager/ClawManager/.worktrees/build-06bf0e89",
   "branch": "backup",
-  "head_verified": "9820e30719f6546b26990db99a42bb7662dfdbce",
+  "head_verified": "729fb06b089fd6e090e0119fbd628ac77f3769a9",
   "git_remote": "https://github.com/huihuihuizhang/ClawManager.git",
   "constraints": [
     "仅补已确认阻断所需的接口，不扩展通用生命周期平台。",

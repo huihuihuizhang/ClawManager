@@ -145,6 +145,9 @@ func (o *deploymentLonghornCutOwner) Hold(ctx context.Context, in d.Input, plans
 					return nil, err
 				}
 				client.Action = action
+				if action == "sync-client" {
+					client.DrainBoundarySHA256 = hash(mustLonghornJSON([]any{source.Provider, source.Clients}))
+				}
 				if _, _, err = o.native.LonghornExt4Transition(ctx, client); err != nil {
 					return nil, err
 				}
