@@ -5,7 +5,7 @@
   "user_requested_handoff": true,
   "complete": false,
   "continuation_progress": {
-    "state": "Actual App RWX mount handling corrected and 3 Windows packages + Linux isolated process/FD regressions PASS. Real no-business-volume probe confirmed original CRI EXITED and retained record across UID-fenced Pod deletion; own Pod absent and runtime record GC/absence verified. No App stopped, no real NFS sync/freeze/capture or page task. CSI physical coverage remains the next blocker.",
+    "state": "Image registry digest, controller four ELF readbacks, both native running owner ELF hashes, and new-Pod relay mTLS/readonly SQL verified. Full backup not started; CSI physical coverage/C1 capture/adoption remain blocked.",
     "runtime_binding_recovery_current": {
       "Root": "/root/sbk/p2-remote-1a466c69-01/runtime-instance3-recovery-current",
       "Cause": "Instance 3 still referenced old Hermes Pod ebbccb4b-967d-49e9-874c-bc479743c321 after certificate rollout. New Pod reused its IP, so healthy agent endpoint prevented automatic stale-pod failover. Original mount author correctly refused the draining old binding.",
@@ -97,10 +97,9 @@
     ],
     "test_cleanup": "本轮 D:\\dsh-work\\p2-keeper-flow-20261115 已整体删除并确认不存在；Linux tmpfs 已卸载。只保留正式交付目录/归档与上传记录。无运行中的本轮测试或构建。",
     "next_required": [
-      "保持本次两个 App、两个 runtime、团队只读附件共五个 RWX 客户端完整登记/同步；本轮修正已本地通过及现场 CRI 前置抽样，不等同真实业务停写。",
-      "接齐 actualPodPersistentRoots 所需真实 CSI 物理覆盖与原 C1/capture/adoption。注意 whole-node scope 当前按 Node 汇总，CRI namespace 比较绑定安装 Namespace；租户 Pro 和纯 shared-runtime 节点仍需实际原生范围证明，不能放开 guard 或伪造 cold Pod/空路径。",
-      "完成调用链和必要异常恢复后再构建/更新现场组件，随后集中续签实际需要的凭据。旧 source-facts 已有原生产物，不可覆盖或盲重放。",
-      "页面真实首单：完整采集、业务恢复、上传、独立读回、目录登记全部留存回执后才完成目标。"
+      "只补当前 actualPodPersistentRoots 的真实 CSI 物理覆盖、共享运行时观测及原 C1 capture/adoption/config 组合；tenant/CSI guard 不可移除，不能用空路径、伪造冷 Pod 或遗漏五个 RWX 客户端绕过。",
+      "通过当前调用链和必要异常恢复后，集中刷新实际需要的短期来源。新组件和新 relay 已验收，不重做镜像、组件更新或仍充足有效期的证书轮换；旧 facts/selection 不覆盖、不盲重放。",
+      "页面真实首单：完整采集、业务恢复、上传、独立读回、目录登记全部留存原始回执后才完成目标。当前仍未停写、采集或创建任务。"
     ],
     "scope_instruction": "仅补本次现场实际路径；当前调用链及必要异常恢复通过后交付并进入现场，先核实更新组件，再集中续签。MFA 仅在正式入口强制要求时补到用户能登记创建任务。不得删除保护条件、漏数据或跳过恢复验证。",
     "current_wiring": "已接入 keeper create/register → 原 Deployment stop → acquire → check-held → 独立 release → 业务恢复 → cleanup；Pending 仅重读、不重建；创建日志错误仍保留不可变 intent；tenant census 核对本次 keeper Job/Pod。Windows 全包及 Linux 持久日志回归通过，尚未部署或正式采集。",
@@ -150,6 +149,12 @@
         "reuse": "复用现有原 SQL gate、register-client、保留 mount FD 的 syncPinnedLonghornRWXClientMount、CRIProver 与完整 host task scan。旧 native sync 要求提供者进程始终存在，不能在 App 退出后复用；现在退出前固定原 FD/table/进程范围，退出后必须原 CRI EXITED 且原 PID/namespace/cgroup 全部消失才同步同一 FD。正式任务现有 sync 调用也补必需 drain correlation，不改变认证范围。",
         "finish_check": "原 5 客户端条目仍全部保留；只允许原 Deployment 已停的客户端离开实时 API 集合；未知消失/同名替换拒绝；注册先于 stop、sync 带固定原注册和 drain 边界；Linux 真实隔离 PID/mount namespace/cgroup 验证 CRI 先报 EXITED 仍拒绝活进程、原进程真退出后同一 FD 可同步、缺失或仍运行 CRI 记录拒绝。NFS 表/CRI 响应为协议夹具，不能冒充现场 NFS 验收。 验证结果：Windows 三包全部 PASS；Linux 实际隔离 namespace/cgroup/原进程退出与保留 FD syncfs 测试 PASS，协议中 CRI/NFS 元数据仍为夹具。没有现场停写成功声明。",
         "not_yet_complete": "本地回归已通过；尚需现场真实 CRI 保留窗口与 CSI 物理覆盖，tenant/CSI guard 仍在；未部署补丁或创建真实备份任务。"
+      },
+      {
+        "change": "本次镜像同时带入匹配的原生 owner，并使 owner/first-adoption 可独立读回构建身份",
+        "blocked_step": "旧补层只替换三个 controller 工具，会留下旧 Longhorn 客户端处理程序；两个 CLI 未引用 buildinfo，严格 ELF 身份核对无法完成。",
+        "reuse": "复用现有 OCI 摘要链、buildinfo、ELF 身份检查及 registry 读回；仅补原生 owner 文件和只读 --version 出口。未降低任何身份、tenant、CSI、恢复保护。",
+        "finish_check": "已完成：六 ELF 原链接身份检查、Linux 两版本出口实际执行、Linux first-adoption 七主测试与 Python 镜像十测试；registry 精确摘要、controller 四个 ELF 和双节点 /proc/PID/exe 真实读回匹配。组件交付验收结束，不代表完整备份。"
       }
     ],
     "latest_read_only_field_check": {
@@ -432,13 +437,13 @@
       }
     },
     "relay_current": {
-      "PKIReceipt": "/root/sbk/p2-remote-1a466c69-01/credential-renewal-current/relay-native.receipt.private.json",
-      "PKIReceiptSHA256": "e45109155c586b6c315dfc9004313ac3f5216c912975860dfcfb0740ba69f4ba",
-      "Until": "2026-11-15T16:14:28Z",
-      "StartIntent": "/root/sbk/p2-remote-1a466c69-01/relay-start-current/listener-start-intent.json",
-      "Completed": "/root/sbk/p2-remote-1a466c69-01/relay-start-current/listener-completed.json",
-      "PodUID": "51c45795-5f46-4642-aa3d-c27ad195bdce",
-      "TLS_SQLVerifiedAt": "2026-11-15T10:15:41.412802Z",
+      "PKIReceipt": "/root/sbk/p2-image-b4b553c3-20261115-small-1/credential-renewal/relay-native.receipt.private.json",
+      "PKIReceiptSHA256": "94d30e932c099fc53e14078d7a771b2cfcf045029623036c453045fe49292796",
+      "Until": "2026-11-15T20:14:01Z",
+      "StartIntent": "/root/sbk/p2-image-b4b553c3-20261115-small-1/relay-start/listener-start-intent.json",
+      "Completed": "/root/sbk/p2-image-b4b553c3-20261115-small-1/relay-start/listener-completed.json",
+      "PodUID": "0823f168-2838-48f2-bb12-e61c910db337",
+      "TLS_SQLVerifiedAt": "2026-11-15T14:15:37.529856Z",
       "NoRespawn": true
     },
     "transport_cleanup": "Observer node1 payload passed only encrypted log ciphertext, decrypted locally SHA checked and sent through existing SSH queue; local temporary password file deleted. All prior D test/build temp deleted.",
@@ -668,11 +673,142 @@
       },
       "Limit": "Probe exited naturally and mounted no business/NFS volume. CRI retained in this observation window; no universal retention-duration guarantee or real App/NFS sync/backup proof.",
       "WrapperCorrection": "Initial kubectl create succeeded with plain-text output; wrapper JSON parse failed. Same private nonce/UID reconciled without another create. Original intent/stdout retained."
+    },
+    "image_refresh_current": {
+      "State": "Image registry digest, controller four ELF readbacks, both native running owner ELF hashes, and new-Pod relay mTLS/readonly SQL verified. Full backup not started; CSI physical coverage/C1 capture/adoption remain blocked.",
+      "SourceRevision": "b4b553c3f80ffee58e63faa3a66f7fb5b5823db7",
+      "LocalDirectory": "D:/dsh-work/p2-image-586fee40-delivery",
+      "RemoteDirectory": "/root/sbk/p2-image-b4b553c3-20261115-small-1",
+      "ArchiveBytes": 232886178,
+      "ArchiveSHA256": "23244ee5296ed4d690ab854a877ce8f27ba707ea3a9395be4d73a438cf4ffc4d",
+      "AllSixELFLinkedIdentitiesVerified": true,
+      "OwnerAndFirstAdoptionVersionExecutedOnLinux": true,
+      "LinuxFirstAdoptionTopLevelTestsPassed": 7,
+      "PythonImageDeliveryTestsPassed": 10,
+      "BuildTemporaryDirectoryRemoved": true,
+      "NativeTmpfsUnmountedVerified": true,
+      "FirstUploadFailure": {
+        "Directory": "/root/sbk/p2-image-b4b553c3-20261115",
+        "ObservedArchiveBytes": 0,
+        "PackageVerified": false,
+        "ImageInvoked": false,
+        "Correction": "preserve failed directory; same archive in fresh directory with 48 KiB chunks and exact offsets"
+      },
+      "IdentityGuardRejection": "Automatic review rejected replacing ELF identity with build-argument evidence. That action did not execute. Two entrypoints now expose existing buildinfo through read-only --version, and all six binaries pass the original ELF identity guard.",
+      "ControllerUpdated": true,
+      "MasterOwnerUpdated": true,
+      "Node1OwnerUpdated": true,
+      "CredentialsRenewed": "Only the new-Pod-bound relay required renewal this round. Existing source API/observer/runtime expiry receipts read back; no short source window reissue before CSI/C1 wiring is ready.",
+      "BackupCompleted": false,
+      "Image": {
+        "Base": "10.130.14.23:5000/clawmanager@sha256:4c196dd9b904244e7715f2151f9f672c9db129b582ca716f1324b2bf31b6847a",
+        "Binaries": {
+          "system-backup-first-install-materials": {
+            "Bytes": 98003229,
+            "SHA256": "7b2a75123cbe030223b5e9bd40890575b8634023efa267f4cca8aeb73878e887"
+          },
+          "system-backup-source-registries": {
+            "Bytes": 98316044,
+            "SHA256": "9f4fc2c13eab0f78bed5a30c2e11583cc0c59c455432674f19a7a4c73fb92a1b"
+          },
+          "system-backup-v2-controller": {
+            "Bytes": 96962272,
+            "SHA256": "543ee4093fba8298a888280bfdff2c7c8f49095e1c73bf650ac5b76269cc4561"
+          }
+        },
+        "BuildAttempt": "attempt-a_2vhxfp",
+        "Image": "10.130.14.23:5000/clawmanager@sha256:e81b507ca50caf183efd23f8c2bd2bd296225095fa70a1497ddebdae365ae492",
+        "NativeOwner": {
+          "Bytes": 65136659,
+          "SHA256": "c620467c86497f4848aa98e2e028aaa1494134c47fb0ad36737ad0600501d3c1"
+        },
+        "SourceRevision": "b4b553c3f80ffee58e63faa3a66f7fb5b5823db7",
+        "Version": "p2-controller-image.v1"
+      },
+      "Controller": {
+        "At": "2026-11-15T14:12:21.635788+00:00",
+        "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+        "Pod": "sbk-d4f51b83b57e-controller-549b46d99b-qttjf",
+        "PodUID": "0823f168-2838-48f2-bb12-e61c910db337",
+        "Image": "10.130.14.23:5000/clawmanager@sha256:e81b507ca50caf183efd23f8c2bd2bd296225095fa70a1497ddebdae365ae492",
+        "BinaryReadback": {
+          "/usr/local/bin/system-backup-first-install-materials": "7b2a75123cbe030223b5e9bd40890575b8634023efa267f4cca8aeb73878e887",
+          "/usr/local/bin/system-backup-source-registries": "9f4fc2c13eab0f78bed5a30c2e11583cc0c59c455432674f19a7a4c73fb92a1b",
+          "/usr/local/bin/system-backup-v2-controller": "543ee4093fba8298a888280bfdff2c7c8f49095e1c73bf650ac5b76269cc4561",
+          "/backup-shared-runtime-node-owner": "c620467c86497f4848aa98e2e028aaa1494134c47fb0ad36737ad0600501d3c1"
+        },
+        "ControllerEnabled": false,
+        "CredentialsRenewed": false,
+        "BackupCompleted": false
+      },
+      "MasterOwner": {
+        "Node": "k8s-master",
+        "PID": 1589080,
+        "ELFSHA256": "c620467c86497f4848aa98e2e028aaa1494134c47fb0ad36737ad0600501d3c1",
+        "UnitPreserved": true,
+        "DurableRecordsPreserved": true,
+        "BackupCompleted": false
+      },
+      "Node1Owner": {
+        "Node": "node1",
+        "PID": 1313608,
+        "ELFSHA256": "c620467c86497f4848aa98e2e028aaa1494134c47fb0ad36737ad0600501d3c1",
+        "UnitPreserved": true,
+        "DurableRecordsPreserved": true,
+        "BackupCompleted": false
+      },
+      "CredentialPhase": {
+        "At": "2026-11-15T14:18:21.952328+00:00",
+        "RelayReceipt": {
+          "File": "/root/sbk/p2-image-b4b553c3-20261115-small-1/credential-renewal/relay-native.receipt.private.json",
+          "SHA256": "94d30e932c099fc53e14078d7a771b2cfcf045029623036c453045fe49292796"
+        },
+        "RelayUntil": "2026-11-15T20:14:01Z",
+        "RelayTLSAndSQLVerified": true,
+        "PodUID": "0823f168-2838-48f2-bb12-e61c910db337",
+        "OwnerHeadRows": 0,
+        "ConfigRows": 0,
+        "ExistingCredentialExpiryReceipts": [
+          {
+            "Receipt": "/root/sbk/p2-remote-1a466c69-01/source-api-renewal/token-response.private.json",
+            "Field": "status.expirationTimestamp",
+            "Value": "2026-11-15T17:48:30Z"
+          },
+          {
+            "Receipt": "/root/sbk/p2-remote-1a466c69-01/source-api-renewal/completed.json",
+            "Field": "ExpiresAt",
+            "Value": "2026-11-15T17:48:30Z"
+          },
+          {
+            "Receipt": "/root/sbk/p2-remote-1a466c69-01/certificate-renewal/prepared.json",
+            "Field": "observer.NotAfter",
+            "Value": "2026-11-16T10:02:15Z"
+          },
+          {
+            "Receipt": "/root/sbk/p2-remote-1a466c69-01/certificate-renewal/prepared.json",
+            "Field": "runtime-unique.NotAfter",
+            "Value": "2026-11-16T10:02:19Z"
+          }
+        ],
+        "SourceFactsNotReissued": true,
+        "BackupCompleted": false
+      },
+      "Cleanup": {
+        "ImageTemporaryArchives": [],
+        "SourceFactsPreserved": true,
+        "WriterSelectionPreserved": true
+      },
+      "RelayRenewedAndLoaded": true,
+      "FinalStageCorrection": {
+        "Defect": "Global REV placeholder replacement also changed SOURCE_REVISION inside the file allowlist; final stage was a SyntaxError and never invoked the builder.",
+        "Reconciled": "Archive had exactly 232886178 bytes; no verified record/build outputs and no component update intent.",
+        "Recovery": "Validated literal-stage Python syntax locally, checked original complete archive SHA256 remotely, then first extraction/build and first controller CAS update. Previous failed callback records preserved."
+      }
     }
   },
   "workspace": "C:/Users/zhanghui08/Desktop/clawmanager/ClawManager/.worktrees/build-06bf0e89",
   "branch": "backup",
-  "head_verified": "729fb06b089fd6e090e0119fbd628ac77f3769a9",
+  "head_verified": "b4b553c3f80ffee58e63faa3a66f7fb5b5823db7",
   "git_remote": "https://github.com/huihuihuizhang/ClawManager.git",
   "constraints": [
     "仅补已确认阻断所需的接口，不扩展通用生命周期平台。",
@@ -738,7 +874,7 @@
     "plan_sha256": "a0aa44b5a12a453c352a402e73c4f4d42a675b2430d2cb69972a29df1f859752",
     "database_uuid": "9e0e40fb-d986-11f1-b30a-9e9a498abc54",
     "last_actual_database_snapshot": "2026-11-15T05:31Z: heads/grants/v2 configs/operations/backups/legacy tasks 均为 0；是只读诊断，不是原生签发或 cleanup 权限。",
-    "controller": "sbk-d4f51b83b57e-controller，仍 disabled，.ready 不存在；必须重新核实现场当前状态。",
+    "controller": "sbk-d4f51b83b57e-controller，e81b507c 镜像，Pod sbk-d4f51b83b57e-controller-549b46d99b-qttjf UID 0823f168-2838-48f2-bb12-e61c910db337；仍 disabled，完整备份未完成。",
     "tenant_namespace": "clawmanager-sbk-validation-user-1",
     "team_readonly_pod": "sbk-team-1-readonly-p2",
     "team_pvc": "clawreef-team-1-shared",
@@ -764,7 +900,7 @@
     }
   },
   "remaining_critical_path": [
-    "完成交付包现场独立读回和组件更新。已经排队只读核对 controller disabled/.ready absent、keeper executable、observer unit/ELF/node/owner-directory。不得覆盖旧 journal；更新完成后才集中续签。",
+    "本轮镜像 e81b507c 已独立 registry 读回；controller 四 ELF、master/node1 实际 owner ELF c620467c 均验收；新 Pod relay 续签并严格 mTLS/SQL 读回成功。勿重做已完成更新。",
     "本次 Pro RWO keeper 调度已接通，但 tenant/CSI guard 仍在。只补实际 CSI 物理覆盖与捕获/接管调用，不以空 SourcePaths 或删除 guard 替代证明。",
     "本次 RWX share-manager/client 同步、冻结、held 重查和独立恢复已接入原 Longhorn 协议，并通过本地回归；尚未部署。下一步补齐 whole-node 冷切所需的实际 CSI 覆盖与 capture/adoption，再验收现场物理停写/恢复。",
     "本次 C1/source 真实签发、capture、mixed adoption、初始化/配置组合仍未完成。只补实际阻断；已有上传、独立读回和目录登记调用优先复用并现场验收。",
