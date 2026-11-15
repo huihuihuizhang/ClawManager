@@ -1,7 +1,7 @@
 import os,json,copy,importlib.util,datetime as dt,subprocess,argparse
 from pathlib import Path
 os.umask(0o077)
-parser=argparse.ArgumentParser();parser.add_argument('--source-attempt',type=int,required=True);args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--source-attempt',type=int,required=True);parser.add_argument('--prepare-only',action='store_true');args=parser.parse_args()
 package=Path(__file__).resolve().parent;s=importlib.util.spec_from_file_location('C',package/'continue-p2-nov14.py');C=importlib.util.module_from_spec(s);s.loader.exec_module(C)
 A,L,H,R,N,D,F,T=[C.load(n) for n in ('assemble-p2-installation-candidate','load-p2-formal-vault','prepare-p2-longhorn-provider-loaded','resume-p2-recovered-source','renew-p2-source-preparation','p2-source-dns','p2-vault-local-forward','resume-p2-tenant-team-source')]
 build=A.decode((package/'BUILD_RECEIPT.json').read_bytes())
@@ -30,6 +30,7 @@ build=A.decode((package/'BUILD_RECEIPT.json').read_bytes())
 A.read({'File':str(package/'system-backup-source-registries'),'SHA256':build['Binaries']['system-backup-source-registries']['SHA256']},256<<20)
 C.mount(A,L,H,R,D,site,package,done,fresh,pod,desired)
 print('P2_NOV15_MOUNT_CONFIRMED',flush=True)
+if args.prepare_only: raise SystemExit(0)
 run=subprocess.run(['python3',str(package/'produce-p2-source-facts.py'),'--source-attempt',str(args.source_attempt)],stdin=subprocess.DEVNULL)
 print('P2_NOV15_FACTS_EXIT',run.returncode,flush=True)
 
