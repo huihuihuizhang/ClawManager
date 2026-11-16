@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/url"
 	"path"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -301,7 +302,7 @@ func observeOriginalLonghornRWXTemplates(ctx context.Context, api kubernetes.Int
 					ProviderNamespaceUID: source.ProviderUID, PodNamespace: source.Namespace, MountPoint: m.MountPath, Endpoint: endpoint, NFSSource: nfsSource}
 				// Native v3 installs one client template per source/Node identity.
 				// Reject ambiguous mount roots instead of silently dropping one.
-				if previous, found := byNode[pod.Spec.NodeName]; found && previous != value {
+				if previous, found := byNode[pod.Spec.NodeName]; found && !reflect.DeepEqual(previous, value) {
 					return nil, install.ErrInstall
 				}
 				byNode[pod.Spec.NodeName] = value
