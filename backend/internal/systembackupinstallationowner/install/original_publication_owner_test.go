@@ -93,7 +93,7 @@ func TestOriginalPublicationNativeProbeUsesActualPurposeTokenAndSignature(t *tes
 		t.Fatal(e)
 	}
 	defer clear(private)
-	for _, mode := range []string{"valid", "wrong-token-purpose", "missing-type", "expanded-policy", "renewable", "long-ttl", "wrong-version", "bad-signature"} {
+	for _, mode := range []string{"valid", "omitted-identity-policies", "null-identity-policies", "expanded-identity-policies", "malformed-identity-policies", "wrong-token-purpose", "missing-type", "expanded-policy", "renewable", "long-ttl", "wrong-version", "bad-signature"} {
 		t.Run(mode, func(t *testing.T) {
 			kube := fake.NewSimpleClientset()
 			kube.PrependReactor("create", "tokenreviews", func(action kt.Action) (bool, runtime.Object, error) {
@@ -113,6 +113,14 @@ func TestOriginalPublicationNativeProbeUsesActualPurposeTokenAndSignature(t *tes
 				if strings.HasSuffix(r.URL.Path, "/login") {
 					auth := map[string]any{"client_token": "actual-private-short-token", "token_type": "batch", "renewable": false, "lease_duration": 10, "policies": []string{"actual-policy"}, "token_policies": []string{"actual-policy"}, "identity_policies": []string{}, "metadata": map[string]string{"role": "actual-role", "namespace": "actual", "pod_uid": "actual-pod", "service_account_uid": "actual-sa"}}
 					switch mode {
+					case "omitted-identity-policies":
+						delete(auth, "identity_policies")
+					case "null-identity-policies":
+						auth["identity_policies"] = nil
+					case "expanded-identity-policies":
+						auth["identity_policies"] = []string{"extra"}
+					case "malformed-identity-policies":
+						auth["identity_policies"] = "extra"
 					case "missing-type":
 						delete(auth, "token_type")
 					case "expanded-policy":
@@ -163,7 +171,7 @@ func TestOriginalPublicationNativeProbeUsesActualPurposeTokenAndSignature(t *tes
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 			end, e := i.originalPublicationProbe(ctx, v, b, pub, []byte("actual-private-jwt"))
-			if mode == "valid" {
+			if mode == "valid" || mode == "omitted-identity-policies" || mode == "null-identity-policies" {
 				if e != nil || signs != 1 || !time.Now().Before(end) {
 					t.Fatal("real challenge signature rejected", e)
 				}

@@ -345,7 +345,7 @@ func (o *CaptureSigningObserver) metadata(ctx context.Context, aRecord *Authenti
 	}
 	tc, e := canonicalRaw(trust)
 	wanted, e2 := a.VaultJWTAuthConfig(o.cfg.Trust)
-	if e != nil || e2 != nil || digest(tc) != b.JWTConfigSHA256 || !jsonSubset(trust, wanted) {
+	if e != nil || e2 != nil || digest(tc) != b.JWTConfigSHA256 || (!jsonSubset(trust, wanted) && !(len(o.cfg.Trust.Algorithms) == 1 && o.cfg.Trust.Algorithms[0] == "RS256" && o.cfg.Trust.JWKSURL == "" && o.cfg.Trust.JWKSCAPEM == "" && installedVaultJWTConfigMatches(trust, wanted))) {
 		return nil, ErrOwner
 	}
 	stamp = append(stamp, trust)

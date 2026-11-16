@@ -46,7 +46,7 @@ func (o *SigningResourceObserver) metadata(ctx context.Context, r SigningResourc
 		IdentityPolicies []string `json:"identity_policies"`
 		TTL              int64    `json:"ttl"`
 	}
-	if e != nil || !requiredFields(raw, "policies", "identity_policies", "ttl") || json.Unmarshal(raw, &self) != nil || len(self.Policies) != 1 || self.Policies[0] != t.cfg.ObserverPolicy || len(self.IdentityPolicies) != 0 || self.TTL < 1 || self.TTL > 86400 {
+	if e != nil || !requiredFields(raw, "policies", "ttl") || json.Unmarshal(raw, &self) != nil || len(self.Policies) != 1 || self.Policies[0] != t.cfg.ObserverPolicy || len(self.IdentityPolicies) != 0 || self.TTL < 1 || self.TTL > 86400 {
 		return nil, time.Time{}, ErrOwner
 	}
 	expected, e := SigningResourceObserverACL(r, t.cfg.ObserverPolicy)
@@ -81,7 +81,7 @@ func (o *SigningResourceObserver) metadata(ctx context.Context, r SigningResourc
 		trust, e := t.read(ctx, "/v1/auth/"+b.AuthMount+"/config", token)
 		tc, te := canonicalRaw(trust)
 		wanted, we := a.VaultJWTAuthConfig(t.cfg.Trust)
-		if e != nil || te != nil || we != nil || digest(tc) != b.JWTConfigSHA256 || !jsonSubset(trust, wanted) {
+		if e != nil || te != nil || we != nil || digest(tc) != b.JWTConfigSHA256 || (!jsonSubset(trust, wanted) && !(len(t.cfg.Trust.Algorithms) == 1 && t.cfg.Trust.Algorithms[0] == "RS256" && t.cfg.Trust.JWKSURL == "" && t.cfg.Trust.JWKSCAPEM == "" && installedVaultJWTConfigMatches(trust, wanted))) {
 			return nil, time.Time{}, ErrOwner
 		}
 		stamp = append(stamp, trust)

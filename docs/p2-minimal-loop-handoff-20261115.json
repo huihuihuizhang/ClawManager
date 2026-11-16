@@ -1255,9 +1255,9 @@
       "TLS": "TLSv1.3"
     },
     "CurrentNativeSend": {
-      "RemoteState": "NONE pending; no policy/role/token/C1 issue dispatched.",
-      "LocalTestState": "PASSED; session3028 terminal.",
-      "Next": "Commit narrow RSA reuse and start exact revision Linux release build inD."
+      "RemoteState": "NONE pending. No role/policy/token/C1 issue dispatched.",
+      "LocalBuildSession": 71086,
+      "LocalBuildState": "RUNNING; poll exact session, do not restart. Tests3028 PASS terminal."
     },
     "Remaining": [
       "Actual Longhorn host configuration and writer selection field author/load/readback (step2 incomplete).",
@@ -1380,7 +1380,7 @@
       "Completed": true,
       "SignedV2Issued": false
     },
-    "NextImmediate": "Poll current targeted test session3028. If successful commit only narrow RSA reuse/code tests and handoff (preserve unrelated go.mod/capacity/UI). Build/deploy affected native first-install/C1/runtime callers using D temp/cache and actual new source identity. Controller Pod rollout will require current relay/source successor and correct new Publisher Pod binding before applying the prepared5 native roles; do not dispatch old-Pod plan. Continue actual native author batch20refs/config/request/Forward/V2/host load/adoption/MFA/enable/page task. No short issuance yet.",
+    "NextImmediate": "Finish live build71086, run already prepared package author, cleanup tmp/cache after all build/test handles terminal, upload <=48KiB raw chunks with intents and exact archive/hash checks. Native fixed-root tool package image overlay8 from current0fad base. Before image patch stop exact old readonly relay by native Process identity (not formal handover), preserve disabled spec/metadata/nonce mounts, CAS patch and actual8 ELF readback. New Pod invalidates old relay/source binding: author newrelay/currentSource/facts and reauthor native KMS plan for actual new PublisherPodUID BEFORE applying its5 writes. Runtime preflight needs same reused RSA identity comparison, not raw451/450 equality. No short C1 material issued; base certvalid10:02Z, API11:05Z, sourcecurrently09:25Z.",
     "Checkpoint": "d74633df pushed origin backup records deployment/renewal/mount. This last SourceFacts success update is subsequent local handoff DATA, preserve it.",
     "NonceFoundation": {
       "Precedence": "Nonce mount changed controller Pod AFTER earlier metadata/facts success. Use new identity below; old source facts are historical valid results for old Pod, NOT current source admission.",
@@ -1787,6 +1787,267 @@
         }
       },
       "NewPatchDeployed": false,
+      "BackupCompleted": false,
+      "CodeCommit": "23cbf0b0 committed and pushed origin backup",
+      "Build": {
+        "Root": "D:/dsh-work/p2-vault-jwt-rsa-reuse-20261116",
+        "SessionID": 71086,
+        "State": "RUNNING linux/amd64 cold compile. All temp/cache D. Do not restart. build-release.ps1 requires exact23cb source, actual ELF Go build ID for all8, source pins before/after. Tests3028 terminal PASS.",
+        "PackageScript": "prepare-package.py prepared; run only after BUILD_RECEIPT exists.",
+        "Overlay": "Prepared builder starts exact current image0fad0e52 and overlays8 actual tools (3 main+3 hosts+2 tooling); no base rollback.",
+        "RemoteRoot": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116",
+        "NewImageDeployed": false
+      }
+    }
+  },
+  "latest_current_site_state_20261116_1515": {
+    "RecordedAtCST": "2026-11-16T15:15:13",
+    "Precedence": "Latest actual readbacks below supersede older current_site_state sections. Step2 and3 incomplete; no formal page task.",
+    "SourceRevision": "23cbf0b08e20b5ac909dbc997473dcb285a61206",
+    "RemoteRelease": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116",
+    "ControllerLoaded": {
+      "Version": "p2-jwt-rsa-release-controller-loaded.v1",
+      "Controller": {
+        "Deployment": "sbk-d4f51b83b57e-controller",
+        "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+        "Namespace": "clawmanager-sbk-validation-system",
+        "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+        "Pod": "sbk-d4f51b83b57e-controller-857f6674fd-szskf",
+        "PodUID": "1025524e-41c7-4941-a93d-fdaa60b563d1",
+        "ReplicaSet": "sbk-d4f51b83b57e-controller-857f6674fd",
+        "ReplicaSetUID": "47bcbe2e-a597-47f2-a655-74e14b50bd20",
+        "ServiceAccount": "sbk-d4f51b83b57e-controller",
+        "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+      },
+      "Image": "10.130.14.23:5000/clawmanager@sha256:f7d0cf756373e1122cc5e67b3047cdc44de7ca1a0270034ed562e76b2447e312",
+      "SourceRevision": "23cbf0b08e20b5ac909dbc997473dcb285a61206",
+      "Actual8ELFHashes": {
+        "/usr/local/bin/system-backup-v2-controller": "f043fbf5ae01b6f3330efa4985056675287c3f2679bda520e5f8b5876463ba35",
+        "/usr/local/bin/system-backup-source-registries": "5a4da660ed49f4931445a67da04ef98b1da648fac3f40a170984775d8da6bb51",
+        "/usr/local/bin/system-backup-first-install-materials": "71dc13c5136de081ab3a2cf6a5a4379f2387b02c2b8b357a8eaefc5e05ffaaf4",
+        "/backup-shared-runtime-node-owner": "feb012a3b888f44dacfc2b47d2b87025d02c81cab0e0f7f078544e80cbaaeec5",
+        "/usr/local/bin/system-backup-first-adoption-production": "e4a4a44aaf2eb68bb0853cfcf2825698a529f560e06c52109c0ccd56eaebd64d",
+        "/usr/local/bin/system-backup-first-adoption": "0078e353d8d4eccfb082744723a3e7a58170c253f871342e7c5556aca3e3a141",
+        "/usr/local/bin/system-backup-c1-native-inputs": "b78dcebcff97a9699bf8304e426cab292718004888638b1c178b318a2fafcaf7",
+        "/usr/local/bin/system-backup-provider-observe": "d25b369336cc9bc866a61aeca92e02bda012b12bf7226c8a8dff4adaeb1e3480"
+      },
+      "OriginalNonceReadableBothContainers": true,
+      "ProviderObserverSHA256": "839369fcf862480dbc19cc05d1ed58d1d960cccb680bf5592229fb88230fba19",
+      "ControllerDisabled": true,
+      "OldReadonlyRelayStopped": true,
+      "FormalHandover": false,
+      "NewRelayRunning": false,
+      "NewSourceFactsProduced": false,
+      "BackupCompleted": false
+    },
+    "RelayIssued": {
+      "Receipt": {
+        "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/credential-renewal/relay-nonce-mounted/native.receipt.private.json",
+        "SHA256": "724863888f7473859d9b6c1cb766d290623ef1283986db492e6a75de05d326bc"
+      },
+      "Until": "2026-11-16T10:02:15Z",
+      "ControllerPodUID": "1025524e-41c7-4941-a93d-fdaa60b563d1",
+      "TLSLoaded": false,
+      "BackupCompleted": false
+    },
+    "RelayTLSAndSQL": {
+      "State": "actual_original_readonly_relay_TLS_SQL_verified",
+      "TLS": "TLSv1.3",
+      "ExactServerHostnameVerified": true,
+      "Identity": {
+        "config_rows": 0,
+        "database": "clawmanager",
+        "observed_at": "2026-11-16T06:51:21.688778Z",
+        "owner_head_rows": 0,
+        "pod_uid": "1025524e-41c7-4941-a93d-fdaa60b563d1",
+        "server_uuid": "9e0e40fb-d986-11f1-b30a-9e9a498abc54",
+        "service_uid": "7fab2030-be06-40ac-b8da-6c5131e23085",
+        "task_mutations_enabled": false,
+        "version": "original-readonly-status-relay-status.v1"
+      },
+      "BackupCompleted": false
+    },
+    "Source": {
+      "Version": "p2-source-renewal-946124fe.v1",
+      "Definition": {
+        "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/source-renewal-minio-region/definition.private.json",
+        "SHA256": "40b5ec06d0abf8a28c5cf5ef4db899a975b0dcb21bf9fd632380cd69d05391f3"
+      },
+      "Receipt": {
+        "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/source-renewal-minio-region/receipt.private.json",
+        "SHA256": "13a9bc178f4239d1fb90730bbeaad15b3301465285b7b7d8e304d6852813eada"
+      },
+      "SourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-23cbf0b0-minio-region-20261116/source-selection.json",
+        "SHA256": "4eefb7e9bc29dcc3ebbad075ad8c2667aa053ed7e7b88f916895717f0e9ae784"
+      },
+      "Controller": {
+        "Deployment": "sbk-d4f51b83b57e-controller",
+        "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+        "Namespace": "clawmanager-sbk-validation-system",
+        "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+        "Pod": "sbk-d4f51b83b57e-controller-857f6674fd-szskf",
+        "PodUID": "1025524e-41c7-4941-a93d-fdaa60b563d1",
+        "ReplicaSet": "sbk-d4f51b83b57e-controller-857f6674fd",
+        "ReplicaSetUID": "47bcbe2e-a597-47f2-a655-74e14b50bd20",
+        "ServiceAccount": "sbk-d4f51b83b57e-controller",
+        "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+      },
+      "Until": "2026-11-16T10:02:15Z",
+      "SourceAPI": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/source-api/source-api.jwt",
+        "SHA256": "ba597d61ac4ce11234818e46431b4afcfcd7c57ab3a2a5d44ea84bbf15a35d74"
+      },
+      "VaultWriterSelection": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/writer-selection-runtime-recovered/selection/original-writer-selection.json",
+        "SHA256": "f0b01ab156db9ad7dd27fbdd4e7836df44d2c5cae9faacc85a1376c958fc5c58"
+      },
+      "GrantsIssued": false,
+      "BackupReady": false
+    },
+    "Mount": {
+      "Version": "p2-longhorn-source-materials-authored.v1",
+      "Receipt": {
+        "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/mount-materials-jwt-rsa-23cbf0b0-api-recheck/native.receipt.private.json",
+        "SHA256": "4ca6ec67f1039f4c9ba09f4ca99102089dbfe43547f395e90e0d6f6c00c512e3"
+      },
+      "ParentSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-23cbf0b0-minio-region-20261116/source-selection.json",
+        "SHA256": "4eefb7e9bc29dcc3ebbad075ad8c2667aa053ed7e7b88f916895717f0e9ae784"
+      },
+      "Deployment": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-jwt-rsa-23cbf0b0-api-recheck/longhorn-deployment-core.json",
+        "SHA256": "c0bb3e62032e3c96ba3d0f52896aada19e5b5db8783e7a6d6f00e56cc31e39cd"
+      },
+      "MaterialsTemplate": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-jwt-rsa-23cbf0b0-api-recheck/mount-materials-template.json",
+        "SHA256": "f29bdf9d822978a14d0cb5abce5da908df444bd21eb169cfc1bde8fd97af6792"
+      },
+      "SourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-jwt-rsa-23cbf0b0-api-recheck/mount-source-selection.json",
+        "SHA256": "685903c7356a58f83075e6a9054568c96b9f8d654ba78a738fbf07482e200ad5"
+      },
+      "LonghornHoldMaterials": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-jwt-rsa-23cbf0b0-api-recheck/longhorn-hold-materials.json",
+        "SHA256": "2bd69edbcbc3c4334486e2ec52758a96da68873bb84a0451d80d54c372a0e3a8"
+      },
+      "VaultWriterSelection": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/writer-selection-runtime-recovered/selection/original-writer-selection.json",
+        "SHA256": "f0b01ab156db9ad7dd27fbdd4e7836df44d2c5cae9faacc85a1376c958fc5c58"
+      },
+      "Until": "2026-11-16T10:02:15Z",
+      "NativeHoldClaim": false,
+      "GrantsIssued": false,
+      "BackupReady": false
+    },
+    "Facts": {
+      "Version": "p2-current-nonce-pod-source-facts.v1",
+      "Receipt": {
+        "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/source-facts-minio-region/native.receipt.private.json",
+        "SHA256": "da71b7d4f1e4604e1640d733eedfd0ef42cbd14eda9361754a62604752d1dfef"
+      },
+      "MountReceipt": {
+        "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/mount-materials-jwt-rsa-23cbf0b0-api-recheck/completed.json",
+        "SHA256": "2be76fa7eb574ca8820bc57864f33f9027abeddb1fdf6a3a8f6adeb0f23da6b5"
+      },
+      "SourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-jwt-rsa-23cbf0b0-api-recheck/mount-source-selection.json",
+        "SHA256": "685903c7356a58f83075e6a9054568c96b9f8d654ba78a738fbf07482e200ad5"
+      },
+      "Controller": {
+        "Deployment": "sbk-d4f51b83b57e-controller",
+        "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+        "Namespace": "clawmanager-sbk-validation-system",
+        "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+        "Pod": "sbk-d4f51b83b57e-controller-857f6674fd-szskf",
+        "PodUID": "1025524e-41c7-4941-a93d-fdaa60b563d1",
+        "ReplicaSet": "sbk-d4f51b83b57e-controller-857f6674fd",
+        "ReplicaSetUID": "47bcbe2e-a597-47f2-a655-74e14b50bd20",
+        "ServiceAccount": "sbk-d4f51b83b57e-controller",
+        "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+      },
+      "Until": "2026-11-16T10:02:15Z",
+      "BackupReady": false
+    },
+    "StaticRegistryDATA": {
+      "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/configuration-inputs-20261116/static-inputs.json",
+      "SHA256": "96a5e6cc204860ee4c849fce862e55b3a05bea4ec5a822b1a82e0e5bba9401f6",
+      "RegistryKinds": [
+        "failure_domains",
+        "parts",
+        "provider_proof_issuers",
+        "rbac_bindings",
+        "redis_sources",
+        "secret_allowlist",
+        "source_writers",
+        "strong_auth_issuers"
+      ],
+      "RemainingRegistry": "disaster_identity_mapping after real20 reference selection",
+      "SourceUntil": "2026-11-16T10:02:15Z",
+      "ConfigurationAuthored": false,
+      "BackupReady": false
+    },
+    "RuntimeRolesLoaded": {
+      "Version": "p2-original-runtime-provider-role-config-loaded.v1",
+      "Operation": "p2-first-install-runtime-4480833d31e58ae7705069bd",
+      "OriginalNativePlan": {
+        "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/provider-runtime-plan-20261116/completed.json",
+        "SHA256": "0ba08f5efcb383e8aa5e8bcb52efcbbe9c0770d115b58de46cf61b3e355cfc3e"
+      },
+      "Provider": {
+        "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/provider-runtime-install-20261116-native-404/runtime-provider-observer.pending-workload.private.json",
+        "SHA256": "9d9782fd5bec67523a99daa66859a3791b96534221b776229289ca75b8561660"
+      },
+      "ReferenceSelectionsIntent": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/provider-runtime-plan-20261116/original-reference-selections.intent.json",
+        "SHA256": "bfe5d194eb1579e07b7ccfe8669637bdfe4a4b1687381449dd1213e37116c77e"
+      },
+      "ActualPoliciesAndRolesReadback": true,
+      "MetadataTokenPolicies": [
+        "sbk-p2-kms-4480833d31e58ae7-metadata"
+      ],
+      "MetadataTokenTTL": 10384,
+      "SelectedUntil": "2026-11-16T10:02:15Z",
+      "KeyMetadataUnchanged": true,
+      "JWTTrustUnchanged": true,
+      "PublisherPodUID": "1025524e-41c7-4941-a93d-fdaa60b563d1",
+      "WorkerServiceAccountUID": "958fd514-6ad8-4ed0-9e4d-23bebdc8a359",
+      "NativePermissionObserverObserved": false,
+      "RuntimeAuthorityIssued": false,
+      "BackupReady": false
+    },
+    "RuntimeRoleJournal": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/provider-runtime-install-20261116-native-404",
+    "KnownFailures": "Initial wrapper output directory collision before native send; distinct writer_api_recheck exit1 empty output. One retained independent full native recheck succeeded, current facts succeeded. Vault apply wrapper initially rejected valid 404 errors:[]; corrected to original API expected=(404,), all5 policies/roles read back and metadata token issued. No key/JWT trust rewrite.",
+    "Checklist": {
+      "2-1": "pending final config/request/Forward/signedV2/capture consumer",
+      "2-2": "pending Longhorn host definition/keeper/bundles actual two-node install",
+      "2-3": "pending original adoption and loaded config/recovery validation",
+      "3-1": "COMPLETE actual5role-policy readback and metadata-only credential",
+      "3-2": "pending complete original refs/registries/storage/catalog/key/CA native registration",
+      "3-3": "pending fresh short-lived materials and real C1 current20",
+      "3-4": "pending real strong auth registration/enable/handover/ready"
+    },
+    "ParallelRegistrationChat": {
+      "ThreadID": "01a1e334-b03a-7b41-94d1-4d840e2edadf",
+      "HostID": "local",
+      "Cursor": "4f5b7b56-7683-4ccd-8b07-c191d165c104:1",
+      "Scope": "3-4 existing registration runtime and MFA page preparation only; source read-only, D outputs, no SSH queue writes or extra Deployment/rollout. Main coordinates final inputs/deploy/enable."
+    },
+    "BuildState": "All8 built, testsPASS, package actual verified, OCI image actual loaded. D tmp/cache cleaned. Retain release receipts/actual deployment artifacts.",
+    "BackupCompleted": false,
+    "SigningMaterialFailureAndFix_1549": {
+      "NativeJournal": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/original-signing-current-pod",
+      "NativeExit": 1,
+      "NativeDurationSeconds": 14.269314050674438,
+      "PartialOutput": "signing-issue.intent.json plus3Pod-boundJWT files; final signed material not written. Retain failed original operation; do not claim complete or blindly reissue.",
+      "ActualPoliciesReadback": "All3purpose policies and bothmetadata policies exist and independentlyread back.",
+      "ActualFailureEvidence": "Same issued acceptance JWT actual Vault login: token_type=batch,ttl10,renewable=false,exactpurposepolicies/metadata, identity_policies omitted. native originalPublicationFields required its presence before unchanged len==0 guard.",
+      "CodeFix": "Optional empty identity_policies allowed at3originalprobes and2signingobserver paths; typed decode/len==0 still rejects expanded/malformed. Reuse existing installedVaultJWTConfigMatches in2signingmetadata/capture paths for same already-proven RSA PEM omission; unsupported algorithms/JWKS retain prior exact path.",
+      "TestsInitial": "PASS owner2.814s/install5.103s; final-source rerun79549 in progress; Droot only",
+      "BuildRoot": "D:/dsh-work/p2-vault-optional-identity-20261116",
+      "BuildPrepared": "8ELF, stripdebug symbols, currentf7d baseimage, exact sourcepins; not started until finaltests andcommit",
+      "TransferPrepared": "upload-release-one-stream.py uses quotedheredoc,48KiB rawperline,onePython receiver; bothtransport+nextcommand actualack. No archive sent yet.",
+      "NewFixDeployed": false,
       "BackupCompleted": false
     }
   }

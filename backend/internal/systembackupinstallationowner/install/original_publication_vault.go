@@ -336,7 +336,7 @@ func (i *Installer) originalPublicationProbe(ctx context.Context, v *originalPub
 		return time.Time{}, ErrInstall
 	}
 	authBody, authErr := originalArchiveObject(raw)
-	if authErr != nil || !originalPublicationFields(authBody["auth"], "client_token", "token_type", "renewable", "lease_duration", "policies", "token_policies", "identity_policies", "metadata") {
+	if authErr != nil || !originalPublicationFields(authBody["auth"], "client_token", "token_type", "renewable", "lease_duration", "policies", "token_policies", "metadata") {
 		return time.Time{}, ErrInstall
 	}
 	a := login.Auth

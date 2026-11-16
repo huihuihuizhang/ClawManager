@@ -43,7 +43,7 @@ func (i *Installer) originalArchiveMaterialLogin(ctx context.Context, v *origina
 		}
 	}
 	root, err := originalArchiveObject(raw)
-	if err != nil || !originalPublicationFields(root["auth"], "client_token", "token_type", "renewable", "lease_duration", "policies", "token_policies", "identity_policies", "metadata") || json.Unmarshal(raw, &login) != nil {
+	if err != nil || !originalPublicationFields(root["auth"], "client_token", "token_type", "renewable", "lease_duration", "policies", "token_policies", "metadata") || json.Unmarshal(raw, &login) != nil {
 		return nil, time.Time{}, ErrInstall
 	}
 	a := login.Auth

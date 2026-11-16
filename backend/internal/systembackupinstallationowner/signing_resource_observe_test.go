@@ -84,7 +84,9 @@ func signingResourceObserverFixture(t *testing.T, purpose, mode string) (*Signin
 		case "/v1/auth/token/lookup-self":
 			lookup++
 			ttl := 120 - lookup
-			data(map[string]any{"policies": []string{observerPolicy}, "identity_policies": []string{}, "ttl": ttl})
+			value := map[string]any{"policies": []string{observerPolicy}, "identity_policies": []string{}, "ttl": ttl}
+			optionalSigningIdentityPolicies(value, mode)
+			data(value)
 			return
 		case "/v1/sys/policies/acl/" + observerPolicy:
 			p, _ := SigningResourceObserverACL(f.grant, observerPolicy)
@@ -103,7 +105,9 @@ func signingResourceObserverFixture(t *testing.T, purpose, mode string) (*Signin
 			if mode == "wrong_login_identity" {
 				pod = "other"
 			}
-			send(map[string]any{"auth": map[string]any{"client_token": "private-short-purpose-runtime-token", "token_type": "batch", "renewable": false, "lease_duration": 10, "policies": []string{b.Policy}, "token_policies": []string{b.Policy}, "identity_policies": []string{}, "metadata": map[string]string{"role": b.Role, "namespace": b.Namespace, "pod_uid": pod, "service_account_uid": b.ServiceAccountUID}}})
+			auth := map[string]any{"client_token": "private-short-purpose-runtime-token", "token_type": "batch", "renewable": false, "lease_duration": 10, "policies": []string{b.Policy}, "token_policies": []string{b.Policy}, "identity_policies": []string{}, "metadata": map[string]string{"role": b.Role, "namespace": b.Namespace, "pod_uid": pod, "service_account_uid": b.ServiceAccountUID}}
+			optionalSigningIdentityPolicies(auth, mode)
+			send(map[string]any{"auth": auth})
 			return
 		case "/v1/" + b.TransitMount + "/sign/" + b.KeyName:
 			if r.Method != "POST" || r.Header.Get("X-Vault-Token") != "private-short-purpose-runtime-token" {
@@ -248,6 +252,38 @@ func TestSigningResourceObserverRejectsOtherPurposeMetadataAndTailDrift(t *testi
 			defer cancel()
 			if _, e := o.ObserveSigningResource(ctx, f.raw, f.sig, f.pin); e == nil {
 				t.Fatal("drift accepted", mode)
+			}
+		})
+	}
+}
+
+// Vault omits empty identity policies. Expanded or malformed policies still
+// fail both the metadata-only reader and actual purpose-token exchange.
+func optionalSigningIdentityPolicies(value map[string]any, mode string) {
+	switch mode {
+	case "omitted_identity_policies":
+		delete(value, "identity_policies")
+	case "null_identity_policies":
+		value["identity_policies"] = nil
+	case "expanded_identity_policies":
+		value["identity_policies"] = []string{"extra"}
+	case "malformed_identity_policies":
+		value["identity_policies"] = "extra"
+	}
+}
+func TestSigningResourceObserverVaultOptionalIdentityPolicies(t *testing.T) {
+	for _, mode := range []string{"omitted_identity_policies", "null_identity_policies", "expanded_identity_policies", "malformed_identity_policies"} {
+		t.Run(mode, func(t *testing.T) {
+			o, f, signs := signingResourceObserverFixture(t, "acceptance_record", mode)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+			observation, err := o.ObserveSigningResource(ctx, f.raw, f.sig, f.pin)
+			valid := mode == "omitted_identity_policies" || mode == "null_identity_policies"
+			if valid && (err != nil || observation == nil || *signs != 1) {
+				t.Fatal("empty identity policies rejected", err)
+			}
+			if !valid && err == nil {
+				t.Fatal("additional or malformed identity policies accepted")
 			}
 		})
 	}

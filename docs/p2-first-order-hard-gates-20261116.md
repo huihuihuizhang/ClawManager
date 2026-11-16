@@ -31,3 +31,7 @@
 MinIO 的区域配置使用原生 `MINIO_SITE_REGION`，对应 [固定 September 版本常量](https://github.com/minio/minio/blob/RELEASE.2025-09-07T16-13-09Z/internal/config/constants.go)；同版 [admin info 作者](https://github.com/minio/minio/blob/RELEASE.2025-09-07T16-13-09Z/cmd/admin-handlers.go) 从 `globalSite.Region()` 返回区域。本次以现场实际响应、CAS 配置加载和原生探测回执为验收依据，没有放宽区域校验。
 
 2026-11-16 运行授权前置重现旧 RSA PEM 差异：同一公钥 DER SHA `849773cc…`，原 API 导出 451 字节（含尾换行），Vault 返回 450 字节。旧对话 `01a1cee2…` 的提交 `16ea941d` 已在安装依赖入口实现 RSA 身份比较；本次复用同一实现至运行权限、C1 evidence 与最初 signing JWT 检查。三包针对性回归已通过；新补丁尚未部署，不据此宣称授权或备份成功。不同密钥、重复密钥、issuer、算法、默认角色变化仍拒绝，JWKS 与非 RS256 分支保持原检查。
+
+2026-11-16 15:15 接续：最新现场以 handoff 的 `latest_current_site_state_20261116_1515` 为准。23cbf0b0 / 镜像 f7d0cf75 已实际加载，8 ELF、原 nonce 两容器可读、metadata 挂载、当前 Pod relay TLS/SQL、新来源、三卷材料及完整 facts 已通过；来源窗口延至 18:02。3-1 已完成：5 项 Vault 策略/角色实际读回，metadata-only 凭据已签发。2-1/2-2/2-3 与 3-2/3-3/3-4 仍待完成。用户授权新聊天 01a1e334-b03a-7b41-94d1-4d840e2edadf 并行准备现有强认证登记服务/页面入口，主线继续配置与存储接线；新聊天禁止竞争 SSH 队列、增加 Deployment 或 rollout 当前来源。没有正式页面任务。
+
+2026-11-16 15:49 签名材料实际首调用 exit1（14.27s），三用途 JWT 已写、五项策略实际存在，但最终 signed material 未写。复核同一 JWT 的实际 Vault batch 登录成功，TTL10、固定用途及 Pod/SA/namespace 全匹配，`identity_policies` 空时被 Vault 省略；三处原始探测和签名 observer 的必填字段检查因此拒绝。补丁只允许该空可选字段，保留强类型解码、非空身份策略拒绝及原有 token/用途/签名检查；两处签名读取器同时复用旧 RSA 身份比较来接收已证明的 PEM 尾换行差异。两包定向回归已通过，最终源码复跑和发布尚未完成，不把代码修复当现场授权成功。

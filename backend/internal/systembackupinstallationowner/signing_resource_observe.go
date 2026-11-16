@@ -129,7 +129,7 @@ func (o *SigningResourceObserver) ObserveSigningResource(ctx context.Context, ra
 	if v := bytes.TrimSpace(fields["wrap_info"]); len(v) > 0 && !bytes.Equal(v, []byte("null")) {
 		return nil, ErrOwner
 	}
-	if !requiredFields(fields["auth"], "client_token", "token_type", "renewable", "lease_duration", "policies", "token_policies", "identity_policies", "metadata") {
+	if !requiredFields(fields["auth"], "client_token", "token_type", "renewable", "lease_duration", "policies", "token_policies", "metadata") {
 		return nil, ErrOwner
 	}
 	var response struct {
