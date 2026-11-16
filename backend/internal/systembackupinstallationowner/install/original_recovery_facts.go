@@ -120,7 +120,7 @@ type originalRecoveryNodeFacts struct {
 }
 
 func (s *PreparedOriginalWriterSet) persistOriginalRecoveryFacts(ctx context.Context, node *originalWholeNodeScope, request q.NodeObservationRequest, peers originalRecoveryPeerSnapshot, boundary *originalRecoveryMutationBoundary) (*originalRecoveryNodeFacts, error) {
-	if s == nil || s.origin != s || node == nil || node.set != s || node.prepare == nil || request.Binding != node.request.Binding || request.Anchor != node.prepare.Response().Anchor || request.RecoveredGeneration != s.owner.token.Generation || !reflect.DeepEqual(request.RecoveredPods, peers.Pods) || request.RecoverySnapshotSHA256 != "" {
+	if s == nil || s.origin != s || node == nil || node.set != s || node.prepare == nil || !reflect.DeepEqual(request.Binding, node.request.Binding) || request.Anchor != node.prepare.Response().Anchor || request.RecoveredGeneration != s.owner.token.Generation || !reflect.DeepEqual(request.RecoveredPods, peers.Pods) || request.RecoverySnapshotSHA256 != "" {
 		return nil, ErrInstall
 	}
 	if request.Action != "recovery-source-stopped" && request.Action != "recovery-reconciled" {

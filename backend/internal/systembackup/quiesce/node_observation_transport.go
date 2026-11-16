@@ -221,12 +221,12 @@ func (c *NodeObservationClient) Observe(ctx context.Context, in NodeObservationR
 		if len(in.SharedFrozenScopes) != 0 {
 			facts = sharedFrozenObservationFacts()
 		}
-		if out.Anchor != in.Anchor || out.TasksChecked <= 0 || out.Files <= 0 {
+		if out.Anchor != in.Anchor || out.TasksChecked <= 0 || in.Binding.Kind == NodeObservationWholePodColdCut && out.Files <= 0 {
 			return NodeObservationResponse{}, ErrNodeObservation
 		}
 	case "recovery-source-stopped", "recovery-reconciled":
 		facts = originalRecoveryFacts(in.Action)
-		if out.Anchor != in.Anchor || out.TasksChecked <= 0 || out.Files <= 0 || out.Processes < len(in.RecoveredPods) {
+		if out.Anchor != in.Anchor || out.TasksChecked <= 0 || in.Binding.Kind == NodeObservationWholePodColdCut && out.Files <= 0 || out.Processes < len(in.RecoveredPods) {
 			return NodeObservationResponse{}, ErrNodeObservation
 		}
 	case "recovered":
@@ -236,6 +236,12 @@ func (c *NodeObservationClient) Observe(ctx context.Context, in NodeObservationR
 		}
 	default:
 		return NodeObservationResponse{}, ErrNodeObservation
+	}
+	if in.Binding.Kind == NodeObservationColdProcesses {
+		facts = nodeProcessFacts(in.Action)
+		if out.Files != 0 {
+			return NodeObservationResponse{}, ErrNodeObservation
+		}
 	}
 	if !reflect.DeepEqual(out.Facts, facts) || bounded.Err() != nil {
 		return NodeObservationResponse{}, ErrNodeObservation
@@ -278,6 +284,7 @@ func (v *VerifiedNodeObservation) Response() NodeObservationResponse {
 		return NodeObservationResponse{}
 	}
 	r := v.response
+	r.Binding.AdditionalNamespaces = append([]ObservationNamespace(nil), r.Binding.AdditionalNamespaces...)
 	r.Facts = append([]string(nil), r.Facts...)
 	return r
 }

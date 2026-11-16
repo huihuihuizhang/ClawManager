@@ -118,10 +118,21 @@ func readOriginalWriterSetSelection(selectionPin BootstrapSourceFilePin) (Origin
 	if decodeExact(raw, &selection) != nil || selection.Version != OriginalWriterSetSelectionVersion || selection.Policy.Validate() != nil {
 		return selection, ErrInstall
 	}
-	// Authoring current controller coordinates is not a native stop/recovery
-	// implementation. Keep the old all-source native factory closed until its
-	// tenant controller lifecycle is explicitly constructed and qualified.
-	if len(selection.TenantPro) != 0 || len(selection.TenantNamespaces) != 0 {
+	// File DATA must contain the complete tenant census. Live owner-chain,
+	// SSAR, original-process and CSI checks remain in the concrete factory
+	// and Acquire; a valid file cannot mint a native writer or held proof.
+	groups := map[string][]OriginalTenantProSelection{}
+	for _, tenant := range selection.TenantPro {
+		groups[tenant.Identity.Namespace] = append(groups[tenant.Identity.Namespace], tenant)
+	}
+	seen := map[string]bool{}
+	for _, census := range selection.TenantNamespaces {
+		if seen[census.Namespace] || originalTenantProCensusMatches(census, groups[census.Namespace], selection.TeamAttachments...) != nil {
+			return selection, OriginalWriterSourceFailure{Dependency: "tenant_pro_original_native_stop_recovery_owner_required"}
+		}
+		seen[census.Namespace] = true
+	}
+	if len(groups) != len(seen) {
 		return selection, OriginalWriterSourceFailure{Dependency: "tenant_pro_original_native_stop_recovery_owner_required"}
 	}
 	return selection, nil

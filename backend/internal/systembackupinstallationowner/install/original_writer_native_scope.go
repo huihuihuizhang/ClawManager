@@ -31,7 +31,14 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 	}
 	pods := map[string][]q.PodIdentity{}
 	roots := map[string][]string{}
-	addPod := func(p q.PodIdentity) { pods[p.Node] = append(pods[p.Node], p) }
+	namespaces := map[string]map[string]bool{}
+	addPod := func(p q.PodIdentity, namespace string) {
+		pods[p.Node] = append(pods[p.Node], p)
+		if namespaces[p.Node] == nil {
+			namespaces[p.Node] = map[string]bool{}
+		}
+		namespaces[p.Node][namespace] = true
+	}
 	addRoot := func(node, root string) error {
 		if node == "" || root == "/" || !path.IsAbs(root) || path.Clean(root) != root || strings.ContainsAny(root, "\\\x00\r\n") {
 			return ErrInstall
@@ -66,14 +73,14 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 			if err != nil || string(pod.UID) != p.UID {
 				return nil, ErrInstall
 			}
-			paths, coverage, err := volumeScope(pod)
+			paths, _, err := volumeScope(pod)
 			if err != nil {
 				return nil, err
 			}
-			if coverage != nil {
-				continue
-			} // concrete Longhorn actor, never a fabricated cold-cut root
-			addPod(p)
+			// A Longhorn actor fences storage, not the original process or its
+			// replacement. Retain every cold Pod in the native process anchor so
+			// partial and complete recovery use the same original identities.
+			addPod(p, pod.Namespace)
 			for _, root := range paths {
 				if addRoot(p.Node, root) != nil {
 					return nil, ErrInstall
@@ -86,14 +93,11 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 		if err != nil || string(pod.UID) != w.original.UID || originalObjectSHA(pod.Spec) != w.specSHA {
 			return nil, ErrInstall
 		}
-		paths, coverage, err := volumeScope(pod)
+		paths, _, err := volumeScope(pod)
 		if err != nil {
 			return nil, err
 		}
-		if coverage != nil {
-			continue
-		}
-		addPod(w.process)
+		addPod(w.process, pod.Namespace)
 		for _, root := range paths {
 			if addRoot(w.process.Node, root) != nil {
 				return nil, ErrInstall
@@ -136,11 +140,10 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 		}
 	}
 	var result []*originalWholeNodeScope
-	names := []string{}
-	for node := range roots {
-		names = append(names, node)
+	names, err := originalColdNativeNodes(pods, roots)
+	if err != nil {
+		return nil, err
 	}
-	sort.Strings(names)
 	for _, nodeName := range names {
 		paths := originalNonOverlappingRoots(roots[nodeName])
 		originalPods := pods[nodeName]
@@ -173,6 +176,34 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 		}
 		p := s.owner
 		binding := q.ObservationBinding{Kind: q.NodeObservationWholePodColdCut, InstallationID: p.operator.installer.plan.Target.InstallationID, OperationID: p.operation, ReservationID: hex.EncodeToString(id[:]), InventorySHA256: s.inventorySHA, Namespace: p.operator.installer.plan.Target.Namespace, NamespaceUID: p.operator.installer.plan.Target.NamespaceUID, Node: nodeName, NodeUID: string(node.UID), Generation: p.token.Generation, FenceEpoch: p.token.FencingToken, ExpiresAt: p.until.UTC().Truncate(time.Microsecond)}
+		if len(paths) == 0 {
+			binding.Kind = q.NodeObservationColdProcesses
+		}
+		for namespace := range namespaces[nodeName] {
+			actual, err := p.operator.installer.kube.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+			if err != nil || actual.UID == "" || actual.DeletionTimestamp != nil {
+				return nil, ErrInstall
+			}
+			if namespace == binding.Namespace {
+				if string(actual.UID) != binding.NamespaceUID {
+					return nil, ErrInstall
+				}
+				continue
+			}
+			pinned := false
+			for _, tenant := range s.selection.TenantNamespaces {
+				if tenant.Namespace == namespace && tenant.NamespaceUID == string(actual.UID) {
+					pinned = true
+				}
+			}
+			if !pinned {
+				return nil, ErrInstall
+			}
+			binding.AdditionalNamespaces = append(binding.AdditionalNamespaces, q.ObservationNamespace{Name: namespace, UID: string(actual.UID)})
+		}
+		sort.Slice(binding.AdditionalNamespaces, func(i, j int) bool {
+			return binding.AdditionalNamespaces[i].Name < binding.AdditionalNamespaces[j].Name
+		})
 		request := q.NodeObservationRequest{Action: "prepare", Binding: binding, Pods: originalPods, SourcePaths: paths}
 		proof, err := s.wholePodClient.ObserveVerified(ctx, request)
 		if err != nil {
@@ -194,6 +225,26 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 		result = append(result, native)
 	}
 	return result, nil
+}
+
+// Every cold process must reach an actual native observer. A node without
+// filesystem sources uses the separate process-only kind, never a host cut.
+func originalColdNativeNodes(pods map[string][]q.PodIdentity, roots map[string][]string) ([]string, error) {
+	seen := map[string]bool{}
+	for node, originals := range pods {
+		if len(originals) != 0 {
+			seen[node] = true
+		}
+	}
+	for node := range roots {
+		seen[node] = true
+	}
+	names := make([]string, 0, len(seen))
+	for node := range seen {
+		names = append(names, node)
+	}
+	sort.Strings(names)
+	return names, nil
 }
 
 func originalNonOverlappingRoots(roots []string) []string {
@@ -251,7 +302,7 @@ func (n *originalWholeNodeScope) observeStopped(ctx context.Context) error {
 	r.Action = "stopped"
 	r.SourcePaths = nil
 	r.Anchor = n.prepare.Response().Anchor
-	if len(n.set.sharedLifecycle) > 0 {
+	if r.Binding.Kind == q.NodeObservationWholePodColdCut && len(n.set.sharedLifecycle) > 0 {
 		scopes, err := n.set.sharedRuntimeFrozenScopes(r.Binding.Node)
 		if err != nil {
 			return err

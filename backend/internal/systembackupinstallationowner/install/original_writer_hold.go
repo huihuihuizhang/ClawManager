@@ -557,7 +557,7 @@ func (h *OriginalWriterHold) PrepareArchiveProvider(ctx context.Context, passwor
 			scope = node
 		}
 	}
-	if scope == nil {
+	if scope == nil || scope.request.Binding.Kind != q.NodeObservationWholePodColdCut {
 		return nil, ErrInstall
 	}
 	claim := scope.claim
@@ -591,6 +591,9 @@ func (h *OriginalWriterHold) ArchiveNativeCut(ctx context.Context, nodeName stri
 	}
 	for _, node := range h.set.nodes {
 		if node.request.Binding.Node == nodeName {
+			if node.request.Binding.Kind != q.NodeObservationWholePodColdCut {
+				return q.NodeObservationRequest{}, nil, nil, ErrInstall
+			}
 			return node.request, node.prepare, h.set.wholePodClient, nil
 		}
 	}

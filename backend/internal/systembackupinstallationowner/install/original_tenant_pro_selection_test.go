@@ -144,3 +144,39 @@ func TestOriginalTenantProSelectionDataCannotMintNativeWriter(t *testing.T) {
 		t.Fatal("coordinate data entered the original native writer factory", err)
 	}
 }
+
+func TestOriginalTenantCompleteCensusReachesExistingLiveFactoryChecks(t *testing.T) {
+	maintenance, source, _ := tenantSelectionFixture()
+	identity, pod, deployment, _, err := maintenance.readInitialTenantPro(context.Background(), source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	record, err := originalTenantProCapture(source, identity, pod, deployment)
+	if err != nil {
+		t.Fatal(err)
+	}
+	selection := OriginalWriterSetSelection{Version: OriginalWriterSetSelectionVersion,
+		Policy:    c.GatePolicy{LockTTL: 900 * time.Second, AcquisitionTimeout: 60 * time.Second, MaxHold: 600 * time.Second},
+		TenantPro: []OriginalTenantProSelection{record},
+		TenantNamespaces: []originalMaintenanceKubernetesCensus{{Namespace: source.Namespace, NamespaceUID: identity.NamespaceUID,
+			Pods:        []originalMaintenanceObjectPin{{Name: pod.Name, UID: string(pod.UID)}},
+			Deployments: []originalMaintenanceObjectPin{{Name: deployment.Name, UID: string(deployment.UID)}}}}}
+	raw, err := canonical(selection)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(t.TempDir(), "complete-tenant-selection.json")
+	if err := os.WriteFile(file, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	pin := BootstrapSourceFilePin{File: file, SHA256: hash(raw)}
+	if _, err := readOriginalWriterSetSelection(pin); err != nil {
+		t.Fatal("complete supported census refused before live checks", err)
+	}
+	// A file-only pass still provides no authenticated SQL/Kube maintenance
+	// owner, original native observation, CSI hold, or recovery authority.
+	writer, err := (&Installer{}).PrepareOriginalWriterSet(context.Background(), nil, EnrollmentPin{}, pin)
+	if err == nil || writer != nil {
+		t.Fatal("complete DATA minted a native writer")
+	}
+}

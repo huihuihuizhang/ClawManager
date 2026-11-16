@@ -208,7 +208,7 @@ func (r *originalMinIOHistoryLifecycle) restoreNative(ctx context.Context, fence
 			node = source
 		}
 	}
-	if node == nil || node.prepare == nil || observation.request.Binding != node.request.Binding {
+	if node == nil || node.prepare == nil || !reflect.DeepEqual(observation.request.Binding, node.request.Binding) {
 		return ErrOriginalRecoveryNativeProof
 	}
 	request := observation.request

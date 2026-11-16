@@ -592,7 +592,7 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecoveryStopped(ctx context.C
 			request.Action = "recovery-stopped"
 			request.SourcePaths = nil
 			request.Anchor = node.prepare.Response().Anchor
-			if len(s.sharedLifecycle) > 0 {
+			if request.Binding.Kind == q.NodeObservationWholePodColdCut && len(s.sharedLifecycle) > 0 {
 				scopes, err := s.sharedRecoveryFrozenScopes(request.Binding.Node)
 				if err != nil {
 					return err

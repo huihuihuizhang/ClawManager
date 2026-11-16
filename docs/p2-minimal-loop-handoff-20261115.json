@@ -4,6 +4,54 @@
   "objective": "页面发起一单真实完整备份并成功：本次 Pro 卷、团队共享卷停写、完整采集、恢复、上传、独立读回及目录登记。",
   "user_requested_handoff": true,
   "complete": false,
+  "current_scope_20261116_process_only": {
+    "UserConstraint": "Only actual site's stateless cold-process verification plus successful and partial-failure recovery. Reuse scanners/recovery. No generic process lifecycle framework. After required checks, deliver/deploy and enter field validation. New development must demonstrate a blocker of this first task. Distinguish immediate issue from unverified later stages; never call the current issue the only remaining blocker.",
+    "HardRejectionsBeforeField": [
+      "Original entry: readOriginalWriterSetSelection still unconditionally refuses TenantPro/TenantNamespaces; qualify actual construction/coverage/recovery before replacing this blanket guard with concrete checks.",
+      "Native proofs: stateless master broker needs process-only kind, and the two-node broker Deployment requires per-node peer reconciliation. Process proof must be rejected by both archive provider and ArchiveNativeCut.",
+      "Versions: current field components do not understand new local protocol; deliver images/native tools and verify actual running ELF and configuration.",
+      "Longhorn install: last field readback lacks node1 materials arguments plus selection HostDefinition/KeeperImage. Use formal author and live source window, install actual policy, read it back. Prepared files are not installed configuration.",
+      "Authority: original source window expired; recheck all short-lived source/metadata/observer/runtime/relay/API credentials, concentrate formal renewal only after code/deployment readiness. Never edit expired grants.",
+      "Bootstrap/config: source qualification, C1 adoption/initial source and actual config registration/enabled state are not accepted yet. Use existing native authors and exact journal/canonical receipts, do not replay unknown sends.",
+      "Capture: actual all-source census/owner graph/SSAR, runtime binding, all three Longhorn volume identities, snapshot/clone classes and formal materials must pass existing production_longhorn_source and production_capture_modules checks. No generic CSI archive RPC.",
+      "Terminal: formal page action/create, fresh dispatch authority, full capture, provider release before business recovery, upload, independent physical readback and catalog registration must all produce actual task receipts before success. Create currently does not require MFA. Retire team readonly Pod only after real task-id and source-disabled/recovery evidence."
+    ],
+    "LocalChangesPendingValidation": "Distinct original_cold_processes kind with no SourcePaths/file/mount facts; existing original scopes and actor reconciliation reused. All original cold nodes included. Archive entrypoints refuse process-only kind. Cross-node broker peers require the other node's original writer anchor. Added bounded protocol and actual local kernel scope tests; no source mutation or new credential issuance."
+    ,"DeliveryValidation": {
+      "State": "Local checks passed, proceed directly to delivery/deployment and site configuration. No generic development. Not field stop/recovery or successful backup.",
+      "WindowsQuiesceSeconds": 3.855,
+      "WindowsInstallFinalSeconds": 42.166,
+      "LinuxNativeScopeSeconds": 0.02,
+      "LinuxNativeScopeCoverage": "Actual separate cgroup/PID/mount namespace children: live original refused, exited original accepted, untouched peer remains running during partial recovery, disjoint replacement still requires original scope absence. CRI/whole-controller positive not covered by this local kernel test; remains field acceptance.",
+      "NativeTestCorrection": "Initial disjoint replacement test was refused as original_process_present. Retained actual namespace handles in test setup to prevent recycled inode numbers while testing a disjoint scenario. Production namespace/cgroup/PID scope protections unchanged. Initial failed log preserved by hash, not represented as a pass.",
+      "CallingChainChecks": "Acquire -> prepareNativeScopes covers stateless master and node1 cold actors -> stop -> native stopped. Complete recovery -> fresh native recovery-stopped -> release RWX -> release keepers -> shared lifecycle -> deployments/Pro -> final recovered. Partial recovery releases storage before actors, uses proveOriginalAffectedAbsent with per-node broker peer coverage, then recovery-reconciled. Process-only nodes never carry filesystem SharedFrozenScopes; shared lifecycle remains independently required. Both archive entrypoints refuse process-only kind.",
+      "TenantEntry": "Blanket tenant rejection replaced with existing originalTenantProCensusMatches complete census check. Partial/invalid tenant DATA still rejected with original dependency. Complete DATA advances to existing actual SQL/Kube authenticated maintenance, live owner-chain, SSAR, CSI and native gates; added test proves DATA cannot mint native writer. No qualification boolean or fake proof added.",
+      "LogSHA256": {
+        "windows-tests.log": "9095c3060bb3af6615df0dd5c93826be4f2d8d0ae381238af4d37a6ffd1c1b1f",
+        "install-delivery.log": "787ea6be43fd72950c0798531e77d1ab5df189441a4e87fa21450d14858a0bb1",
+        "linux-native-final.log": "309308091d5ada6e718835a324a1c0459600c933d08491caa87b773ed746d09e",
+        "linux-native-initial-failed.log": "a99fe05b6c02213a95df7ce4eec75ed0ce61e5aa129a354de2123a99d5e521fb"
+      },
+      "TemporaryRoot": "D:/dsh-work/p2-process-proof-20261116",
+      "Cleanup": "All Go test/build sessions terminal. Entire D test directory removed and absence verified; WSL test cgroup absence verified. Direct SSH consumer remains live. No production source stopped/frozen, credential minted, deployment changed or task dispatched during these checks.",
+      "Next": "Build six release tools on D, preserve actual linked identity and dirty additional source pins, reuse existing delivery/overlay and installed policy authors. Re-read actual node1 unit and selection. No renewal until deployment/config preparation ready. Then user's steps 3-5: concentrated renewal+registry/config, same formal page task full pipeline, scope/evidence audit and cleanup.",
+      "Precedence": "This DeliveryValidation supersedes older no-process-protocol and blanket-tenant-guard statements in this handoff. Production host-cut empty-root guard remains; process-only kind has zero filesystem claims. Site remains unmodified this round."
+    }
+  },
+  "direct_ssh_session_20261116": {
+    "Route": "local -> root@10.130.14.23 (user corrected: no 10.130.37.2 jump host)",
+    "Queue": "D:/dsh-work/p2-direct-session-20261116-0829/commands.txt",
+    "Output": "D:/dsh-work/p2-direct-session-20261116-0829/output.log",
+    "SSHPID": 21976,
+    "VerifiedAtRemoteUTC": "2026-11-16T00:31:55Z",
+    "Hostname": "k8s-master",
+    "UID": 0,
+    "VerifiedMarker": "P2_DIRECT_READONLY_END_20261116",
+    "CurrentTopologyMarker": "P2_CURRENT_COMPONENTS_END_20261116",
+    "CurrentTopology": "Both k8s-master and node1 Ready. Validation secret-broker Running on each node. Controller sbk-d4f51b83b57e-controller-549b46d99b-qttjf Running on node1. Tenant Pro clawreef-2-deployment-5bc5b96b4d-sk95t and retained sbk-team-1-readonly-p2 Running on node1.",
+    "Rules": "Append only. New empty queue, no old commands replayed. Preserve this live consumer; remote subprocess stdin=DEVNULL. Do not output credentials.",
+    "State": "User completed password login. Read-only probe completed through actual queue. No hold, credential renewal, deployment or backup dispatched. Old session PID values are historical, not live evidence."
+  },
   "continuation_progress": {
     "state": "Cold-client exit requirement and concrete CSI pod-to-RWX/RWO actor coverage now wired and locally verified. Shared runtime requests use exact NFS client references; complete held verifier additionally requires matching physical actor and synced client state. No false whole-node cut/host paths. C1 archive still host-only; real node1 unit lacks Longhorn materials and original selection lacks host definition. Not deployed, no real backup.",
     "runtime_binding_recovery_current": {
@@ -963,9 +1011,36 @@
       "NoSourceHoldOrTaskDispatched": true
     }
   },
+  "continuation_20261116_capture_and_recovery_correction": {
+    "BackupCompleted": false,
+    "NamespaceContinuation_20261116": {
+      "State": "Implemented locally, not deployed. AdditionalNamespaces in the original ObservationBinding pins actual tenant namespace name/UID from participating Pods and the original TenantNamespaces selection. Native CRI still requires exact Pod UID, name and CID, and additionally accepts only the pinned namespace set. All recovery actions authenticate the unchanged sealed Binding. No tenant guard removed.",
+      "WhyNeeded": "Existing native reader compared every CRI namespace to the installation namespace, so the real tenant Pro process could not be observed or recovered. Existing tenant owner-graph census and namespace UID checks remain the API authority.",
+      "Validation": "Windows quiesce package PASS 4.754s including new namespace seal, ambiguity and opaque response aliasing tests. Initial install compilation found two non-comparable Binding expressions; changed both to complete reflect.DeepEqual checks. Final full Windows install package PASS 60.903s. Linux quiesce test cross-compilation PASS exit 0 (93900538-byte ELF); not executed, no field native process proof claimed. git diff --check PASS.",
+      "LogSHA256": {
+        "tests-initial.log": "d75e8680f0cef6a314418bff3f9f78aeaaeac6fb05fe69304e8bcad9d9a12004",
+        "install-final.log": "b07f155bd9d9ba0778c52f0e273825e68d59800bbf6950a296a13e9abef5a7fd",
+        "linux-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "RemainingPriority": "No process-only protocol exists yet. Stateless master broker still fails originalColdNativeNodes before any stop. Next implement a distinct process-only observation kind with zero filesystem claims, original process absence plus full/partial replacement reconciliation, explicit archive rejection, and actual CSI release-before-business recovery validation. Keep tenant guard until all of these pass.",
+      "InspectedReuse": "Existing scan(ctx, anchor, nil) already checks complete original process-scope absence without filesystem claims. Existing reconcileOriginalRecovery partitions affected vs current actors using sealed original scopes and exact CRI identities. Whole-pod transport currently requires Files > 0 and filesystem facts, so do not pass an empty host cut through it. Preserve the whole-pod host archive contract. ArchiveNativeCut and archive-provider node selection must explicitly refuse any new process-only kind.",
+      "TemporaryRoot": "D:/dsh-work/p2-native-namespace-20261116",
+      "Cleanup": "All three Go exec sessions terminal (initial tests exit1, final install exit0, Linux compile exit0). Entire D temporary root including caches, logs and ELF removed; absence explicitly verified. Direct SSH session is retained for authorized field work.",
+      "Precedence": "This NamespaceContinuation_20261116 supersedes the older statement below that no namespace protocol change exists. Process-only protocol is still unimplemented; older archive diagnosis remains corrected. All new code is local and uncommitted."
+    },
+    "ArchiveDiagnosisCorrection": "OriginalAdoptionArchiveProvider / ArchiveNativeCut capture MinIO original history, not general workspace/Pro/team data. Do not add generic CSI archive RPCs to these methods. The formal production capture already plans Longhorn snapshots/clones in production_longhorn_source.go and consumes them in production_capture_modules.go.",
+    "ActualPriorityBlocker": "Cold CSI Pods were excluded from original whole-node scopes, but partial recovery proveOriginalAffectedAbsent and final recovery still require their original process anchors. Also roots-only node enumeration omits the actual stateless broker on master. Keep tenant guard until original process absence and replacement validation cover all actual sources.",
+    "CurrentChange": "Retain cold CSI Pods in original native process membership; reject cold nodes without actual host roots rather than silently omitting them. Shared runtime CSI Pods remain in their separate frozen lifecycle actor. Existing empty-root and tenant guards remain closed.",
+    "WhyExistingCannotFinish": "The host filesystem cold-cut protocol requires real host roots and asserts file/mount facts. It cannot be reused with fabricated roots or empty roots for the actual stateless broker. CSI storage hold alone does not prove cold original processes absent or replacements running. Tenant CRI namespace correlation must also be checked before enabling the original entry.",
+    "FinishCheck": "One original controller entry must cover original cold-process observation, full and partial failure recovery, replacement native observation, and separate actual CSI provider/keeper release. Then build image on D, verify/update actual components and installed Longhorn policies, concentrate credential refresh, and dispatch the formal page first task.",
+    "Validation": "Windows go test -mod=readonly -p=2 ./internal/systembackupinstallationowner/install -count=1 PASS, 36.836s (cold compilation took additional time). Log SHA256 0e4c5826b7df1a1b45d3474cbfd94602ad34ca504d6bc9b651ff1e7dbb63635a. Process exited 0. D:/dsh-work/p2-cold-recovery-20261116 completely removed and absence verified. This is local regression only, not field recovery or backup success.",
+    "CurrentGit": "backup HEAD 20fbdfe3b9faf4fac751becf0ba2233a241e7faf. This continuation modified original_writer_native_scope.go and this handoff, added original_cold_native_nodes_test.go; not committed or deployed. Preserve pre-existing backend/go.mod, original_c1_capacity_collector.go, scripts/sbk-bootstrap-discover.py.",
+    "NextCodeInvestigation": "Do not remove tenant guard. Exact remaining gap: actual stateless broker on master needs an original native process anchor without fabricating a host filesystem cut. Cold CSI App/Pro must remain in process absence/replacement recovery as well as separate storage actor. Current q.NodeObserver.runningRecoveryScopes compares CRI namespace against binding.Namespace; the original node binding is installation/system namespace, so tenant Pro cannot be mixed into it without an explicit authenticated tenant namespace binding. Inspect and implement only this site's original stop/recovery composition; a process proof cannot satisfy ArchiveNativeCut or file/mount claims. No process-only protocol or namespace protocol change has been implemented yet.",
+    "FieldReadOnlyTopology": "App two Pods node1; secret-broker one Pod master and one node1, with no persistent volumes; transit PVC node1. Both SSH queue consumers still live. No stop, freeze, new credential issuance or backup task dispatched."
+  },
   "workspace": "C:/Users/zhanghui08/Desktop/clawmanager/ClawManager/.worktrees/build-06bf0e89",
   "branch": "backup",
-  "head_verified": "b4b553c3f80ffee58e63faa3a66f7fb5b5823db7",
+  "head_verified": "20fbdfe3b9faf4fac751becf0ba2233a241e7faf",
   "git_remote": "https://github.com/huihuihuizhang/ClawManager.git",
   "constraints": [
     "仅补已确认阻断所需的接口，不扩展通用生命周期平台。",

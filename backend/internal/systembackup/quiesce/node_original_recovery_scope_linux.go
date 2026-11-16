@@ -44,9 +44,11 @@ func (o *NodeObserver) reconcileOriginalRecovery(ctx context.Context, r NodeObse
 	for n, s := range a.Paths {
 		p[n] = s.Path
 	}
-	currentPaths, e := o.paths(ctx, p)
-	if e != nil || !reflect.DeepEqual(currentPaths, a.Paths) {
-		return result, observationFailure("source_mount_drift")
+	if r.Binding.Kind == NodeObservationWholePodColdCut {
+		currentPaths, e := o.paths(ctx, p)
+		if e != nil || !reflect.DeepEqual(currentPaths, a.Paths) {
+			return result, observationFailure("source_mount_drift")
+		}
 	}
 	var roots []observedProcess
 	if len(r.RecoveredPods) > 0 {
@@ -100,6 +102,9 @@ func (o *NodeObserver) reconcileOriginalRecovery(ctx context.Context, r NodeObse
 	}
 	if len(fencedPods) > 0 && (CRIProver{Node: o.Node, Inspector: o.CRI}).Confirm(ctx, fencedPods) != nil {
 		return result, observationFailure("original_cri_exit")
+	}
+	if r.Binding.Kind == NodeObservationColdProcesses {
+		return o.reconcileColdProcesses(ctx, r, a, fencedPods, fenced, roots, live)
 	}
 	// Explicitly empty CURRENT membership is never an implicit untouched mode:
 	// it must pass the unchanged COMPLETE original scope-absence algorithm.
@@ -171,7 +176,7 @@ func (o *NodeObserver) scanOriginalRecovery(ctx context.Context, paths []observe
 				if originalRecoveryScopeContains(p.process, fenced) {
 					return observationFailure("original_process_present")
 				}
-				if !originalRecoveryLiveContains(p.process, roots, live) {
+				if len(paths) != 0 && !originalRecoveryLiveContains(p.process, roots, live) {
 					if e := observationWritableHandles(ctx, p.base, o.HostProc, files, paths); e != nil {
 						return e
 					}

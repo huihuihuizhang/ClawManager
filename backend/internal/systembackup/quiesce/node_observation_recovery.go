@@ -16,7 +16,10 @@ func nodeObservationRecoveryAction(action string) bool {
 // In this protocol Generation is the original SQL gate generation. Replacement
 // source identities come from D's journal and the actual native CRI checks.
 func nodeObservationPhaseDataValid(r NodeObservationRequest, node string) bool {
-	if r.Binding.Kind != NodeObservationWholePodColdCut || r.Binding.Generation == 0 || !validObservationPods(r.Pods, node) {
+	if !nodeObservationKindValid(r.Binding.Kind) || r.Binding.Generation == 0 || !validObservationNamespaces(r.Binding) || !validObservationPods(r.Pods, node) {
+		return false
+	}
+	if r.Binding.Kind == NodeObservationColdProcesses && (len(r.SourcePaths) != 0 || len(r.SharedFrozenScopes) != 0) {
 		return false
 	}
 	if originalRecoveryScopedPhase(r.Action) {
@@ -27,7 +30,7 @@ func nodeObservationPhaseDataValid(r NodeObservationRequest, node string) bool {
 	}
 	switch r.Action {
 	case "prepare":
-		return r.Anchor == "" && len(r.SourcePaths) > 0 && len(r.SourcePaths) <= 128 && len(r.RecoveredPods) == 0 && r.RecoveredGeneration == 0
+		return r.Anchor == "" && nodeObservationPreparePathsValid(r) && len(r.RecoveredPods) == 0 && r.RecoveredGeneration == 0
 	case "stopped", "recovery-stopped":
 		return r.Anchor != "" && len(r.SourcePaths) == 0 && len(r.RecoveredPods) == 0 && r.RecoveredGeneration == 0
 	case "recovered":
@@ -55,6 +58,9 @@ func (o *NodeObserver) originalNodeObservationAnchor(r NodeObservationRequest, n
 		return zero, ErrNodeObservation
 	}
 	a, err := o.open(r.Anchor)
+	if err == nil && (a.Binding.Kind == NodeObservationColdProcesses && len(a.Paths) != 0 || a.Binding.Kind == NodeObservationWholePodColdCut && len(a.Paths) == 0) {
+		return zero, ErrNodeObservation
+	}
 	if err != nil || observationDigest(a.Binding) != observationDigest(r.Binding) || !reflect.DeepEqual(a.Pods, r.Pods) || a.BootID != o.BootID || a.PreparedAt.After(now) || (!nodeObservationRecoveryAction(r.Action) && !now.Before(a.Binding.ExpiresAt)) {
 		return zero, ErrNodeObservation
 	}

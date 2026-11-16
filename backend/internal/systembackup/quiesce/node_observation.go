@@ -33,10 +33,49 @@ type ObservationBinding struct {
 	Kind                                                        string
 	InstallationID, OperationID, ReservationID, InventorySHA256 string
 	Namespace, NamespaceUID, Node, NodeUID                      string
+	// AdditionalNamespaces are actual tenant namespace identities read by the
+	// controller from the original writer owner graph. They are sealed with
+	// the original UID/CID census; recovery cannot extend this set.
+	AdditionalNamespaces []ObservationNamespace `json:",omitempty"`
 	// FenceEpoch is the exact original acquisition epoch, including legal zero.
 	// Current held-gate ownership is independently verified by D.
 	Generation, FenceEpoch uint64
 	ExpiresAt              time.Time
+}
+
+type ObservationNamespace struct {
+	Name, UID string
+}
+
+func validObservationNamespaces(b ObservationBinding) bool {
+	if b.Namespace == "" || b.NamespaceUID == "" || len(b.AdditionalNamespaces) > 8 {
+		return false
+	}
+	previous := ""
+	for _, ns := range b.AdditionalNamespaces {
+		if ns.Name == "" || ns.UID == "" || ns.Name == b.Namespace || ns.UID == b.NamespaceUID || ns.Name <= previous {
+			return false
+		}
+		for _, other := range b.AdditionalNamespaces {
+			if other.Name != ns.Name && other.UID == ns.UID {
+				return false
+			}
+		}
+		previous = ns.Name
+	}
+	return true
+}
+
+func observationNamespaceAllowed(b ObservationBinding, namespace string) bool {
+	if namespace == b.Namespace {
+		return true
+	}
+	for _, ns := range b.AdditionalNamespaces {
+		if namespace == ns.Name {
+			return true
+		}
+	}
+	return false
 }
 
 type NodeObservationRequest struct {
@@ -175,7 +214,7 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 	now := time.Now().UTC()
 	b := r.Binding
 	deadline, ok := ctx.Deadline()
-	if o == nil || len(o.key) != 32 || !ok || ctx.Err() != nil || b.Kind != NodeObservationWholePodColdCut || r.Version != "node-observation.v1" || !validObservationHash(r.Nonce) || b.Node != o.Node || b.NodeUID != o.NodeUID || b.InstallationID == "" || b.OperationID == "" || b.ReservationID == "" || b.Namespace == "" || b.NamespaceUID == "" || b.Generation == 0 || b.ExpiresAt.IsZero() || !validObservationHash(b.InventorySHA256) || !now.Before(r.Deadline) || r.Deadline.After(now.Add(15*time.Second)) || deadline.After(r.Deadline) || (!nodeObservationRecoveryAction(r.Action) && !r.Deadline.Before(b.ExpiresAt)) || !validObservationPods(r.Pods, o.Node) {
+	if o == nil || len(o.key) != 32 || !ok || ctx.Err() != nil || !nodeObservationKindValid(b.Kind) || r.Version != "node-observation.v1" || !validObservationHash(r.Nonce) || b.Node != o.Node || b.NodeUID != o.NodeUID || b.InstallationID == "" || b.OperationID == "" || b.ReservationID == "" || b.Namespace == "" || b.NamespaceUID == "" || b.Generation == 0 || b.ExpiresAt.IsZero() || !validObservationHash(b.InventorySHA256) || !now.Before(r.Deadline) || r.Deadline.After(now.Add(15*time.Second)) || deadline.After(r.Deadline) || (!nodeObservationRecoveryAction(r.Action) && !r.Deadline.Before(b.ExpiresAt)) || !validObservationPods(r.Pods, o.Node) {
 		return result, ErrNodeObservation
 	}
 	if !nodeObservationPhaseDataValid(r, o.Node) {
@@ -191,7 +230,7 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 	var err error
 	switch r.Action {
 	case "prepare":
-		if r.Anchor != "" || len(r.SourcePaths) == 0 || len(r.SourcePaths) > 128 || len(r.RecoveredPods) != 0 || r.RecoveredGeneration != 0 {
+		if r.Anchor != "" || !nodeObservationPreparePathsValid(r) || len(r.RecoveredPods) != 0 || r.RecoveredGeneration != 0 {
 			return result, ErrNodeObservation
 		}
 		sorted := append([]string(nil), r.SourcePaths...)
@@ -202,7 +241,9 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 			}
 		}
 		a = nodeObservationAnchor{Binding: b, Pods: r.Pods, BootID: o.BootID, PreparedAt: now}
-		a.Paths, err = o.paths(ctx, sorted)
+		if b.Kind == NodeObservationWholePodColdCut {
+			a.Paths, err = o.paths(ctx, sorted)
+		}
 		if err != nil {
 			return result, observationFailure("source_mount")
 		}
@@ -248,9 +289,11 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 		for i, x := range a.Paths {
 			p[i] = x.Path
 		}
-		current, e := o.paths(ctx, p)
-		if e != nil || !reflect.DeepEqual(current, a.Paths) {
-			return result, ErrNodeObservation
+		if b.Kind == NodeObservationWholePodColdCut {
+			current, e := o.paths(ctx, p)
+			if e != nil || !reflect.DeepEqual(current, a.Paths) {
+				return result, ErrNodeObservation
+			}
 		}
 		if (CRIProver{Node: o.Node, Inspector: o.CRI}).Confirm(ctx, a.Pods) != nil {
 			return result, observationFailure("original_cri_exit")
@@ -259,7 +302,11 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 			if len(r.RecoveredPods) != 0 || r.RecoveredGeneration != 0 {
 				return result, ErrNodeObservation
 			}
-			result.TasksChecked, result.Files, err = o.stoppedWithSharedScopes(ctx, a, r.SharedFrozenScopes)
+			if b.Kind == NodeObservationColdProcesses {
+				result.TasksChecked, _, err = o.scan(ctx, a, nil)
+			} else {
+				result.TasksChecked, result.Files, err = o.stoppedWithSharedScopes(ctx, a, r.SharedFrozenScopes)
+			}
 			result.Facts = []string{"original_cri_containers_exited", "original_process_scopes_absent", "no_observed_writable_source_fd_or_shared_mmap", "source_mount_identities_unchanged"}
 			if len(r.SharedFrozenScopes) != 0 {
 				result.Facts = sharedFrozenObservationFacts()
@@ -293,6 +340,12 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 	}
 	if ctx.Err() != nil || o.hostIdentity(ctx) != nil || !time.Now().Before(r.Deadline) {
 		return NodeObservationResponse{}, ErrNodeObservation
+	}
+	if b.Kind == NodeObservationColdProcesses {
+		result.Facts = nodeProcessFacts(r.Action)
+		if result.Files != 0 {
+			return NodeObservationResponse{}, ErrNodeObservation
+		}
 	}
 	// Request digest always covers the caller's original bytes-as-typed, whose
 	// prepare Anchor was empty. The returned token is a separate observation.

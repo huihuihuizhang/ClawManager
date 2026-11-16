@@ -97,6 +97,16 @@ func (s *PreparedOriginalWriterSet) readOriginalRecoveryPeers(ctx context.Contex
 			if e != nil || running && !found && (!writer.stopDispatched || deployment.Annotations[originalDeploymentRecoveryAnnotation] != s.owner.operation) {
 				return result, ErrInstall
 			}
+			if running && process.Node != node.request.Binding.Node {
+				// The actual broker Deployment spans both site nodes. A peer on
+				// the other node belongs to that node's original writer anchor;
+				// never send it to this node's native observer or drop an unanchored
+				// migration. Complete final recovered membership is checked again.
+				if !s.originalRecoveryPeerNodeCovered(writer.pods, process.Node) {
+					return result, ErrInstall
+				}
+				continue
+			}
 			if err := add(writer.ID(), string(deployment.UID), deployment.ResourceVersion, writer.specSHA, pod); err != nil {
 				return result, err
 			}
@@ -144,6 +154,22 @@ func (s *PreparedOriginalWriterSet) readOriginalRecoveryPeers(ctx context.Contex
 		return result, ErrInstall
 	}
 	return result, nil
+}
+
+func (s *PreparedOriginalWriterSet) originalRecoveryPeerNodeCovered(originals []q.PodIdentity, nodeName string) bool {
+	for _, scope := range s.nodes {
+		if scope == nil || scope.set != s || scope.prepare == nil || scope.request.Binding.Node != nodeName {
+			continue
+		}
+		for _, old := range originals {
+			for _, pinned := range scope.request.Pods {
+				if old.Node == nodeName && reflect.DeepEqual(old, pinned) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // A peer observation is current process DATA, not a readiness or recovered ACK.

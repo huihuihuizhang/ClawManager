@@ -322,7 +322,7 @@ func (o *NodeObserver) runningRecoveryScopes(ctx context.Context, b ObservationB
 					PID json.Number `json:"pid"`
 				} `json:"info"`
 			}
-			if json.Unmarshal(raw, &v) != nil || v.Status.ID != id || v.Status.Labels["io.kubernetes.pod.uid"] != pod.UID || v.Status.Labels["io.kubernetes.pod.namespace"] != b.Namespace || v.Status.Labels["io.kubernetes.pod.name"] != pod.Name {
+			if json.Unmarshal(raw, &v) != nil || v.Status.ID != id || v.Status.Labels["io.kubernetes.pod.uid"] != pod.UID || !observationNamespaceAllowed(b, v.Status.Labels["io.kubernetes.pod.namespace"]) || v.Status.Labels["io.kubernetes.pod.name"] != pod.Name {
 				return nil, ErrNodeObservation
 			}
 			state := strings.Trim(string(v.Status.State), "\"")
