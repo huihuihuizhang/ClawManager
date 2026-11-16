@@ -1214,7 +1214,8 @@
     "Precedence": "Overrides older live-upload/no-deploy and old relay/Pod statements. No business stop/freeze or task created during these credential operations.",
     "OldChatsReviewed": [
       "01a1ddfc-dcfb-7692-a0d1-96fc7acc880d",
-      "01a1d423-c234-7482-931d-8adaafc7dd40"
+      "01a1d423-c234-7482-931d-8adaafc7dd40",
+      "01a1cee2-6539-7153-972a-0c9eccdb0b64"
     ],
     "Metadata": {
       "FirstAttempt": "credential-renewal/metadata exit1 output empty; host DNS cannot resolve provider Service. ObserveInstalledVaultProviderScope performs DNS check before mint. Preserve failed journal.",
@@ -1254,7 +1255,9 @@
       "TLS": "TLSv1.3"
     },
     "CurrentNativeSend": {
-      "State": "NONE pending. Region CAS/rollout/native discovery/source successor/raw mounts/facts/static8 registry selection/mc delivery all completed and actual receipts read back. No short C1/S3/signing issue, source hold or page task dispatched."
+      "RemoteState": "NONE pending; no policy/role/token/C1 issue dispatched.",
+      "LocalTestState": "PASSED; session3028 terminal.",
+      "Next": "Commit narrow RSA reuse and start exact revision Linux release build inD."
     },
     "Remaining": [
       "Actual Longhorn host configuration and writer selection field author/load/readback (step2 incomplete).",
@@ -1262,8 +1265,8 @@
       "Actual formal page create and same task full capture, storage release before business recovery, upload, independent readback and catalog.",
       "Scope/evidence audit and original authorized retirement/temporary resource cleanup."
     ],
-    "NoNewGoCodeThisContinuation": true,
-    "NoTestOrBuildArtifactsCreated": "This continuation reused existing delivered tools; required six-tool build was completed earlier entirely on D, tmp/cache removed and verified absent.",
+    "NoNewGoCodeThisContinuation": false,
+    "NoTestOrBuildArtifactsCreated": false,
     "BackupCompleted": false,
     "SourceRenewal": {
       "Version": "p2-source-renewal-946124fe.v1",
@@ -1377,7 +1380,7 @@
       "Completed": true,
       "SignedV2Issued": false
     },
-    "NextImmediate": "Prepare concrete original producer input batch for remaining20 references and disaster_identity_mapping, then execute original native authors within actual short windows. Existing8 registry DATA selection is NOT signedV2 or authority; nonce binding still requires final real request. Real VaultPermissionObserverConfig for KMS worker/publisher is distinct from InstalledVaultDependencyConfig currently mounted for metadata: inspect actual retained provider/config inputs and install minimal existing roles through original owner, never treat these wire types as interchangeable. Preserve original pre-adoption writer1e7560fb…+installed observeree378e92… for evidence author; recovered writerf0b0 has no pre-adoption dependency. Actual host Longhorn definition/keeper writer selection remains absent; verify legitimate head1/sourceV2/host material order before dispatching irreversible first adoption. Do not infer circular gap or weaken checks. No new Go code needed for confirmed MinIO region refusal.",
+    "NextImmediate": "Poll current targeted test session3028. If successful commit only narrow RSA reuse/code tests and handoff (preserve unrelated go.mod/capacity/UI). Build/deploy affected native first-install/C1/runtime callers using D temp/cache and actual new source identity. Controller Pod rollout will require current relay/source successor and correct new Publisher Pod binding before applying the prepared5 native roles; do not dispatch old-Pod plan. Continue actual native author batch20refs/config/request/Forward/V2/host load/adoption/MFA/enable/page task. No short issuance yet.",
     "Checkpoint": "d74633df pushed origin backup records deployment/renewal/mount. This last SourceFacts success update is subsequent local handoff DATA, preserve it.",
     "NonceFoundation": {
       "Precedence": "Nonce mount changed controller Pod AFTER earlier metadata/facts success. Use new identity below; old source facts are historical valid results for old Pod, NOT current source admission.",
@@ -1752,6 +1755,39 @@
       "SourceUntil": "2026-11-16T09:25:15.384603Z",
       "ConfigurationAuthored": false,
       "BackupReady": false
+    },
+    "VaultJWTReuseCurrent": {
+      "OldChat": "01a1cee2-6539-7153-972a-0c9eccdb0b64",
+      "OldFixTurn": "01a1ceff-501d-79c3-ba72-91a6718a06f5",
+      "OldSuccessTurn": "01a1cf11-0281-7ca2-9b03-42672d6a40f6",
+      "OldCommit": "16ea941d",
+      "ActualCurrentPublicKeyEvidence": "/root/sbk/p2-process-946124fe-20261116/provider-runtime-public-key-comparison-20261116/public-key-comparison.json",
+      "ActualDifference": "expected451 PEM bytes with final newline vs actual450 without; both parse to DER SHA849773cc876caae09a61d5cdd3adb3c0ea974f4715bf104469b81105819781d4. Same key, no writes.",
+      "NativePlan": "/root/sbk/p2-process-946124fe-20261116/provider-runtime-plan-20261116/completed.json",
+      "PlanReceiptSHA256": "386477abe2c2007e1cd674d685fd8a63e2da93535623a5cbee7ed94e2df60293",
+      "PlannedReferenceIntent": "/root/sbk/p2-process-946124fe-20261116/provider-runtime-plan-20261116/original-reference-selections.intent.json",
+      "ReferenceIntentNature": "Nine original owner-selected stable selectors, not credential/probe/grant proof. Existing MinIO SQL first-install entry-source ledger expressly requires original independently selected IDs/scopes; future native owners must authenticate and qualify each.",
+      "OriginalRuntimeIssuerMaterial": "/root/sbk/p2-api-runtime-inputs.WWN62yPS/runtime-issuers/original-runtime-issuers.json SHAe9b85848…; Record/Signature wrapper, key files remain original custody",
+      "PlanOnlyFirstRefusal": "KeyBinding is Go DTO with Provider/IdentityHash/RegistryVersion/ProviderKeyID/ProviderVersion fields, not the lower-case public wire encoding. First plan exit1 with empty output. Corrected new input native-plan-go-key-fields exit0. No provider writes.",
+      "RuntimeRoleApply": "Original owner preflight refused at raw JWT public-key bytes before any write intent. Root lookup, exact seal cluster/version and main key flags passed. Two subsequent original-owner read-only checks confirmed same RSA DER and no write intents. No role/policy/token issued.",
+      "Implementation": "Reuse original16ea RSA set implementation through one shared VaultRSAPublicKeysEqual function in systembackupkekadapter; old installation owner delegates. Runtime permission check and exact C1-evidence/signing JWT sites use it. JWKS/non-RS256 checks preserve prior behavior. No record bytes/signatures or live Vault JWT config rewritten.",
+      "Tests": {
+        "SessionID": 3028,
+        "Root": "D:/dsh-work/p2-vault-jwt-rsa-reuse-20261116",
+        "State": "PASSED exit0; test session3028 terminal, no go/compile/link processes remain. Three packages1.542s/5.140s/4.778s. Same D tmp/cache retained only for immediately following Linux release builds, remove after all terminal.",
+        "Names": [
+          "TestRuntimeVaultJWTTrustReusesRSAIdentity",
+          "TestOriginalPublicationJWTTrustReusesRSAIdentity",
+          "TestInstalledVaultPublicKeysEquivalentEncoding"
+        ],
+        "Result": {
+          "TempAndCacheRoot": "D:\\dsh-work\\p2-vault-jwt-rsa-reuse-20261116",
+          "ExitCode": 0,
+          "LogSHA256": "3ae9fae0192ebf867a8d2b519db698a8773f9b720b31925224cb2ee565cf650d"
+        }
+      },
+      "NewPatchDeployed": false,
+      "BackupCompleted": false
     }
   }
 }

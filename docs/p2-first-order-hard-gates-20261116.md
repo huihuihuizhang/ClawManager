@@ -29,3 +29,5 @@
 第 3 项挂载已完成，原生 bind 仍待真实 request；第 4 项新 Pod relay 已通过 TLS/SQL 读回，补充工具和新 Pod 完整来源事实均已验收；MinIO 区域实际配置已加载并通过原生探测，变更后的来源事实也已重读。眼前处理完整引用与配置生产物。第 8—19 项仍含未完成或未现场验证的环节，不称前一项为“唯一剩余阻塞”。新开发仅接受能指出本次首单具体拒绝点、不能复用的原因及结束检查的修改。
 
 MinIO 的区域配置使用原生 `MINIO_SITE_REGION`，对应 [固定 September 版本常量](https://github.com/minio/minio/blob/RELEASE.2025-09-07T16-13-09Z/internal/config/constants.go)；同版 [admin info 作者](https://github.com/minio/minio/blob/RELEASE.2025-09-07T16-13-09Z/cmd/admin-handlers.go) 从 `globalSite.Region()` 返回区域。本次以现场实际响应、CAS 配置加载和原生探测回执为验收依据，没有放宽区域校验。
+
+2026-11-16 运行授权前置重现旧 RSA PEM 差异：同一公钥 DER SHA `849773cc…`，原 API 导出 451 字节（含尾换行），Vault 返回 450 字节。旧对话 `01a1cee2…` 的提交 `16ea941d` 已在安装依赖入口实现 RSA 身份比较；本次复用同一实现至运行权限、C1 evidence 与最初 signing JWT 检查。三包针对性回归已通过；新补丁尚未部署，不据此宣称授权或备份成功。不同密钥、重复密钥、issuer、算法、默认角色变化仍拒绝，JWKS 与非 RS256 分支保持原检查。

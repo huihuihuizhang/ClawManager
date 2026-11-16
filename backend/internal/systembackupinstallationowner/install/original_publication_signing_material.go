@@ -131,7 +131,7 @@ func (i *Installer) ProduceOriginalPublicationSigningMaterial(ctx context.Contex
 		return zero, e
 	}
 	actualTrust, e := vault.data(ctx, "/v1/auth/"+o.JWTMount+"/config", root)
-	if e != nil || !originalPublicationSubset(actualTrust, wantedTrust) {
+	if e != nil || !originalPublicationJWTTrustSubset(actualTrust, wantedTrust) {
 		return zero, ErrInstall
 	}
 	actualTrust, e = originalPublicationObjectCanonical(actualTrust)

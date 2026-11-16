@@ -193,7 +193,7 @@ func (i *Installer) ProduceOriginalC1EvidenceMaterial(ctx context.Context, passw
 		return zero, ErrInstall
 	}
 	actualTrust, err := vault.data(ctx, "/v1/auth/"+original.JWTMount+"/config", root)
-	if err != nil || !originalPublicationSubset(actualTrust, desiredTrust) {
+	if err != nil || !originalPublicationJWTTrustSubset(actualTrust, desiredTrust) {
 		return zero, ErrInstall
 	}
 	actualTrust, err = originalPublicationObjectCanonical(actualTrust)

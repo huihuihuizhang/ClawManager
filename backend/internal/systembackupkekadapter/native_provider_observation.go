@@ -328,7 +328,16 @@ func validateVaultJWTTrust(raw []byte, expected VaultJWTTrust) error {
 		Pairs       []json.RawMessage `json:"jwks_pairs"`
 		DefaultRole string            `json:"default_role"`
 	}
-	if _, err := vaultCanonical(raw); err != nil || json.Unmarshal(raw, &trust) != nil || trust.Issuer != expected.Issuer || trust.JWKSURL != expected.JWKSURL || trust.JWKSCAPEM != expected.JWKSCAPEM || !sameStrings(trust.PublicKeys, expected.ValidationPublicKeys) || !sameStrings(trust.Algorithms, expected.Algorithms) || trust.OIDC != "" || len(trust.Pairs) != 0 || trust.DefaultRole != "" {
+	if _, err := vaultCanonical(raw); err != nil || json.Unmarshal(raw, &trust) != nil {
+		return kms.ErrPermission
+	}
+	keysMatch := sameStrings(trust.PublicKeys, expected.ValidationPublicKeys)
+	// The installed RS256 provider trims its PEM trailing newline. Reuse the
+	// original identity check; JWKS and other algorithm profiles stay exact.
+	if len(expected.ValidationPublicKeys) > 0 && len(expected.Algorithms) == 1 && expected.Algorithms[0] == "RS256" {
+		keysMatch = VaultRSAPublicKeysEqual(trust.PublicKeys, expected.ValidationPublicKeys)
+	}
+	if trust.Issuer != expected.Issuer || trust.JWKSURL != expected.JWKSURL || trust.JWKSCAPEM != expected.JWKSCAPEM || !keysMatch || !sameStrings(trust.Algorithms, expected.Algorithms) || trust.OIDC != "" || len(trust.Pairs) != 0 || trust.DefaultRole != "" {
 		return kms.ErrPermission
 	}
 	return nil

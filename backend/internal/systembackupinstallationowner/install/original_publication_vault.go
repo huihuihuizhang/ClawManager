@@ -123,6 +123,35 @@ func originalPublicationSubset(actual, wanted []byte) bool {
 	}
 	return contains(got, want)
 }
+
+// Only the independently selected RSA key set is compared by identity.
+// Retain the original subset comparison for every other JWT field and mode.
+func originalPublicationJWTTrustSubset(actual, wanted []byte) bool {
+	got, err := originalArchiveObject(actual)
+	if err != nil {
+		return false
+	}
+	want, err := originalArchiveObject(wanted)
+	if err != nil {
+		return false
+	}
+	var algorithms []string
+	if json.Unmarshal(want["jwt_supported_algs"], &algorithms) != nil {
+		return false
+	}
+	keys, present := want["jwt_validation_pubkeys"]
+	if present && len(algorithms) == 1 && algorithms[0] == "RS256" {
+		var actualKeys, expectedKeys []string
+		if json.Unmarshal(got["jwt_validation_pubkeys"], &actualKeys) != nil || json.Unmarshal(keys, &expectedKeys) != nil || !a.VaultRSAPublicKeysEqual(actualKeys, expectedKeys) {
+			return false
+		}
+		got["jwt_validation_pubkeys"] = keys
+		normalized, err := json.Marshal(got)
+		return err == nil && originalPublicationSubset(normalized, wanted)
+	}
+	return originalPublicationSubset(actual, wanted)
+}
+
 func originalPublicationObjectCanonical(raw []byte) ([]byte, error) {
 	var x any
 	if json.Unmarshal(raw, &x) != nil {
