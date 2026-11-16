@@ -2049,6 +2049,145 @@
       "TransferPrepared": "upload-release-one-stream.py uses quotedheredoc,48KiB rawperline,onePython receiver; bothtransport+nextcommand actualack. No archive sent yet.",
       "NewFixDeployed": false,
       "BackupCompleted": false
+    },
+    "LatestProgress_1622": {
+      "CodeCommit": "ca68d733a19374e3bf720097adaca62d0ceab071 pushed origin backup",
+      "FinalTests": "PASS session79549 owner6.579s/install5.360s; prior79708 PASS",
+      "ProductionFix": "Allow omitted emptyidentity_policies at5probe/observer sites, retain typeddecode/nonemptyreject;2actualsigningreaders also reuse installedVaultJWTConfigMatches for same RSA PEM.",
+      "Build": "All8 original-format/unstrippedELF verified actual linkedCommit/Version, session41957 exit0. Earlier stripped products incompatible with existing symboltable verifier were not delivered and deleted. Dtmp/cache absent, cleanup receipt D:/dsh-work/p2-vault-optional-identity-20261116/BUILD_TEMP_AND_UNUSED_PRODUCTS_CLEANED.json. Do NOT rebuild again.",
+      "EarlyInstallerDelivered": {
+        "SourceRevision": "ca68d733a19374e3bf720097adaca62d0ceab071",
+        "File": "/root/sbk/p2-vault-optional-identity-ca68d733-tools-20261116/system-backup-first-install-materials",
+        "SHA256": "8c2ddd1b17b52863aa41c68c26ff8ac11d139fdf0cee33fa36eaac7106c4d02f",
+        "LinkedBuildIdentity": {
+          "Version": "p2-vault-optional-identity-20261116-ca68d733",
+          "Commit": "ca68d733a19374e3bf720097adaca62d0ceab071"
+        }
+      },
+      "ActualNativeSigning": {
+        "Version": "p2-current-pod-original-signing-produced.v1",
+        "Receipt": {
+          "File": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/original-signing-ca68d733-current-pod/native.receipt.private.json",
+          "SHA256": "19eb9920bed3dff05148197c14ccd9a273557f206e5b5f1e63ec7ad2fec6fa7c"
+        },
+        "Material": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/original-publication-signing.material.json",
+          "SHA256": "7f3b939299c54a2ca629c28f625f2a6371b2aee878af78608c65cc6fc95036ae"
+        },
+        "RecordPin": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/installation-signing.pin.json",
+          "SHA256": "3c740f96aff2468573be353515a1d4297e241c56bacc77e172596443107ea1ca"
+        },
+        "CaptureObserver": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/capture-observer.json",
+          "SHA256": "bb72b3247278ea159d2821f94e46fcfff439b1c385a38972dc98b685cc590c3c"
+        },
+        "ResourceObservers": {
+          "acceptance_record": {
+            "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/resource-observer-acceptance_record.json",
+            "SHA256": "bd6acbcb46f202c9176a0fd89fbd5a136c07bd3cd161faa515fd061059850641"
+          },
+          "capture_certificate": {
+            "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/resource-observer-capture_certificate.json",
+            "SHA256": "19d22e7c337fe1109a64c522158c51a6e68f315f41baac03f6717223707e5818"
+          },
+          "catalog_record": {
+            "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/resource-observer-catalog_record.json",
+            "SHA256": "e07ba4f67503c8114d831153bdb805a19a8992fad0873c2ce752b662ebd7c019"
+          }
+        },
+        "Controller": {
+          "Deployment": "sbk-d4f51b83b57e-controller",
+          "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+          "Namespace": "clawmanager-sbk-validation-system",
+          "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+          "Pod": "sbk-d4f51b83b57e-controller-857f6674fd-szskf",
+          "PodUID": "1025524e-41c7-4941-a93d-fdaa60b563d1",
+          "ReplicaSet": "sbk-d4f51b83b57e-controller-857f6674fd",
+          "ReplicaSetUID": "47bcbe2e-a597-47f2-a655-74e14b50bd20",
+          "ServiceAccount": "sbk-d4f51b83b57e-controller",
+          "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+        },
+        "JWTFiles": {
+          "acceptance_record": {
+            "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/signing-acceptance_record.jwt",
+            "SHA256": "553a9925ca938904029f9e026330fc5e535ae3b850d85feb7f07a2ec7a3ba344"
+          },
+          "capture_certificate": {
+            "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/signing-capture_certificate.jwt",
+            "SHA256": "1ae909dae6253b786bb210651e315d931b5487dadabea187ae8745b57c044ac8"
+          },
+          "catalog_record": {
+            "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-signing-ca68d733-current-pod/signing-catalog_record.jwt",
+            "SHA256": "74f0bc8eff4f2f545b5873cb3400379cf74970c32f5bfe850f5c425cd6dae4e3"
+          }
+        },
+        "Until": "2026-11-16T10:02:15Z",
+        "ToolSourceRevision": "ca68d733a19374e3bf720097adaca62d0ceab071",
+        "ToolSHA256": "8c2ddd1b17b52863aa41c68c26ff8ac11d139fdf0cee33fa36eaac7106c4d02f",
+        "RuntimeAuthorityIssued": false,
+        "BackupCompleted": false
+      },
+      "SigningJournal": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/original-signing-ca68d733-current-pod",
+      "SigningFreshness": "Signing documentUntil18:02; issued projectedJWT/observer tokens600s and now requirefresh original issuance atfinalC1 batch. Existing stable3signingref identities/keyversion remain1. Do not treat expired runtime credentials as ready. Failed23cb output retained.",
+      "FullDelivery": {
+        "LocalRoot": "D:/dsh-work/p2-vault-optional-identity-20261116/deliverable",
+        "RemoteRoot": "/root/sbk/p2-vault-optional-identity-ca68d733-20261116",
+        "ArchiveBytes": 301980781,
+        "ArchiveSHA256": "b7e434201b931cf53d5ba42e1dc22635d793f1466adf7b2d4f98639926b83005",
+        "WriterSession56590": "terminal exit0 all stream queued",
+        "Protocol": "quotedheredoc,49152rawperline,onePython receiver; Bash buffers fullheredoc before receiver uploadstarted marker, so no early marker does not mean stopped. SSH21976 is actual live consumer. Never restart/requeue.",
+        "ActualPackageVerified": {
+          "SourceRevision": "ca68d733a19374e3bf720097adaca62d0ceab071",
+          "ArchiveSHA256": "b7e434201b931cf53d5ba42e1dc22635d793f1466adf7b2d4f98639926b83005",
+          "Actual8ELFHashes": {
+            "system-backup-source-registries": "7ef6868b6952c98c76d0e72158e128adeb30f9fadfa28ac5de0aed943484a873",
+            "system-backup-v2-controller": "694640bb6d50811cb85696aab65a7c9e54be2002bc12081863820dd46d0e313c",
+            "system-backup-first-install-materials": "8c2ddd1b17b52863aa41c68c26ff8ac11d139fdf0cee33fa36eaac7106c4d02f",
+            "backup-shared-runtime-node-owner": "c09dbacfe956951254ddab00c30678c365ed9af045c6e1d2d9adee564a0a3fe7",
+            "system-backup-first-adoption-production": "edbd4da535ca243efb9b0b205198876e10b8a47024be624c4e39a66b1b1117f5",
+            "system-backup-first-adoption": "8fd0934ccee01d64b75aba0cfa6968e4e8ed7f331157225d3847e039b2631a2f",
+            "system-backup-provider-observe": "0ec202eaaec1c65518e4497e42382a964c14cd654f0712742f61b050d1918970",
+            "system-backup-c1-native-inputs": "d9c8df8883f0c41531085e9907b25671ee45c85bb8cb46fedbb41422ff110021"
+          },
+          "BackupCompleted": false
+        },
+        "ActualImageVerified": null
+      },
+      "DeploymentDecision": "Use patched original installer/hostCLIs now. Keep current disabled f7d controller Pod1025524e and freshsource/roles stable; do NOT immediately run prepared update-optional-identity-controller-once.py (notqueued). Patched runtime image must be loaded through original final enabled/handover flow beforeformal task, with actual identity readbacks. No unnecessary extra disabled rollout/reauthor.",
+      "CurrentConfigurationInputs": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/configuration-cohort-inputs/locations.private.json SHA8cf357018a94d7e316f515a01836db70395a260cf91a40df3474ca4596f971df containsCommon/Issuer/Core/realprovider/actualrootlocators. original-broker-execution-network.json SHA09d6a0e9362c334a8dc9a7dcecd17999faac3741c0f4c86ce7984760fa77ac98 actualCRI /usr/bin/crictl masterbrokerPID/netns. Existing oldrootpassword/user filesknown fornativeS3 owner.",
+      "NextReferenceSet": "9originalownerintent refs +3actualnative signingrefs +1originalnonce =13; missing6C1sixrefs and1statusrelay. Generate via originalC1S3+evidence+archive+definitions only when fullbatch ready; windows9min/480s. finaldisastermapping unavailablefor20realrefs; author-disabled-config thenrequest thenactualMinio native/SQL/catalog.",
+      "PendingQueuedAfterFullPackage": "Real-signing-reference DATA projection command alreadyqueued; marker P2_ACTUAL_SIGNING_REFERENCE_DATA_SELECTED. Uses actualBindings and exact existing identityASCIIJCS formula, notauthority.",
+      "NewParallelMinIO": {
+        "ThreadID": "01a1e364-0725-75a0-b723-fc358c89f6fa",
+        "HostID": "local",
+        "Cursor": "7dcbf96a-aec1-4352-8fc6-7f3b7f799718:1",
+        "Files": [
+          "D:/dsh-work/p2-minio-parallel-20261116/operator-card.md",
+          "D:/dsh-work/p2-minio-parallel-20261116/p2-minio-step.sh"
+        ],
+        "ActualFinding": "Catalogcapture MUST occur after6nativeaccounts installed and BEFOREpermission-owner produce, reads finalConfig catalog_snapshot. Thenpermission produce→SQL issue-install→prepare-input→import-qualified→export-terminal→catalogpublish/query. Scripts are preparedonly; shellsyntax notchecked becauseWSLdenied; rootcan bash-n whenfield available. Needs finalConfig andBootstrapGrant pins plusrealtemplates/nativeSQL intent(codec). No nativeMinio execution bychild."
+      },
+      "RegistrationParallel": "01a1e334-b03a-7b41-94d1-4d840e2edadf prepared D:/dsh-work/p2-registration-parallel-20261116/registration-readiness.md andruntime.template.json. Existingservice/realMFA notdeployed; enroll/confirmproxyandUI missing. Do not mark3-4complete.",
+      "BackupCompleted": false
+    },
+    "C1S3MCInvocationFix_1653": {
+      "CohortJournal": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/bootstrap-config-ca68d733-20261116-1630",
+      "ActualResult": "signing exit0; C1S3 exit1 rejected_before_native_write after4.307s; generated local6credentials/policies/intent but no IAM/bucket mutation reached. Retain all failed files.",
+      "Cause1": "mc --version inherits stripped environment without PATH/MC_CONFIG_DIR; actual stderr getent executable not found in PATH.",
+      "Cause2": "After standard environment fixed, user/policy reads rejected unsupported --certs-dir flag.",
+      "ActualVerifiedFix": "Using exact MC01f8 with same root/privateCA and existing native-install environment MC_HOST,MC_CONFIG_DIR,PATH=/usr/local/bin:/usr/bin:/bin; remove --certs-dir. Actual version,userlist,policylist all exit0; correctJSONaccessKey/policy shapes verified. No TLS weakening.",
+      "Evidence": "/root/sbk/p2-vault-jwt-rsa-23cbf0b0-20261116/bootstrap-config-ca68d733-20261116-1630/mc-existing-native-argument-check/completed.json",
+      "CodeScope": "original_c1_s3_materials.go only subprocess environment/argv reuse; build ONLY system-backup-c1-s3-materials. Existing8ca68delivery remains valid. Do not rebuild8 again.",
+      "OriginalCohort": "No completed.json; oldS3shortrequest expired, nofinalConfig/grant. Fresh explicit successor required after toolready, keep original.",
+      "Time": "Rootactual16:52CST; sourceUntil18:02. Parallelchild corrected mistakenUTC+9 conversion.",
+      "RuntimeSQLDSN": {
+        "File": "/root/sbk-validation-tls-inspect.7LVU7vpE/fresh-sql-prepare.faa4osWr/sql-operation/mysql-runtime.dsn",
+        "SHA256": "dc1fb8854011b7ac8a44a10d1bfb86e11f478c046e1f46b00a4c0738947daab3"
+      },
+      "RuntimeProfile": "public-runtime-c1-minio-metadata-read.v1",
+      "NewToolDeployed": false,
+      "BackupCompleted": false
     }
   }
 }

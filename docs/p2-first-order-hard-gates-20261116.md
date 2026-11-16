@@ -35,3 +35,5 @@ MinIO 的区域配置使用原生 `MINIO_SITE_REGION`，对应 [固定 September
 2026-11-16 15:15 接续：最新现场以 handoff 的 `latest_current_site_state_20261116_1515` 为准。23cbf0b0 / 镜像 f7d0cf75 已实际加载，8 ELF、原 nonce 两容器可读、metadata 挂载、当前 Pod relay TLS/SQL、新来源、三卷材料及完整 facts 已通过；来源窗口延至 18:02。3-1 已完成：5 项 Vault 策略/角色实际读回，metadata-only 凭据已签发。2-1/2-2/2-3 与 3-2/3-3/3-4 仍待完成。用户授权新聊天 01a1e334-b03a-7b41-94d1-4d840e2edadf 并行准备现有强认证登记服务/页面入口，主线继续配置与存储接线；新聊天禁止竞争 SSH 队列、增加 Deployment 或 rollout 当前来源。没有正式页面任务。
 
 2026-11-16 15:49 签名材料实际首调用 exit1（14.27s），三用途 JWT 已写、五项策略实际存在，但最终 signed material 未写。复核同一 JWT 的实际 Vault batch 登录成功，TTL10、固定用途及 Pod/SA/namespace 全匹配，`identity_policies` 空时被 Vault 省略；三处原始探测和签名 observer 的必填字段检查因此拒绝。补丁只允许该空可选字段，保留强类型解码、非空身份策略拒绝及原有 token/用途/签名检查；两处签名读取器同时复用旧 RSA 身份比较来接收已证明的 PEM 尾换行差异。两包定向回归已通过，最终源码复跑和发布尚未完成，不把代码修复当现场授权成功。
+
+2026-11-16 16:53：ca68 全8包已现场核验，镜像8191f41b已构建（尚未替换当前disabled f7d Pod）；新签名原生成功。C1 S3 首次调用在MC预读拒绝、未进入IAM或桶写：其子进程省略PATH/MC_CONFIG_DIR导致getent找不到，还传入固定mc不支持的--certs-dir。已在同一现场、同一原root和CA下，用现有native-install的环境及参数实际跑通mc版本、用户和策略三项只读检查；只修正并更新独立C1S3工具。失败输出保留，配置/请求尚未生成，不称2-1或3-2完成。

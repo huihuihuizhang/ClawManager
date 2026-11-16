@@ -324,7 +324,9 @@ func (i *Installer) ProduceOriginalC1S3Material(ctx context.Context, password []
 		return receipt, ErrInstall
 	}
 	endpoint.User = url.UserPassword(root.AccessKey, string(root.SecretKey))
-	environment := []string{"MC_HOST_original=" + endpoint.String()}
+	// Match the existing native MinIO installer: mc needs its private config
+	// directory and the standard executable path even for --version.
+	environment := []string{"MC_HOST_original=" + endpoint.String(), "MC_CONFIG_DIR=" + mcDir, "PATH=/usr/local/bin:/usr/bin:/bin"}
 	for _, name := range []string{"SystemRoot", "WINDIR", "TEMP", "TMP"} {
 		if value := os.Getenv(name); value != "" {
 			environment = append(environment, name+"="+value)
@@ -342,7 +344,7 @@ func (i *Installer) ProduceOriginalC1S3Material(ctx context.Context, password []
 		defer cancel()
 		child, cancel2 := context.WithTimeout(child, 30*time.Second)
 		defer cancel2()
-		command := append([]string{"--json", "--config-dir", mcDir, "--certs-dir", certDir}, args...)
+		command := append([]string{"--json", "--config-dir", mcDir}, args...)
 		cmd := exec.CommandContext(child, in.MC.File, command...)
 		cmd.Env = environment
 		var output originalC1MCBuffer
