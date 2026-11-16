@@ -4,6 +4,61 @@
   "objective": "页面发起一单真实完整备份并成功：本次 Pro 卷、团队共享卷停写、完整采集、恢复、上传、独立读回及目录登记。",
   "user_requested_handoff": true,
   "complete": false,
+  "delivery_946124fe_20261116": {
+    "State": "DEPLOYED. All package files and ELF identities verified; image built and independently read back; controller and both shared owners updated. Supplementary whole readers deployed at2df43fbf. Source/config preparation in progress, NOT full step2 completion. No formal backup task.",
+    "SourceRevision": "946124feb56ce452249d6eb645d9b40c9724ad7d",
+    "Git": "backup 946124fe committed and pushed. Three-line compile compatibility correction in bootstrap_source_longhorn_materials.go uses full reflect.DeepEqual for coordinates containing namespace list; preserves ambiguity refusal. Direct blocker discovered by first release build, no new feature.",
+    "Root": "D:/dsh-work/p2-process-release-701809e9",
+    "RootNaming": "Root retains initial attempt name. Final BUILD_RECEIPT/PACKAGE_RECEIPT and every actual ELF identity are 946124fe, not 701809e9. First failed build log preserved as first-build-701809e9.failed.log. Do not rebuild or treat old naming as source identity.",
+    "ArchiveBytes": 237928958,
+    "ArchiveSHA256": "fe3e7a620b22a155ccc313c66374a67befe23673cce91a0d2b7210c49f04ee08",
+    "Remote": "/root/sbk/p2-process-946124fe-20261116",
+    "MasterSSH": {
+      "PID": 21976,
+      "Queue": "D:/dsh-work/p2-direct-session-20261116-0829/commands.txt",
+      "Output": "D:/dsh-work/p2-direct-session-20261116-0829/output.log"
+    },
+    "Node1SSH": {
+      "PID": 38396,
+      "Queue": "D:/dsh-work/p2-direct-session-20261116-0829/node1/commands.txt",
+      "Output": "D:/dsh-work/p2-direct-session-20261116-0829/node1/output.log",
+      "Route": "direct root@10.130.35.23, user authenticated"
+    },
+    "ReadOnlyPredeploy": "Controller UID e4e27f27-8f02-40ab-8c62-09f2ffa3fafa generation14 image e81b507c, disabled. Master actual PID1589080 and node1 PID1313608 ELF c620467c. Both LonghornMaterialsArgs false. Node1 durable store guard-only. All read back this turn, no business stop/freeze/task.",
+    "Checks": {
+      "LonghornMaterialsPackage": "PASS 1.702s",
+      "LogSHA256": "464ac32d0c9abe2b8d4767e43b6ee21a30d6bb40abecf1f68ca58511b4688589",
+      "SixELFIdentityVerified": true,
+      "AllBuildAndCheckExecSessionsTerminal": true
+    },
+    "QueuedMarkers": [
+      "P2_946_PACKAGE_VERIFIED",
+      "P2_946_IMAGE_BUILD_EXIT 0",
+      "P2_946_IMAGE_VERIFIED",
+      "P2_946_CONTROLLER_UPDATED",
+      "P2_946_OWNER_UPDATED"
+    ],
+    "LocalScripts": [
+      "prepare-package.py",
+      "upload-release.py",
+      "update-controller-once.py",
+      "update-owner-once.py"
+    ],
+    "Next": "Actual fresh source and mount material authors passed. Facts call now sent; reconcile before next action. Do not replay deployment or mint new token. Next generate actual signed V2 source/current consumer references, formal Longhorn host bundles and writer selection fields, install/read back policy. Then first adoption/config/enable and formal page same task, full recovery/upload/readback/catalog/cleanup.",
+    "UIHandoff": "Preserve concurrent frontend/src/pages/admin/backups/BackupSetupGuide.tsx, BackupLiveWorkspace.tsx and docs/backup-setup-guide-handoff-20261116.md. No frontend deploy authorized by these local edits alone. User authorized notification to chat01a1e1fc-53cb-7772-8e5b-b6829818af1d after step3 (renewal/source registry/config/first enable) is actually verified, using send_message_to_thread with non-sensitive version/steps/receipts/limits. Do not notify completion early or send credentials.",
+    "Image": "10.130.14.23:5000/clawmanager@sha256:0fad0e520c445382bffead4089f195204d64d714fb043b68a05caf6a0d1accc5",
+    "ControllerReceipt": "/root/sbk/p2-process-946124fe-20261116/controller-update/completed.json",
+    "OwnerReceipts": [
+      "/root/sbk/p2-process-946124fe-owner-k8s-master/completed.json",
+      "/root/sbk/p2-process-946124fe-owner-node1/completed.json"
+    ],
+    "WholeReaders": {
+      "SourceRevision": "2df43fbf8c86a16e9cfc70e8683e3ce7ee52f09f",
+      "SHA256": "0548c76c5f3714e84bcd60086da401bc8c29dee84e41f873d6982b0db353a08e",
+      "NodeReceipts": "/root/sbk/p2-whole-2df43fbf-20261116/completed.json on each node",
+      "BothTLSIdentityReadback": true
+    }
+  },
   "current_scope_20261116_process_only": {
     "UserConstraint": "Only actual site's stateless cold-process verification plus successful and partial-failure recovery. Reuse scanners/recovery. No generic process lifecycle framework. After required checks, deliver/deploy and enter field validation. New development must demonstrate a blocker of this first task. Distinguish immediate issue from unverified later stages; never call the current issue the only remaining blocker.",
     "HardRejectionsBeforeField": [
@@ -16,8 +71,8 @@
       "Capture: actual all-source census/owner graph/SSAR, runtime binding, all three Longhorn volume identities, snapshot/clone classes and formal materials must pass existing production_longhorn_source and production_capture_modules checks. No generic CSI archive RPC.",
       "Terminal: formal page action/create, fresh dispatch authority, full capture, provider release before business recovery, upload, independent physical readback and catalog registration must all produce actual task receipts before success. Create currently does not require MFA. Retire team readonly Pod only after real task-id and source-disabled/recovery evidence."
     ],
-    "LocalChangesPendingValidation": "Distinct original_cold_processes kind with no SourcePaths/file/mount facts; existing original scopes and actor reconciliation reused. All original cold nodes included. Archive entrypoints refuse process-only kind. Cross-node broker peers require the other node's original writer anchor. Added bounded protocol and actual local kernel scope tests; no source mutation or new credential issuance."
-    ,"DeliveryValidation": {
+    "LocalChangesPendingValidation": "Distinct original_cold_processes kind with no SourcePaths/file/mount facts; existing original scopes and actor reconciliation reused. All original cold nodes included. Archive entrypoints refuse process-only kind. Cross-node broker peers require the other node's original writer anchor. Added bounded protocol and actual local kernel scope tests; no source mutation or new credential issuance.",
+    "DeliveryValidation": {
       "State": "Local checks passed, proceed directly to delivery/deployment and site configuration. No generic development. Not field stop/recovery or successful backup.",
       "WindowsQuiesceSeconds": 3.855,
       "WindowsInstallFinalSeconds": 42.166,
@@ -34,6 +89,14 @@
       },
       "TemporaryRoot": "D:/dsh-work/p2-process-proof-20261116",
       "Cleanup": "All Go test/build sessions terminal. Entire D test directory removed and absence verified; WSL test cgroup absence verified. Direct SSH consumer remains live. No production source stopped/frozen, credential minted, deployment changed or task dispatched during these checks.",
+      "DeliveryBuild": {
+        "SourceRevision": "701809e986c14e4051e2592e1a47dd28e4c9c211",
+        "Git": "Committed and pushed origin backup, from 20fbdfe3 to 701809e9. Original go.mod and original_c1_capacity_collector.go remain modified and scripts/sbk-bootstrap-discover.py remains untracked; preserve them.",
+        "Root": "D:/dsh-work/p2-process-release-701809e9",
+        "ExecSession": 47317,
+        "State": "Six-tool Linux release build started; use existing session/progress before any restart. Not yet complete or deployed. TEMP/TMP/GOTMPDIR/GOCACHE all D native paths, linux/amd64 CGO0. Linked version p2-process-20261116-701809e9. Final BUILD_RECEIPT.json appears only after all six tools build. Read BUILD_PROGRESS.json for completed tools.",
+        "Next": "Wait existing build, verify actual ELF symbols with existing binary_release_identity, preserve additional source pins, package with existing upload <=48KiB exact offset reconciliation. Reuse image overlay/controller and owner CAS tooling, validate four controller ELF and both node owner ELF. Install real Longhorn policy via current formal author. No renew until deployment/material preparation ready."
+      },
       "Next": "Build six release tools on D, preserve actual linked identity and dirty additional source pins, reuse existing delivery/overlay and installed policy authors. Re-read actual node1 unit and selection. No renewal until deployment/config preparation ready. Then user's steps 3-5: concentrated renewal+registry/config, same formal page task full pipeline, scope/evidence audit and cleanup.",
       "Precedence": "This DeliveryValidation supersedes older no-process-protocol and blanket-tenant-guard statements in this handoff. Production host-cut empty-root guard remains; process-only kind has zero filesystem claims. Site remains unmodified this round."
     }
@@ -1146,5 +1209,112 @@
     "service_deployed": false,
     "configuration_activated": false
   },
-  "next_chat_instruction": "先读取此交接 JSON、现有 continuation 文档和当前 git diff。沿真实首单链路继续，不重做已验证部署，不重复申请持久授权；重新验证动态现场状态。当前未提交代码可以修改/替换，不把 partial support 视为交付完成。"
+  "next_chat_instruction": "先读取此交接 JSON、现有 continuation 文档和当前 git diff。沿真实首单链路继续，不重做已验证部署，不重复申请持久授权；重新验证动态现场状态。当前未提交代码可以修改/替换，不把 partial support 视为交付完成。",
+  "current_site_state_20261116_1148": {
+    "Precedence": "Overrides older live-upload/no-deploy and old relay/Pod statements. No business stop/freeze or task created during these credential operations.",
+    "OldChatsReviewed": [
+      "01a1ddfc-dcfb-7692-a0d1-96fc7acc880d",
+      "01a1d423-c234-7482-931d-8adaafc7dd40"
+    ],
+    "Metadata": {
+      "FirstAttempt": "credential-renewal/metadata exit1 output empty; host DNS cannot resolve provider Service. ObserveInstalledVaultProviderScope performs DNS check before mint. Preserve failed journal.",
+      "Correction": "Reused existing SourceDNS private mount namespace and original LocalForward. No Go change or host resolver mutation.",
+      "Receipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/metadata-cluster-dns/native.receipt.private.json",
+        "SHA256": "3710435be89c0ba1a62d9d2b8a702db0c8f5d2433636ad8ffb52903d721097bf"
+      },
+      "LookupSelf": "2026-11-16T03:34:12Z TTL28723s, native metadata-only policy matches, nonrenewable, covers source window",
+      "LoadedReceipt": "/root/sbk/p2-process-946124fe-20261116/metadata-load/completed.json",
+      "Pod": "sbk-d4f51b83b57e-controller-75c5cf8746-jkrrg",
+      "PodUID": "fdf15167-a7f7-4384-bf8d-69ad22147047",
+      "ReplicaSet": "sbk-d4f51b83b57e-controller-75c5cf8746",
+      "ReplicaSetUID": "8ba84bcd-42c1-48f6-94d7-39cebe50600d",
+      "ObserverSHA256": "839369fcf862480dbc19cc05d1ed58d1d960cccb680bf5592229fb88230fba19",
+      "ControllerDisabled": true,
+      "ActualReadback": "controller container has mounted private provider files, installation-owner does not. Mode0600 UID65532 and hashes verified. All actual overlay binaries verified against Binaries+HostTools using original update-controller paths. first-adoption runs from new host release, image copy remains old and is not claimed new.",
+      "OldRelayStop": "Verified original native Process PID/startticks/boot/pidnamespace/ELF/cmd hashes, TERM then terminal before immutable Secret rollout. Administrative readonly listener stop, NOT formal handover proof."
+    },
+    "SourceAPI": {
+      "Receipt": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/source-api/completed.json",
+      "ExpiresAt": "2026-11-16T11:05:29Z",
+      "TokenReviewVerified": true,
+      "ReissueAgain": false
+    },
+    "CurrentRelay": {
+      "NativeReceipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/relay-metadata-loaded/native.receipt.private.json",
+        "SHA256": "c7a6d6c1ac2f1a4cd7c05026b34a4ea8c3e873a241e9b21ff076b8f869e2d229"
+      },
+      "Until": "2026-11-16T09:43:54Z",
+      "LoadedReceipt": "/root/sbk/p2-process-946124fe-20261116/relay-start-metadata-loaded/listener-completed.json",
+      "StrictMTLSAndSQLVerifiedAt": "2026-11-16T03:45:27.274647Z",
+      "ConfigRows": 0,
+      "OwnerHeadRows": 0,
+      "TaskMutationsEnabled": false
+    },
+    "CurrentNativeSend": {
+      "Journal": "/root/sbk/p2-process-946124fe-20261116/source-facts-946124fe",
+      "LocalScript": "D:/dsh-work/p2-process-release-701809e9/produce-current-source-facts-recheck-once.py",
+      "State": "Sent once after actual mount success. SourceDNS, exact loaded provider Secret files and existing LocalForward/private mount wrapper reused. Reconcile same native intent/result, do not repeat token issuance. No hold or task.",
+      "DependsOn": "mount-materials-946124fe-recheck/completed.json"
+    },
+    "Remaining": [
+      "Actual Longhorn host configuration and writer selection field author/load/readback (step2 incomplete).",
+      "Source facts/V2 signed registry/current consumer, first adoption and config/enable (step3 incomplete).",
+      "Actual formal page create and same task full capture, storage release before business recovery, upload, independent readback and catalog.",
+      "Scope/evidence audit and original authorized retirement/temporary resource cleanup."
+    ],
+    "NoNewGoCodeThisContinuation": true,
+    "NoTestOrBuildArtifactsCreated": true,
+    "BackupCompleted": false,
+    "SourceRenewal": {
+      "Completed": true,
+      "Definition": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal/definition.private.json",
+        "SHA256": "2c8ae2969e76a46552fcc4404121413146d81c54a4817cb747223d0da81de990"
+      },
+      "Receipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal/receipt.private.json",
+        "SHA256": "7b1d5103484bfab324c6993e77f0120283be232e85fb9c32a42610cda9e609cd"
+      },
+      "SourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-20261116/source-selection.json",
+        "SHA256": "bae1442562e9eee9854a2ceb4d592e5128b06f2993613d8feedd23442be0fccd"
+      },
+      "Until": "2026-11-16T07:47:39.23342Z",
+      "NativeCoordinatesCount": 8,
+      "GrantsIssued": false,
+      "BackupReady": false
+    },
+    "LonghornMountMaterials": {
+      "Completed": true,
+      "FirstFailure": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe: exit1 hold_materials_recheck/mount_hold_recheck_read/read_error after94.569s. Output empty. Actual tenant Pro and share-manager Pods Running Ready, restart0. Preserved all logs.",
+      "OldChatEquivalent": "01a1d423-c234-7482-931d-8adaafc7dd40 turn01a1da25-aee3-76a0-bbae-3608f2b76574: known final recheck refusal, verify empty outputs via rollback_native_output, independent one-shot attempt with same source and new output. No code change required.",
+      "AttachmentContinuation": "Original team attachment record copied only after current exact UID/spec revalidation via existing check_recorded_attachment. sbk-team-1-readonly-p2 UID5465d76c-0966-47c0-8aaf-85d0a8adc8f9 retained.",
+      "Journal": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe-recheck",
+      "Receipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe-recheck/native.receipt.private.json",
+        "SHA256": "81be6605ae84cfd02a19549144983f5116514941a062a5be15ab20020d3c5854"
+      },
+      "Deployment": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/longhorn-deployment-core.json",
+        "SHA256": "a9687e8b096fe7a4aa958a099d7572b73a2e3a4f3f53023ea51d6abb4e2d64e1"
+      },
+      "MaterialsTemplate": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/mount-materials-template.json",
+        "SHA256": "3fb36617a746af30db7b08e7f7c33c7cea028cd5b0d170ec8b3ceeebd530e572"
+      },
+      "SourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/mount-source-selection.json",
+        "SHA256": "1631b25cc98fb2b4368951db846fb4815a051a7ba0b34101018b831ecb43e6e8"
+      },
+      "LonghornHoldMaterials": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/longhorn-hold-materials.json",
+        "SHA256": "2bd69edbcbc3c4334486e2ec52758a96da68873bb84a0451d80d54c372a0e3a8"
+      },
+      "Installed": false,
+      "NativeHoldClaim": false,
+      "BackupReady": false
+    }
+  }
 }
