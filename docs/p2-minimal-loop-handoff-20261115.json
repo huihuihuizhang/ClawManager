@@ -44,7 +44,7 @@
       "update-controller-once.py",
       "update-owner-once.py"
     ],
-    "Next": "Actual fresh source and mount material authors passed. Facts call now sent; reconcile before next action. Do not replay deployment or mint new token. Next generate actual signed V2 source/current consumer references, formal Longhorn host bundles and writer selection fields, install/read back policy. Then first adoption/config/enable and formal page same task, full recovery/upload/readback/catalog/cleanup.",
+    "Next": "Confirm nonce-Pod relay actual TLS/SQL receipt. Complete five-tool upload using package already prepared, no Go rebuild. Source/API credentials remain valid; reauthor source and facts for actual Pod7de91180… after nonce rollout without reissuing API/metadata/observer/runtime credentials. Actual native request/signing/source V2/consumer and Longhorn host config are still missing. Complete all9 registry/20 reference DATA from actual existing authors before short-lived S3/C1 evidence/signing actions; keep expiries. Follow hard-gate ledger; MFA really required for enable, not inferred create. No page task or business stop yet.",
     "UIHandoff": "Preserve concurrent frontend/src/pages/admin/backups/BackupSetupGuide.tsx, BackupLiveWorkspace.tsx and docs/backup-setup-guide-handoff-20261116.md. No frontend deploy authorized by these local edits alone. User authorized notification to chat01a1e1fc-53cb-7772-8e5b-b6829818af1d after step3 (renewal/source registry/config/first enable) is actually verified, using send_message_to_thread with non-sensitive version/steps/receipts/limits. Do not notify completion early or send credentials.",
     "Image": "10.130.14.23:5000/clawmanager@sha256:0fad0e520c445382bffead4089f195204d64d714fb043b68a05caf6a0d1accc5",
     "ControllerReceipt": "/root/sbk/p2-process-946124fe-20261116/controller-update/completed.json",
@@ -1242,21 +1242,19 @@
     },
     "CurrentRelay": {
       "NativeReceipt": {
-        "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/relay-metadata-loaded/native.receipt.private.json",
-        "SHA256": "c7a6d6c1ac2f1a4cd7c05026b34a4ea8c3e873a241e9b21ff076b8f869e2d229"
+        "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/relay-nonce-mounted/native.receipt.private.json",
+        "SHA256": "14e1573589d349c975e5703609001c6b17321ef1115103416631e6e6946ba895"
       },
-      "Until": "2026-11-16T09:43:54Z",
-      "LoadedReceipt": "/root/sbk/p2-process-946124fe-20261116/relay-start-metadata-loaded/listener-completed.json",
-      "StrictMTLSAndSQLVerifiedAt": "2026-11-16T03:45:27.274647Z",
+      "Until": "2026-11-16T10:02:15Z",
+      "LoadedReceipt": "/root/sbk/p2-process-946124fe-20261116/relay-start-nonce-mounted/listener-completed.json",
+      "StrictMTLSAndSQLVerifiedAt": "2026-11-16T04:41:35.259732Z",
       "ConfigRows": 0,
       "OwnerHeadRows": 0,
-      "TaskMutationsEnabled": false
+      "TaskMutationsEnabled": false,
+      "TLS": "TLSv1.3"
     },
     "CurrentNativeSend": {
-      "Journal": "/root/sbk/p2-process-946124fe-20261116/source-facts-946124fe",
-      "LocalScript": "D:/dsh-work/p2-process-release-701809e9/produce-current-source-facts-recheck-once.py",
-      "State": "Sent once after actual mount success. SourceDNS, exact loaded provider Secret files and existing LocalForward/private mount wrapper reused. Reconcile same native intent/result, do not repeat token issuance. No hold or task.",
-      "DependsOn": "mount-materials-946124fe-recheck/completed.json"
+      "State": "NONE pending. Region CAS/rollout/native discovery/source successor/raw mounts/facts/static8 registry selection/mc delivery all completed and actual receipts read back. No short C1/S3/signing issue, source hold or page task dispatched."
     },
     "Remaining": [
       "Actual Longhorn host configuration and writer selection field author/load/readback (step2 incomplete).",
@@ -1265,55 +1263,494 @@
       "Scope/evidence audit and original authorized retirement/temporary resource cleanup."
     ],
     "NoNewGoCodeThisContinuation": true,
-    "NoTestOrBuildArtifactsCreated": true,
+    "NoTestOrBuildArtifactsCreated": "This continuation reused existing delivered tools; required six-tool build was completed earlier entirely on D, tmp/cache removed and verified absent.",
     "BackupCompleted": false,
     "SourceRenewal": {
-      "Completed": true,
+      "Version": "p2-source-renewal-946124fe.v1",
       "Definition": {
-        "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal/definition.private.json",
-        "SHA256": "2c8ae2969e76a46552fcc4404121413146d81c54a4817cb747223d0da81de990"
+        "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal-minio-region/definition.private.json",
+        "SHA256": "669578e9565cbadd3592eb5dab1861d6f0104918c59ea91656feff652a81637b"
       },
       "Receipt": {
-        "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal/receipt.private.json",
-        "SHA256": "7b1d5103484bfab324c6993e77f0120283be232e85fb9c32a42610cda9e609cd"
+        "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal-minio-region/receipt.private.json",
+        "SHA256": "b9b66e6f774d174e46710cce62ba38c78f6f833013f5a64c419b099180bd2412"
       },
       "SourceSelection": {
-        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-20261116/source-selection.json",
-        "SHA256": "bae1442562e9eee9854a2ceb4d592e5128b06f2993613d8feedd23442be0fccd"
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-minio-region-20261116/source-selection.json",
+        "SHA256": "3b404529f4df8419de31eaeb519bb729b3d8c605bbadcd6d974a677976926b06"
       },
-      "Until": "2026-11-16T07:47:39.23342Z",
-      "NativeCoordinatesCount": 8,
+      "Controller": {
+        "Deployment": "sbk-d4f51b83b57e-controller",
+        "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+        "Namespace": "clawmanager-sbk-validation-system",
+        "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+        "Pod": "sbk-d4f51b83b57e-controller-6d549fbc47-gz7zr",
+        "PodUID": "7de91180-8b62-4f80-818e-15373aae2eba",
+        "ReplicaSet": "sbk-d4f51b83b57e-controller-6d549fbc47",
+        "ReplicaSetUID": "c2a1249b-c559-4101-aeb5-4542a0b720e2",
+        "ServiceAccount": "sbk-d4f51b83b57e-controller",
+        "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+      },
+      "Until": "2026-11-16T09:25:15.384603Z",
+      "SourceAPI": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/source-api/source-api.jwt",
+        "SHA256": "ba597d61ac4ce11234818e46431b4afcfcd7c57ab3a2a5d44ea84bbf15a35d74"
+      },
+      "VaultWriterSelection": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/writer-selection-runtime-recovered/selection/original-writer-selection.json",
+        "SHA256": "f0b01ab156db9ad7dd27fbdd4e7836df44d2c5cae9faacc85a1376c958fc5c58"
+      },
       "GrantsIssued": false,
-      "BackupReady": false
+      "BackupReady": false,
+      "Completed": true
     },
     "LonghornMountMaterials": {
-      "Completed": true,
-      "FirstFailure": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe: exit1 hold_materials_recheck/mount_hold_recheck_read/read_error after94.569s. Output empty. Actual tenant Pro and share-manager Pods Running Ready, restart0. Preserved all logs.",
-      "OldChatEquivalent": "01a1d423-c234-7482-931d-8adaafc7dd40 turn01a1da25-aee3-76a0-bbae-3608f2b76574: known final recheck refusal, verify empty outputs via rollback_native_output, independent one-shot attempt with same source and new output. No code change required.",
-      "AttachmentContinuation": "Original team attachment record copied only after current exact UID/spec revalidation via existing check_recorded_attachment. sbk-team-1-readonly-p2 UID5465d76c-0966-47c0-8aaf-85d0a8adc8f9 retained.",
-      "Journal": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe-recheck",
+      "Version": "p2-longhorn-source-materials-authored.v1",
       "Receipt": {
-        "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe-recheck/native.receipt.private.json",
-        "SHA256": "81be6605ae84cfd02a19549144983f5116514941a062a5be15ab20020d3c5854"
+        "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-minio-region/native.receipt.private.json",
+        "SHA256": "2e3006f17ac4afc5ab621a8b7d8d23a76c816dc812236f726428dc0483038d19"
+      },
+      "ParentSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-minio-region-20261116/source-selection.json",
+        "SHA256": "3b404529f4df8419de31eaeb519bb729b3d8c605bbadcd6d974a677976926b06"
       },
       "Deployment": {
-        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/longhorn-deployment-core.json",
-        "SHA256": "a9687e8b096fe7a4aa958a099d7572b73a2e3a4f3f53023ea51d6abb4e2d64e1"
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-minio-region/longhorn-deployment-core.json",
+        "SHA256": "0b6424895fef36427d555679557a26d6fd59f067f646fc6a32adc0b0b3c2641b"
       },
       "MaterialsTemplate": {
-        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/mount-materials-template.json",
-        "SHA256": "3fb36617a746af30db7b08e7f7c33c7cea028cd5b0d170ec8b3ceeebd530e572"
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-minio-region/mount-materials-template.json",
+        "SHA256": "c944ff113961cc60d3a72d0a3482cf73c896b07bdab0e016da224fd50dac96dd"
       },
       "SourceSelection": {
-        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/mount-source-selection.json",
-        "SHA256": "1631b25cc98fb2b4368951db846fb4815a051a7ba0b34101018b831ecb43e6e8"
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-minio-region/mount-source-selection.json",
+        "SHA256": "628f9bb81a659533b08a7ae2648008a08872039d4f86a2ee598f61a3ea9f731b"
       },
       "LonghornHoldMaterials": {
-        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/longhorn-hold-materials.json",
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-minio-region/longhorn-hold-materials.json",
         "SHA256": "2bd69edbcbc3c4334486e2ec52758a96da68873bb84a0451d80d54c372a0e3a8"
       },
-      "Installed": false,
+      "VaultWriterSelection": {
+        "File": "/root/sbk/p2-remote-1a466c69-01/writer-selection-runtime-recovered/selection/original-writer-selection.json",
+        "SHA256": "f0b01ab156db9ad7dd27fbdd4e7836df44d2c5cae9faacc85a1376c958fc5c58"
+      },
+      "Until": "2026-11-16T09:25:15.384603Z",
       "NativeHoldClaim": false,
+      "GrantsIssued": false,
+      "BackupReady": false,
+      "Completed": true,
+      "Journal": "/root/sbk/p2-process-946124fe-20261116/mount-materials-minio-region",
+      "CompletedReceipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-minio-region/completed.json",
+        "SHA256": "bcacb671ee8d05f844254da79e26a8a7f0ac3b1d8f1b07d4c3e8a60c6c9d362a"
+      },
+      "Installed": false
+    },
+    "SourceFacts": {
+      "Version": "p2-current-nonce-pod-source-facts.v1",
+      "Receipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/source-facts-minio-region/native.receipt.private.json",
+        "SHA256": "15f0d9a674d384aeab597e697e46067acdd5d1329476cb11660e5fef82e6e553"
+      },
+      "MountReceipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-minio-region/completed.json",
+        "SHA256": "bcacb671ee8d05f844254da79e26a8a7f0ac3b1d8f1b07d4c3e8a60c6c9d362a"
+      },
+      "SourceSelection": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-minio-region/mount-source-selection.json",
+        "SHA256": "628f9bb81a659533b08a7ae2648008a08872039d4f86a2ee598f61a3ea9f731b"
+      },
+      "Controller": {
+        "Deployment": "sbk-d4f51b83b57e-controller",
+        "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+        "Namespace": "clawmanager-sbk-validation-system",
+        "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+        "Pod": "sbk-d4f51b83b57e-controller-6d549fbc47-gz7zr",
+        "PodUID": "7de91180-8b62-4f80-818e-15373aae2eba",
+        "ReplicaSet": "sbk-d4f51b83b57e-controller-6d549fbc47",
+        "ReplicaSetUID": "c2a1249b-c559-4101-aeb5-4542a0b720e2",
+        "ServiceAccount": "sbk-d4f51b83b57e-controller",
+        "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+      },
+      "Until": "2026-11-16T09:25:15.384603Z",
+      "BackupReady": false,
+      "Completed": true,
+      "SignedV2Issued": false
+    },
+    "NextImmediate": "Prepare concrete original producer input batch for remaining20 references and disaster_identity_mapping, then execute original native authors within actual short windows. Existing8 registry DATA selection is NOT signedV2 or authority; nonce binding still requires final real request. Real VaultPermissionObserverConfig for KMS worker/publisher is distinct from InstalledVaultDependencyConfig currently mounted for metadata: inspect actual retained provider/config inputs and install minimal existing roles through original owner, never treat these wire types as interchangeable. Preserve original pre-adoption writer1e7560fb…+installed observeree378e92… for evidence author; recovered writerf0b0 has no pre-adoption dependency. Actual host Longhorn definition/keeper writer selection remains absent; verify legitimate head1/sourceV2/host material order before dispatching irreversible first adoption. Do not infer circular gap or weaken checks. No new Go code needed for confirmed MinIO region refusal.",
+    "Checkpoint": "d74633df pushed origin backup records deployment/renewal/mount. This last SourceFacts success update is subsequent local handoff DATA, preserve it.",
+    "NonceFoundation": {
+      "Precedence": "Nonce mount changed controller Pod AFTER earlier metadata/facts success. Use new identity below; old source facts are historical valid results for old Pod, NOT current source admission.",
+      "IssueReceipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/nonce-first-issue/native.receipt.private.json",
+        "SHA256": "bc0d89c1bf0f65f532d83c737b649954fdad2250e7ab9bc6c43e569c4ff6ef3e"
+      },
+      "Source": {
+        "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/original-nonce-20261116/nonce.material.json",
+        "SHA256": "d788e88f2b0f45cfd3b6420b8a7bd563aa3f6a0e8a811ebee445c393e863b7f9"
+      },
+      "Until": "2026-11-16T10:02:15Z",
+      "Secret": "sbk-nonce-86ce3231373c037bcc94982a",
+      "Ledger": "sbk-nonce-86ce3231373c037bcc94982a-owner",
+      "MountReceipt": "/root/sbk/p2-process-946124fe-20261116/nonce-mount-bound-native-receipt/completed.json",
+      "ActualReadonlyBothContainers": true,
+      "Controller": {
+        "Deployment": "sbk-d4f51b83b57e-controller",
+        "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+        "Pod": "sbk-d4f51b83b57e-controller-6d549fbc47-gz7zr",
+        "PodUID": "7de91180-8b62-4f80-818e-15373aae2eba",
+        "ReplicaSet": "sbk-d4f51b83b57e-controller-6d549fbc47",
+        "ReplicaSetUID": "c2a1249b-c559-4101-aeb5-4542a0b720e2"
+      },
+      "ProviderObserverSHA256": "839369fcf862480dbc19cc05d1ed58d1d960cccb680bf5592229fb88230fba19",
+      "FourActualELFHashesPreserved": true,
+      "NativeBound": false,
+      "BindingNext": "Existing native bind requires final real request/config, do it after those are produced. Do not manufacture binding.",
+      "ControllerDisabled": true,
+      "FirstMountHelperRefusal": "Original helper requires its transport readback index; first nonce-mount journal had no stop/patch intents or side effects. Linked actual original exit0 intent/stdout SHA as p2-ssh-native-readback.v1 for the unmodified helper; no fake business proof. New mount journal actually rolled and read back native nonce bytes.",
+      "CurrentRelayReceipt": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/relay-nonce-mounted/native.receipt.private.json",
+        "SHA256": "14e1573589d349c975e5703609001c6b17321ef1115103416631e6e6946ba895"
+      },
+      "CurrentRelayState": "STARTED; strict TLS1.3/exact hostname/SQL readback succeeded for actual nonce-mounted Pod. config_rows=owner_head_rows=0 and task_mutations_enabled=false. No reissue or restart pending."
+    },
+    "RequiredNativeTools": {
+      "Root": "D:/dsh-work/p2-install-tools-20261116",
+      "SourceRevision": "d74633df90829501cc52e3dd8cec20783ad7048f",
+      "BuildReceipt": "INSTALL_TOOLS_BUILD_RECEIPT.json",
+      "ActualELFBuildIDsVerified": true,
+      "AdditionalSourcePins": "Unchanged go.mod bfac471b… and original_c1_capacity_collector.go7189d712… preserved. No source code changes for these tools.",
+      "NonceRemoteVerified": "/root/sbk/p2-install-tools-20261116/nonce-verified.json",
+      "NonceSHA256": "6baaebfeff388467dc8f06c56c004f606d1b752b4d1746e355fe8d65d12d8c77",
+      "OtherTools": [
+        "system-backup-c1-s3-materials",
+        "system-backup-installation-kek-materials",
+        "system-backup-kek-window-owner",
+        "system-backup-minio-catalog-initial",
+        "system-backup-registration"
+      ],
+      "OtherPackage": {
+        "File": "D:/dsh-work/p2-install-tools-20261116/remaining-install-tools.tar.gz",
+        "Bytes": 150874058,
+        "SHA256": "ba2f7ca1214ee06c348924d2e72ec9e42c9e1df61db55cbdd735cf86acbbdab6",
+        "State": "DELIVERED and independently verified all5 ELF SHA/mode/root UID/amd64. See remote install-tools-verified.json and P2_INSTALL_TOOLS_AND_NONCE_POD_CURRENT_READBACK. Do not reupload."
+      },
+      "BuildSessionsTerminal": [
+        71162,
+        12513,
+        80111
+      ],
+      "Cleanup": "tmp/cache directories beneath D:/dsh-work/p2-install-tools-20261116 removed and absence verified. Release artifacts and receipts retained. No test/build temporary outputs on C.",
+      "ActualReadback": {
+        "system-backup-c1-s3-materials": "64c1dd7a3adc80cd642bbf2b33a2e19cba25a7908f8e34949b267485ee97676c",
+        "system-backup-installation-kek-materials": "4ee49608d867f9c926ab57a90c8a450510d084d4c13b5858e51019ddcbaf09f9",
+        "system-backup-kek-window-owner": "b8a2d0fcccd725168ec27586c4e5c3eb2015ad1db4414138b0371e25dde94f87",
+        "system-backup-minio-catalog-initial": "e3ca6a6b28b36ec90bfbc250ee763f4352176f4f8144ff78519adbc35f10f4ff",
+        "system-backup-registration": "cd06388097471b621993f21fa281bac8e9f9a5678db72b8b8ad83647eac33b89",
+        "INSTALL_TOOLS_BUILD_RECEIPT.json": "c8bfa4c1fb361f34ce2737d07d2c158878d10968846fe12431938fc76e1d9ba2"
+      },
+      "VerifiedReceipt": "/root/sbk/p2-install-tools-20261116/install-tools-verified.json",
+      "ExistingMinIOTools": {
+        "Source": "Current deployed image0fad0e52;3 actual ELF SHA read back then copied to host mode0500, no rebuild",
+        "Receipt": "/root/sbk/p2-process-946124fe-20261116/minio-native-preflight-20261116/existing-image-tools.receipt.json",
+        "Binaries": {
+          "system-backup-minio-native-install": "b2d67d2669bc8b2ff9c10358ecdc2bc7aab5dde502ae114fc50a429053e7f260",
+          "system-backup-minio-permission-owner": "b90930dafcb28ad91ad664a7e5b934c9d3a575a5a1d4f21983c4a3cf6c0f0f74",
+          "system-backup-minio-sql-owner": "cd9a044373d9776fca2a7b2f6c99d987a6a692f6c1bf2ccd4e55fb6fbad0ca6f"
+        }
+      },
+      "OriginalMC": {
+        "Version": "p2-original-mc-existing-release-delivery.v1",
+        "File": "/root/sbk/p2-install-tools-20261116/mc",
+        "SHA256": "01f866e9c5f9b87c2b09116fa5d7c06695b106242d829a8bb32990c00312e891",
+        "OriginalFile": "/root/clawmanager-release.0qgdJKAX/tools/mc",
+        "Bytes": 30535864,
+        "DownloadUsed": false
+      }
+    },
+    "SigningTransport": {
+      "HostDirectVaultTLS": "actual TCP/TLS to10.100.37.11:8200 times out",
+      "ActualExistingPodNetworkProbe": {
+        "Pod": "clawmanager-secret-broker-f9b8756d8-2zhcl",
+        "PodUID": "afa7e37b-d649-4d10-b11d-df768c093e8e",
+        "Node": "k8s-master",
+        "NetworkNamespaceInode": 4026547837,
+        "TLSVerified": true,
+        "TLSVersion": "TLSv1.3"
+      },
+      "Mechanism": "nsenter existing net namespace held by FD after exact Kube/CRI Pod UID and container identity check; probe only. Source/issuer custody remain on host, no keys copied into business Pods and no network policy changes. Re-observe before native author use.",
+      "NativeSigningIssued": false
+    },
+    "FullHardGateLedger": "docs/p2-first-order-hard-gates-20261116.md",
+    "HistoricalSourceBeforeNonceMount": {
+      "SourceRenewal": {
+        "Completed": true,
+        "Definition": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal/definition.private.json",
+          "SHA256": "2c8ae2969e76a46552fcc4404121413146d81c54a4817cb747223d0da81de990"
+        },
+        "Receipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal/receipt.private.json",
+          "SHA256": "7b1d5103484bfab324c6993e77f0120283be232e85fb9c32a42610cda9e609cd"
+        },
+        "SourceSelection": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-20261116/source-selection.json",
+          "SHA256": "bae1442562e9eee9854a2ceb4d592e5128b06f2993613d8feedd23442be0fccd"
+        },
+        "Until": "2026-11-16T07:47:39.23342Z",
+        "NativeCoordinatesCount": 8,
+        "GrantsIssued": false,
+        "BackupReady": false
+      },
+      "LonghornMountMaterials": {
+        "Completed": true,
+        "FirstFailure": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe: exit1 hold_materials_recheck/mount_hold_recheck_read/read_error after94.569s. Output empty. Actual tenant Pro and share-manager Pods Running Ready, restart0. Preserved all logs.",
+        "OldChatEquivalent": "01a1d423-c234-7482-931d-8adaafc7dd40 turn01a1da25-aee3-76a0-bbae-3608f2b76574: known final recheck refusal, verify empty outputs via rollback_native_output, independent one-shot attempt with same source and new output. No code change required.",
+        "AttachmentContinuation": "Original team attachment record copied only after current exact UID/spec revalidation via existing check_recorded_attachment. sbk-team-1-readonly-p2 UID5465d76c-0966-47c0-8aaf-85d0a8adc8f9 retained.",
+        "Journal": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe-recheck",
+        "Receipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-946124fe-recheck/native.receipt.private.json",
+          "SHA256": "81be6605ae84cfd02a19549144983f5116514941a062a5be15ab20020d3c5854"
+        },
+        "Deployment": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/longhorn-deployment-core.json",
+          "SHA256": "a9687e8b096fe7a4aa958a099d7572b73a2e3a4f3f53023ea51d6abb4e2d64e1"
+        },
+        "MaterialsTemplate": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/mount-materials-template.json",
+          "SHA256": "3fb36617a746af30db7b08e7f7c33c7cea028cd5b0d170ec8b3ceeebd530e572"
+        },
+        "SourceSelection": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/mount-source-selection.json",
+          "SHA256": "1631b25cc98fb2b4368951db846fb4815a051a7ba0b34101018b831ecb43e6e8"
+        },
+        "LonghornHoldMaterials": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-946124fe-recheck/longhorn-hold-materials.json",
+          "SHA256": "2bd69edbcbc3c4334486e2ec52758a96da68873bb84a0451d80d54c372a0e3a8"
+        },
+        "Installed": false,
+        "NativeHoldClaim": false,
+        "BackupReady": false
+      },
+      "SourceFacts": {
+        "Completed": true,
+        "Receipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/source-facts-946124fe/native.receipt.private.json",
+          "SHA256": "1d531a3e9d015381617450c8b50d54bb3922b72d257551b4d646619ce09f56da"
+        },
+        "PartsRegistry": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-20261116/parts-registry.json",
+          "SHA256": "02312c22ddfdf57c114e3e9b1c6e8a2e9f149e87c1043e78ac37539a282f75f9"
+        },
+        "SourceWritersRegistry": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-20261116/source-writers-registry.json",
+          "SHA256": "c1c72f0b16cdb3b47ee4e982ec7eb8bc794b91d4228119ac48bc2aaad41a2781"
+        },
+        "RedisSources": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-20261116/redis-sources-registry.json",
+          "SHA256": "54315164a06dbb13c9a13b6ad1dc20090b2cfa2893edc8ef2e1adfde886760e3"
+        },
+        "SixSecretPolicy": "Original72360a4b policy unchanged and natively accepted",
+        "PrivateTransportClosed": true,
+        "SignedV2Issued": false,
+        "BackupReady": false
+      },
+      "Relay": {
+        "NativeReceipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/relay-metadata-loaded/native.receipt.private.json",
+          "SHA256": "c7a6d6c1ac2f1a4cd7c05026b34a4ea8c3e873a241e9b21ff076b8f869e2d229"
+        },
+        "Until": "2026-11-16T09:43:54Z",
+        "LoadedReceipt": "/root/sbk/p2-process-946124fe-20261116/relay-start-metadata-loaded/listener-completed.json",
+        "StrictMTLSAndSQLVerifiedAt": "2026-11-16T03:45:27.274647Z",
+        "ConfigRows": 0,
+        "OwnerHeadRows": 0,
+        "TaskMutationsEnabled": false
+      }
+    },
+    "CurrentController": {
+      "Deployment": "sbk-d4f51b83b57e-controller",
+      "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+      "Namespace": "clawmanager-sbk-validation-system",
+      "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+      "Pod": "sbk-d4f51b83b57e-controller-6d549fbc47-gz7zr",
+      "PodUID": "7de91180-8b62-4f80-818e-15373aae2eba",
+      "ReplicaSet": "sbk-d4f51b83b57e-controller-6d549fbc47",
+      "ReplicaSetUID": "c2a1249b-c559-4101-aeb5-4542a0b720e2",
+      "ServiceAccount": "sbk-d4f51b83b57e-controller",
+      "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+    },
+    "BeforeMinIORegionSource": {
+      "SourceRenewal": {
+        "Version": "p2-source-renewal-946124fe.v1",
+        "Definition": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal-nonce-mounted/definition.private.json",
+          "SHA256": "2184957dbce02ceef69f07acf60d5b514e2f64de55e20a684dd2b63c87d2ecde"
+        },
+        "Receipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/source-renewal-nonce-mounted/receipt.private.json",
+          "SHA256": "d4e96b0c136916ac9d3bc94c00dda994bc011f8c1e361f89389afde1826c9066"
+        },
+        "SourceSelection": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-nonce-20261116/source-selection.json",
+          "SHA256": "1e59bfa0d0ca710b2999e074e29b4e0b4cf4012acaa64e9495d1c81a5fbbc90e"
+        },
+        "Controller": {
+          "Deployment": "sbk-d4f51b83b57e-controller",
+          "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+          "Namespace": "clawmanager-sbk-validation-system",
+          "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+          "Pod": "sbk-d4f51b83b57e-controller-6d549fbc47-gz7zr",
+          "PodUID": "7de91180-8b62-4f80-818e-15373aae2eba",
+          "ReplicaSet": "sbk-d4f51b83b57e-controller-6d549fbc47",
+          "ReplicaSetUID": "c2a1249b-c559-4101-aeb5-4542a0b720e2",
+          "ServiceAccount": "sbk-d4f51b83b57e-controller",
+          "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+        },
+        "Until": "2026-11-16T08:44:31.205104Z",
+        "SourceAPI": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/credential-renewal/source-api/source-api.jwt",
+          "SHA256": "ba597d61ac4ce11234818e46431b4afcfcd7c57ab3a2a5d44ea84bbf15a35d74"
+        },
+        "VaultWriterSelection": {
+          "File": "/root/sbk/p2-remote-1a466c69-01/writer-selection-runtime-recovered/selection/original-writer-selection.json",
+          "SHA256": "f0b01ab156db9ad7dd27fbdd4e7836df44d2c5cae9faacc85a1376c958fc5c58"
+        },
+        "GrantsIssued": false,
+        "BackupReady": false,
+        "Completed": true
+      },
+      "LonghornMountMaterials": {
+        "Version": "p2-longhorn-source-materials-authored.v1",
+        "Receipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-nonce-mounted/native.receipt.private.json",
+          "SHA256": "911a8afe966fd55e7ffbd981d468c6c698578c9705f9a057e0168bbcb825d1e8"
+        },
+        "ParentSelection": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/initial-source-946124fe-nonce-20261116/source-selection.json",
+          "SHA256": "1e59bfa0d0ca710b2999e074e29b4e0b4cf4012acaa64e9495d1c81a5fbbc90e"
+        },
+        "Deployment": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-nonce-mounted/longhorn-deployment-core.json",
+          "SHA256": "d7e0e1c4f58e27407df56f0a5cabebc8dedacaaa1723609b91cc4ad474faec2e"
+        },
+        "MaterialsTemplate": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-nonce-mounted/mount-materials-template.json",
+          "SHA256": "385c8bde0ae56540be26edb373cbaeb45bc820a5fa053c34b34fc30ef9c36a19"
+        },
+        "SourceSelection": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-nonce-mounted/mount-source-selection.json",
+          "SHA256": "35a5547349e49770651cbfa0bd089b4864d5659bb007b7ba8b514f90e43f62a0"
+        },
+        "LonghornHoldMaterials": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-nonce-mounted/longhorn-hold-materials.json",
+          "SHA256": "2bd69edbcbc3c4334486e2ec52758a96da68873bb84a0451d80d54c372a0e3a8"
+        },
+        "VaultWriterSelection": {
+          "File": "/root/sbk/p2-remote-1a466c69-01/writer-selection-runtime-recovered/selection/original-writer-selection.json",
+          "SHA256": "f0b01ab156db9ad7dd27fbdd4e7836df44d2c5cae9faacc85a1376c958fc5c58"
+        },
+        "Until": "2026-11-16T08:44:31.205104Z",
+        "NativeHoldClaim": false,
+        "GrantsIssued": false,
+        "BackupReady": false,
+        "Completed": true,
+        "Journal": "/root/sbk/p2-process-946124fe-20261116/mount-materials-nonce-mounted",
+        "CompletedReceipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-nonce-mounted/completed.json",
+          "SHA256": "b9b203919968bc35cc884f09a107dcd3f9eb2ca6024937c1911331bfa82d4073"
+        },
+        "Installed": false
+      },
+      "SourceFacts": {
+        "Version": "p2-current-nonce-pod-source-facts.v1",
+        "Receipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/source-facts-nonce-mounted/native.receipt.private.json",
+          "SHA256": "37811c72d4841a8e0d73a0cbc57ca1f5f2b946c36c701bb254bb87c3ef766b8d"
+        },
+        "MountReceipt": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/mount-materials-nonce-mounted/completed.json",
+          "SHA256": "b9b203919968bc35cc884f09a107dcd3f9eb2ca6024937c1911331bfa82d4073"
+        },
+        "SourceSelection": {
+          "File": "/run/system-backup/runtime/p2-renew-1048e373bfe0/mount-materials-nonce-mounted/mount-source-selection.json",
+          "SHA256": "35a5547349e49770651cbfa0bd089b4864d5659bb007b7ba8b514f90e43f62a0"
+        },
+        "Controller": {
+          "Deployment": "sbk-d4f51b83b57e-controller",
+          "DeploymentUID": "e4e27f27-8f02-40ab-8c62-09f2ffa3fafa",
+          "Namespace": "clawmanager-sbk-validation-system",
+          "NamespaceUID": "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f",
+          "Pod": "sbk-d4f51b83b57e-controller-6d549fbc47-gz7zr",
+          "PodUID": "7de91180-8b62-4f80-818e-15373aae2eba",
+          "ReplicaSet": "sbk-d4f51b83b57e-controller-6d549fbc47",
+          "ReplicaSetUID": "c2a1249b-c559-4101-aeb5-4542a0b720e2",
+          "ServiceAccount": "sbk-d4f51b83b57e-controller",
+          "ServiceAccountUID": "0680d6db-b8bb-4502-a0cd-efd08c2f0ab1"
+        },
+        "Until": "2026-11-16T08:44:31.205104Z",
+        "BackupReady": false,
+        "Completed": true,
+        "SignedV2Issued": false
+      }
+    },
+    "MinIORegion": {
+      "InitialRefusal": "Actual native provider discovery rejected: authenticated TLS1.3/SPKI/admin info200 and exact September version passed, but admin info omitted region while native provider requiresus-east-1. Preserved private admin-info.response and failed native receipts.",
+      "Config": {
+        "Version": "p2-original-minio-region-config-loaded.v1",
+        "DeploymentUID": "6a14e6f1-253b-45ab-96d9-66cf3b22ef23",
+        "Pod": "minio-7797779b5-48thf",
+        "PodUID": "937175cd-de62-49b9-9d2c-8665afd8508c",
+        "Region": "us-east-1",
+        "Image": "10.130.14.23:5000/minio@sha256:52dfd5c0bbd38d3219f2058c7af216d9f9a27a994b7b5baad09bbd38866015ff",
+        "Ready": true,
+        "DesiredSpec": {
+          "File": "/root/sbk/p2-process-946124fe-20261116/minio-region-config-20261116/desired.spec.private.json",
+          "SHA256": "037ff25aab0811f17e1ac79581b25bfd0ddc7ddf4ab6f6431e19c931181ac8d9"
+        },
+        "NativeProbePassed": false,
+        "BackupReady": false
+      },
+      "NativeProvider": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/minio-region-config-20261116/native-discovery/original-minio-source-provider.data.json",
+        "SHA256": "2327f0b2a648bbd9175226216e5c3c38251f52ce5afbce695ff807c099b641f9"
+      },
+      "NativeObservation": {
+        "File": "/root/sbk/p2-process-946124fe-20261116/minio-region-config-20261116/native-discovery/native.receipt.private.json",
+        "SHA256": "4ff683df9113329c03c261eeba1581ed3a715863cf44f72ac465a9416f96cbdd"
+      },
+      "NativeProbeExit": 0,
+      "Network": {
+        "Pod": "clawmanager-secret-broker-f9b8756d8-2zhcl",
+        "PodUID": "afa7e37b-d649-4d10-b11d-df768c093e8e",
+        "NetNS": 4026547837
+      },
+      "Scope": "Full UID/resourceVersion/spec CAS added only MINIO_SITE_REGION=us-east-1 to existing minio container; same DeploymentUID/image/root/TLS/storage preserved. Actual new Pod Ready and original native probe passed. No Go code changes.",
+      "UpstreamSources": [
+        "https://github.com/minio/minio/blob/RELEASE.2025-09-07T16-13-09Z/internal/config/constants.go",
+        "https://github.com/minio/minio/blob/RELEASE.2025-09-07T16-13-09Z/cmd/admin-handlers.go"
+      ],
+      "OldSourceHandling": "New explicit source, three-volume raw materials and complete facts produced after workload change. Prior nonce-only source/facts are historical.",
+      "PermissionIssued": false,
+      "BackupReady": false,
+      "ConfigReceiptInterpretation": "Retained original rollout receipt correctly says NativeProbePassed=false because probe followed rollout. Independent later NativeObservation and NativeProbeExit0 below prove the subsequent native success; original receipt bytes unchanged."
+    },
+    "StaticConfigurationInputs": {
+      "File": "/root/sbk/p2-process-946124fe-20261116/configuration-inputs-20261116/static-inputs.json",
+      "SHA256": "2e88339089a3eca7180efcebdc735b38c3f1bdf8d02bf266a56bc3461654477e",
+      "RegistryKinds": [
+        "failure_domains",
+        "parts",
+        "provider_proof_issuers",
+        "rbac_bindings",
+        "redis_sources",
+        "secret_allowlist",
+        "source_writers",
+        "strong_auth_issuers"
+      ],
+      "RemainingRegistry": "disaster_identity_mapping after real20 reference selection",
+      "SourceUntil": "2026-11-16T09:25:15.384603Z",
+      "ConfigurationAuthored": false,
       "BackupReady": false
     }
   }
