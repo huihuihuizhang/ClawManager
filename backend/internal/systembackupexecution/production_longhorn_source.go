@@ -51,6 +51,11 @@ func (x *originalSourceMetadataAuthority) freezeLonghornSources(ctx context.Cont
 	out := make(map[string]plannedLonghornClone, len(authored))
 	volumes := make(map[string]bool, len(authored))
 	for part, source := range authored {
+		// The original MinIO volume is held for the initial cold archive. Formal
+		// backups read its objects through S3 and do not create a clone for it.
+		if part == originalMinIOArchivePart {
+			continue
+		}
 		if identity, ok := mounts[part]; !ok || identity != source.Source {
 			return nil, d.ErrNotReady
 		}

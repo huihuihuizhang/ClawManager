@@ -191,6 +191,9 @@ func (x *bootstrapSourceRegistryReader) openMetadataClients() (_ *productionMeta
 		return nil, install.ErrInstall
 	}
 	cfg := &rest.Config{Host: apiBinding.Endpoint, BearerToken: value, TLSClientConfig: rest.TLSClientConfig{CAData: ca}, Timeout: 5 * time.Second, QPS: 5, Burst: 5}
+	if x.mountAuthoring {
+		cfg.QPS, cfg.Burst = 10, 10
+	}
 	base, err := rest.TransportFor(cfg)
 	if err != nil {
 		return nil, install.ErrInstall

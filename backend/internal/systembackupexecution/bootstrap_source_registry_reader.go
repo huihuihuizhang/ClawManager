@@ -46,13 +46,15 @@ type bootstrapSourceReadSelection struct {
 type bootstrapSourceRegistryReader struct {
 	// Installer-only TCP route; never part of persisted source facts.
 	providerLocalForward string
-	ctx                  context.Context
-	physical             context.Context
-	access               bootstrapSourceReadAccess
-	association          bootstrapSourceReadDeclaration
-	config               DeploymentConfig
-	materials            productionCaptureMaterials
-	profile              api.ExecutionProfile
+	// Mount authoring makes several complete reads within one native deadline.
+	mountAuthoring bool
+	ctx            context.Context
+	physical       context.Context
+	access         bootstrapSourceReadAccess
+	association    bootstrapSourceReadDeclaration
+	config         DeploymentConfig
+	materials      productionCaptureMaterials
+	profile        api.ExecutionProfile
 }
 
 func strictBootstrapSourceJSON(raw []byte, out any) error {

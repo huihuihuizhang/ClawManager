@@ -226,6 +226,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 		return zero, err
 	}
 	phase = "metadata_clients"
+	x.mountAuthoring = true
 	clients, err := x.openMetadataClients()
 	if err != nil {
 		return zero, err
@@ -303,7 +304,10 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	}
 	phase = "mount_scope_recheck"
 	lastScope, err := BuildOriginalInstanceMountScope(x.physical, clients.API, x.config, lastSQL.inventory.Instances, specs, layouts.Layouts)
-	if err != nil || !bytes.Equal(scopeRaw, lastScope) {
+	if err != nil {
+		return zero, err
+	}
+	if !bytes.Equal(scopeRaw, lastScope) {
 		return zero, install.ErrInstall
 	}
 	phase = "longhorn_sources_recheck"
@@ -418,6 +422,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 		// The successor changes the Core digest as well as the template. Have
 		// the original installer/reader validate that new pairing before it
 		// can be selected by the later signing/facts owners.
+		phase = "successor_readback"
 		next, err := installer.PrepareBootstrapSourceRegistryAuthoring(ctx, password, enrollment, nextSelectionFile, hash(selectionRaw))
 		if err != nil {
 			return zero, install.ErrInstall
