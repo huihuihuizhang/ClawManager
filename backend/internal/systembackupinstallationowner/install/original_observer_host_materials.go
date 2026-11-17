@@ -33,6 +33,10 @@ type OriginalObserverHostCRI struct {
 const observerHostCRIBinarySHA256 = "d9f541aa6a3a1fce15392d4366da5f97b47683aa55a825909ad8c0a624c7f4f3"
 const observerHostCRIBundleName = "crictl-v1.31.1"
 
+// Four separately bounded observer ELFs, optional crictl, and bounded metadata.
+// The bundle must accommodate those inputs without relaxing their individual pins.
+const observerHostBundleMax = 5*(64<<20) + (2 << 20)
+
 type OriginalObserverHostDefinition struct {
 	Version                            string
 	PKIDefinition, PKIReceipt          BootstrapSourceFilePin
@@ -467,7 +471,7 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 				return zero, ErrInstall
 			}
 		}
-		if writer.Close() != nil || archive.Len() > 200<<20 || check() != nil {
+		if writer.Close() != nil || archive.Len() > observerHostBundleMax || check() != nil {
 			return zero, ErrInstall
 		}
 		name := "observer-node-" + hash([]byte(endpoints[0].NodeUID))[:24] + ".private.tar"
@@ -475,7 +479,7 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 			return zero, ErrInstall
 		}
 		output := BootstrapSourceFilePin{File: filepath.Join(directory, name), SHA256: hash(archive.Bytes())}
-		actual, e := readObserverHostFile(output, 200<<20)
+		actual, e := readObserverHostFile(output, observerHostBundleMax)
 		same := e == nil && bytes.Equal(actual, archive.Bytes())
 		clear(actual)
 		clear(archive.Bytes())

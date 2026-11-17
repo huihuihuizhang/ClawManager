@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+
 	"syscall"
 	"time"
 
@@ -43,12 +44,21 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	f := flag.NewFlagSet("system-backup-first-adoption-production", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
 	action := f.String("action", "run", "run, prepare-minio-history, prepare-native-plan, prepare-inputs query-disabled-initialization prepare-recovery-descriptor or query-minio-recovery")
+	helperFile := f.String("longhorn-pre-cold-helper-file", "", "pinned one-shot same-process Longhorn continuation")
+	pythonSHA := f.String("longhorn-pre-cold-python-sha256", "", "SHA256 of fixed /usr/bin/python3.12 interpreter")
+	helperSHA := f.String("longhorn-pre-cold-helper-sha256", "", "independent helper SHA256")
 	values := map[string]*string{}
 	for _, name := range []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "issuer-private-file", "issuer-private-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "inputs-file", "inputs-sha256"} {
 		values[name] = f.String(name, "", "original independently selected owner input")
 	}
 	recoveryPassword := f.String("recovery-admin-password-file", "", "fresh original local admin credential file; defaults to selected original file")
 	if ctx == nil || out == nil || f.Parse(args) != nil || f.NArg() != 0 {
+		return 2
+	}
+	if (*helperFile == "") != (*helperSHA == "") || (*helperFile == "") != (*pythonSHA == "") {
+		return 2
+	}
+	if *helperFile != "" && *action != "run-minio-metadata" {
 		return 2
 	}
 	get := func(n string) string { return *values[n] }
@@ -298,6 +308,33 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	in, e := install.DecodeOriginalFirstAdoptionProductionInputs(raw, get("inputs-sha256"))
 	if e != nil {
 		return 1
+	}
+
+	if *helperFile != "" {
+
+		code, err := readPin(*helperFile, *helperSHA, 64<<10)
+		if err != nil {
+			return 1
+		}
+		// Execute the exact checked bytes, not a mutable path. The helper is
+		// operator code, not an authority receipt; live original gates follow.
+		in.LonghornPreCold = func(active context.Context, head install.OriginalC1Head1Receipt) (install.BootstrapSourceFilePin, error) {
+			var pin install.BootstrapSourceFilePin
+			raw, err := json.Marshal(head)
+			if err != nil {
+				return pin, err
+			}
+			output, err := runLonghornPreColdHelper(active, code, raw, *pythonSHA, os.Stderr)
+			if err != nil {
+				return pin, err
+			}
+			decoder := json.NewDecoder(bytes.NewReader(output))
+			decoder.DisallowUnknownFields()
+			if decoder.Decode(&pin) != nil || decoder.Decode(new(any)) != io.EOF {
+				return pin, install.ErrInstall
+			}
+			return pin, nil
+		}
 	}
 	runProduction := owner.RunOriginalFirstAdoptionProduction
 	if *action == "run-minio-metadata" {

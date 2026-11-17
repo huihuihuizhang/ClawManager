@@ -131,10 +131,15 @@ func main() {
 		defer backupDatabase.Close()
 	}
 	backupSessionSQL, _ := backupDatabase.Driver().(*sql.DB)
-	backupMutation, err := loadBackupConfigMutationProduction(backupSessionSQL, cfg.Database.Database, cfg.JWT.Secret, os.Getenv)
+	backupMutation, err := loadBackupConfigMutationStartup(backupSessionSQL, cfg.Database.Database, cfg.JWT.Secret, os.Getenv)
 	if err != nil {
 		log.Fatal("system backup configuration mutation composition unavailable")
 	}
+	backupMutationFirstLoad, err := newBackupMutationFirstLoad(backupSessionSQL, cfg.Database.Database, cfg.JWT.Secret, os.Getenv)
+	if err != nil {
+		log.Fatal("system backup first-load configuration invalid")
+	}
+	defer backupMutationFirstLoad.Close()
 	var backupSessions *systembackupsecurity.SQLLoginSessions
 	if backupMutation != nil {
 		backupSessions = backupMutation.LoginSessions()
@@ -1018,6 +1023,7 @@ func main() {
 			registerBackupReadLive(versionedAdmin, live)
 			registerBackupTaskMutations(versionedAdmin, live.tasks)
 			registerBackupConfigMutationLive(versionedAdmin, backupMutation)
+			registerBackupConfigMutationFirstLoad(versionedAdmin, backupMutationFirstLoad)
 		} else if readErr != nil {
 			log.Println("Versioned backup history disabled: invalid read switch")
 		}

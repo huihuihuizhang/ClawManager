@@ -183,10 +183,14 @@ func registerBackupConfigMutationLive(admin *gin.RouterGroup, production *sec.Co
 		return
 	}
 	handler := func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 90*time.Second)
-		defer cancel()
-		production.ServeHTTP(c.Writer, c.Request.WithContext(ctx))
+		serveBackupConfigMutationLive(c, production)
 	}
 	admin.PUT("/system-backup-config", handler)
 	admin.POST("/system-backup-config/rollback", handler)
+}
+
+func serveBackupConfigMutationLive(c *gin.Context, production *sec.ConfigMutationProduction) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 90*time.Second)
+	defer cancel()
+	production.ServeHTTP(c.Writer, c.Request.WithContext(ctx))
 }

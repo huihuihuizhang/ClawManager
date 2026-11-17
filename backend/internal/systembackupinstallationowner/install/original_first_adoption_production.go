@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"time"
 
 	sb "clawreef/internal/systembackup"
@@ -16,6 +17,8 @@ import (
 // owner creates the runtime mapping, C1 sources, head1, B reservation, archive
 // association, retained references and every signed control inside this call.
 type OriginalFirstAdoptionProductionInputs struct {
+	// In-process, explicit CLI continuation only. Never decoded from DATA or treated as proof.
+	LonghornPreCold                                                                                  func(context.Context, OriginalC1Head1Receipt) (BootstrapSourceFilePin, error) `json:"-"`
 	Version                                                                                          string
 	RuntimeDSN, RuntimeCA, C1Invocation, WriterSelection, MinIOWholeHistoryMaterial, AdoptionIssuers BootstrapSourceFilePin
 	Provider                                                                                         OriginalRuntimeProviderIssueInputs
@@ -160,6 +163,28 @@ func (i *Installer) runOriginalFirstAdoptionProductionForSQLProfile(ctx context.
 		return fail("actual_current20_timing", ErrInstall)
 	}
 	receipt.OriginalObservationMinimum = minimum
+	if in.LonghornPreCold != nil {
+		before, err := readOriginalWriterSetSelection(in.WriterSelection)
+		if err != nil || before.LonghornHostDefinition != (BootstrapSourceFilePin{}) || before.LonghornKeeperImage != "" {
+			return fail("longhorn_precold_original_selection", ErrInstall)
+		}
+		// Keep the same opaque C1 objects, context, head1 and expiry. No resume/reissue.
+		successor, err := in.LonghornPreCold(active, receipt.Head1)
+		if err != nil {
+			return fail("longhorn_precold_native_delivery", err)
+		}
+		after, err := readOriginalWriterSetSelection(successor)
+		if err != nil || after.LonghornHostDefinition == (BootstrapSourceFilePin{}) || after.LonghornKeeperImage == "" {
+			return fail("longhorn_precold_successor", ErrInstall)
+		}
+		if !originalLonghornOnlySuccessor(before, after) {
+			return fail("longhorn_precold_unrelated_selection_change", ErrInstall)
+		}
+		if _, err := installed.CompleteOriginalSources(active); err != nil {
+			return fail("longhorn_precold_current20_recheck", err)
+		}
+		in.WriterSelection = successor
+	}
 	set, e := i.PrepareOriginalWriterSet(active, password, enrollment, in.WriterSelection)
 	if e != nil {
 		return fail("complete_original_writer_preflight", e)
@@ -302,4 +327,14 @@ func (i *Installer) runOriginalFirstAdoptionProductionForSQLProfile(ctx context.
 	// A's lawful post-cold current-reference/index path must qualify enable;
 	// this committing D1 entry never pretends old20 are final current health.
 	return receipt, nil
+}
+
+// The pre-cold continuation cannot change any original census or keeper input.
+func originalLonghornOnlySuccessor(before, after OriginalWriterSetSelection) bool {
+	if before.LonghornHostDefinition != (BootstrapSourceFilePin{}) || before.LonghornKeeperImage != "" || after.LonghornHostDefinition == (BootstrapSourceFilePin{}) || after.LonghornKeeperImage == "" {
+		return false
+	}
+	after.LonghornHostDefinition = BootstrapSourceFilePin{}
+	after.LonghornKeeperImage = ""
+	return reflect.DeepEqual(before, after)
 }
