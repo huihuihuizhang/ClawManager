@@ -65,7 +65,8 @@ func (s *PreparedOriginalWriterSet) prepareLonghornKeepers(ctx context.Context, 
 		}
 	}
 	for _, writer := range s.deployments {
-		if writer.namespace == s.initial.Namespace {
+		installationMinIO := writer.namespace == s.initial.Namespace && writer.namespaceUID == s.initial.NamespaceUID && writer.selection.Name == "minio" && writer.minio == nil && writer.redis == nil
+		if writer.namespace == s.initial.Namespace && !installationMinIO {
 			continue
 		}
 		keeper, err := s.prepareLonghornKeeper(ctx, writer, s.selection.LonghornKeeperImage)
@@ -73,7 +74,7 @@ func (s *PreparedOriginalWriterSet) prepareLonghornKeepers(ctx context.Context, 
 			return err
 		}
 		source, found := s.longhornSources[keeper.plan.Identity.Namespace+"/"+keeper.plan.Source.Name]
-		if !found || source.PVCUID != keeper.plan.Source.UID || source.PVUID != keeper.plan.Source.PVUID || source.Binding.NodeUID != keeper.plan.NodeUID || source.ProviderPodUID != writer.pods[0].UID {
+		if !found || source.PVCUID != keeper.plan.Source.UID || source.PVUID != keeper.plan.Source.PVUID || source.Binding.NodeUID != keeper.plan.NodeUID || source.ProviderPodUID != writer.pods[0].UID || (installationMinIO && (source.MountPoint != "/data" || source.Binding.Namespace != s.initial.Namespace || source.Binding.NamespaceUID != s.initial.NamespaceUID)) {
 			return ErrInstall
 		}
 		s.longhornKeepers = append(s.longhornKeepers, keeper)

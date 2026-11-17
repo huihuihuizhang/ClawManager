@@ -47,31 +47,33 @@ type OriginalArchiveJWTSource struct {
 // It is NOT B's physical holder, an immutable snapshot/history witness, or
 // PreparedCoverage. Its actual SQL check cannot prove all writers stopped.
 type OriginalAdoptionArchiveProvider struct {
-	origin         *OriginalAdoptionArchiveProvider
-	ctx            context.Context
-	outer          context.Context
-	cancel         context.CancelFunc
-	done           chan struct{}
-	operator       *authenticatedOperator
-	enrollment     EnrollmentPin
-	reservation    controller.OriginalAdoptionReservation
-	database       controller.OriginalAdoptionDatabasePin
-	definition     OriginalArchiveProviderDefinition
-	sourceFile     string
-	sourceSHA      string
-	minio          MinIOPermissionDefinition
-	initial        HeadCAS
-	permissionSHA  string
-	sourceIdentity string
-	until          time.Time
-	client         *http.Client
-	keys           *ev.TransitKeys
-	local          *archive.LocalArchive
-	nativePlanSHA  string
-	used, active   atomic.Bool
-	failed         atomic.Bool
-	wrapCalls      atomic.Uint32
-	unwrapCalls    atomic.Uint32
+	physical               *OriginalMinIOCSIPhysicalSource
+	physicalObservationSHA string
+	origin                 *OriginalAdoptionArchiveProvider
+	ctx                    context.Context
+	outer                  context.Context
+	cancel                 context.CancelFunc
+	done                   chan struct{}
+	operator               *authenticatedOperator
+	enrollment             EnrollmentPin
+	reservation            controller.OriginalAdoptionReservation
+	database               controller.OriginalAdoptionDatabasePin
+	definition             OriginalArchiveProviderDefinition
+	sourceFile             string
+	sourceSHA              string
+	minio                  MinIOPermissionDefinition
+	initial                HeadCAS
+	permissionSHA          string
+	sourceIdentity         string
+	until                  time.Time
+	client                 *http.Client
+	keys                   *ev.TransitKeys
+	local                  *archive.LocalArchive
+	nativePlanSHA          string
+	used, active           atomic.Bool
+	failed                 atomic.Bool
+	wrapCalls              atomic.Uint32
+	unwrapCalls            atomic.Uint32
 }
 
 func (*OriginalAdoptionArchiveProvider) MarshalJSON() ([]byte, error) { return nil, ErrInstall }
@@ -83,6 +85,14 @@ func (*OriginalAdoptionArchiveProvider) MarshalJSON() ([]byte, error) { return n
 func (i *Installer) PrepareOriginalAdoptionArchiveProvider(ctx context.Context, password []byte,
 	enrollment EnrollmentPin, reservation controller.OriginalAdoptionReservation,
 	sourceFile, sourceSHA string) (*OriginalAdoptionArchiveProvider, error) {
+	return i.prepareOriginalAdoptionArchiveProvider(ctx, password, enrollment, reservation, sourceFile, sourceSHA, nil)
+}
+
+// CSI admission is only supplied by the original same-operation writer hold.
+// The public legacy constructor remains hostPath-only.
+func (i *Installer) prepareOriginalAdoptionArchiveProvider(ctx context.Context, password []byte,
+	enrollment EnrollmentPin, reservation controller.OriginalAdoptionReservation,
+	sourceFile, sourceSHA string, physical *OriginalMinIOCSIPhysicalSource) (*OriginalAdoptionArchiveProvider, error) {
 	s, err := i.authenticate(ctx, password)
 	if err != nil || s.authority(ctx, enrollment) != nil || reservation.Phase != controller.GateHeld ||
 		reservation.InstallationID != i.plan.Target.InstallationID ||
@@ -113,7 +123,7 @@ func (i *Installer) PrepareOriginalAdoptionArchiveProvider(ctx context.Context, 
 		m.Grant.Namespace != i.plan.Target.Namespace || m.Grant.NamespaceUID != i.plan.Target.NamespaceUID {
 		return nil, ErrInstall
 	}
-	p := &OriginalAdoptionArchiveProvider{ctx: ctx, outer: ctx, done: make(chan struct{}), operator: s, enrollment: enrollment,
+	p := &OriginalAdoptionArchiveProvider{physical: physical, ctx: ctx, outer: ctx, done: make(chan struct{}), operator: s, enrollment: enrollment,
 		reservation: reservation, database: controller.OriginalAdoptionDatabasePin{
 			ServerUUID: i.plan.Target.ServerUUID, Database: i.plan.Target.Database, Account: i.plan.InstallerDatabaseAccount},
 		definition: d, sourceFile: sourceFile, sourceSHA: sourceSHA, minio: m, until: s.until}

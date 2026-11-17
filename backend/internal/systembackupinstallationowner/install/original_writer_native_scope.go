@@ -73,9 +73,15 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 			if err != nil || string(pod.UID) != p.UID {
 				return nil, ErrInstall
 			}
-			paths, _, err := volumeScope(pod)
+			paths, coverage, err := volumeScope(pod)
 			if err != nil {
 				return nil, err
+			}
+			if s.minioHistory != nil && s.minioHistory.writer == w && coverage != nil {
+				root, rootErr := s.originalMinIOCSIPrepareRoot(ctx, pod)
+				if rootErr != nil || addRoot(p.Node, root) != nil {
+					return nil, ErrInstall
+				}
 			}
 			// A Longhorn actor fences storage, not the original process or its
 			// replacement. Retain every cold Pod in the native process anchor so

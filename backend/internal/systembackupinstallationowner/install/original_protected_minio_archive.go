@@ -59,7 +59,7 @@ func readOriginalMinIOFullTree(ctx context.Context, native archive.NativeStream,
 	var output originalHistoryLimitedOutput
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = nil, &output, io.Discard
 	cmd.WaitDelay = 5 * time.Second
-	if cmd.Run() != nil || child.Err() != nil || decodeOriginalMinIOFullInventory(output.Bytes(), &out) != nil || out.Profile != "original-minio-hostpath-native-raw-cut.v1" || out.Phase != phase || out.PlanSHA256 != native.PlanSHA256 || !filepath.IsAbs(out.Root) || filepath.Clean(out.Root) != out.Root || out.Root == "/" || len(out.Tree) == 0 || hash(out.Tree) != out.TreeSHA256 || out.Excluded == nil || len(out.Excluded) != 0 {
+	if cmd.Run() != nil || child.Err() != nil || decodeOriginalMinIOFullInventory(output.Bytes(), &out) != nil || (out.Profile != "original-minio-hostpath-native-raw-cut.v1" && out.Profile != "original-minio-longhorn-csi-native-raw-cut.v1") || out.Phase != phase || out.PlanSHA256 != native.PlanSHA256 || !filepath.IsAbs(out.Root) || filepath.Clean(out.Root) != out.Root || out.Root == "/" || len(out.Tree) == 0 || hash(out.Tree) != out.TreeSHA256 || out.Excluded == nil || len(out.Excluded) != 0 {
 		return originalMinIOFullTree{}, ErrInstall
 	}
 	again, err := ReadPrivateFile(native.PlanFile, 262144)

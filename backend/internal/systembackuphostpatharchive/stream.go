@@ -237,7 +237,7 @@ func CreateEncryptedLocal(ctx context.Context, custody *os.Root, name string, b 
 	var plan struct{ Root, Profile string }
 	planHash := sha256.Sum256(planRaw)
 	if err != nil || hex.EncodeToString(planHash[:]) != n.PlanSHA256 ||
-		json.Unmarshal(planRaw, &plan) != nil || plan.Profile != "original-minio-hostpath-native-raw-cut.v1" ||
+		json.Unmarshal(planRaw, &plan) != nil || (plan.Profile != "original-minio-hostpath-native-raw-cut.v1" && plan.Profile != "original-minio-longhorn-csi-native-raw-cut.v1") ||
 		plan.Root != b.SourceHostPath || !filepath.IsAbs(plan.Root) || filepath.Clean(plan.Root) != plan.Root {
 		return nil, ErrArchive
 	}

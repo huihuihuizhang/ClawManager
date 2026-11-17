@@ -85,11 +85,22 @@ func (i *Installer) PrepareOriginalMinIOHistoryNativePlan(ctx context.Context, p
 		return zero, ErrInstall
 	}
 	pv, e := i.kube.CoreV1().PersistentVolumes().Get(ctx, d.PVName, metav1.GetOptions{})
-	if e != nil || string(pv.UID) != d.PVUID || pv.DeletionTimestamp != nil || pv.Spec.HostPath == nil || pv.Spec.ClaimRef == nil || string(pv.Spec.ClaimRef.UID) != d.PVCUID || pv.Spec.ClaimRef.Namespace != minio.Grant.Namespace || pv.Spec.ClaimRef.Name != d.PVCName {
+	if e != nil || string(pv.UID) != d.PVUID || pv.DeletionTimestamp != nil || pv.Spec.ClaimRef == nil || string(pv.Spec.ClaimRef.UID) != d.PVCUID || pv.Spec.ClaimRef.Namespace != minio.Grant.Namespace || pv.Spec.ClaimRef.Name != d.PVCName {
 		return zero, ErrInstall
 	}
-	root := pv.Spec.HostPath.Path
-	if !filepath.IsAbs(root) || filepath.Clean(root) != root || root == "/" || custodyWithin(root, in.OutputDirectory) {
+	root, csiHandle := "", ""
+	if pv.Spec.HostPath != nil {
+		if pv.Spec.CSI != nil {
+			return zero, ErrInstall
+		}
+		root = pv.Spec.HostPath.Path
+	} else {
+		csiHandle, e = originalMinIOCSIHandle(pv, claim)
+		if e != nil {
+			return zero, ErrInstall
+		}
+	}
+	if csiHandle == "" && (!filepath.IsAbs(root) || filepath.Clean(root) != root || root == "/" || custodyWithin(root, in.OutputDirectory)) {
 		return zero, ErrInstall
 	}
 	node, e := i.kube.CoreV1().Nodes().Get(ctx, p.Node, metav1.GetOptions{})
@@ -113,17 +124,25 @@ func (i *Installer) PrepareOriginalMinIOHistoryNativePlan(ctx context.Context, p
 		return zero, ErrInstall
 	}
 	var output originalHistoryLimitedOutput
-	cmd := exec.CommandContext(ctx, d.NativePythonFile, "-I", "-B", d.NativeScriptFile, "prepare", "--root", root, "--cri-endpoint", in.CRIEndpoint, "--crictl-file", in.CRI.File, "--crictl-sha256", in.CRI.SHA256, "--container-id", containerID, "--pod-uid", p.Pod.UID, "--container-name", p.Container)
+	args := []string{"-I", "-B", d.NativeScriptFile, "prepare", "--cri-endpoint", in.CRIEndpoint, "--crictl-file", in.CRI.File, "--crictl-sha256", in.CRI.SHA256, "--container-id", containerID, "--pod-uid", p.Pod.UID, "--container-name", p.Container}
+	if csiHandle == "" {
+		args = append(args, "--root", root)
+	} else {
+		args = append(args, "--csi-handle", csiHandle)
+	}
+	cmd := exec.CommandContext(ctx, d.NativePythonFile, args...)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = nil, &output, io.Discard
 	cmd.WaitDelay = 5 * time.Second
 	if cmd.Run() != nil || len(output.Bytes()) > 262144 {
 		return zero, ErrInstall
 	}
 	var plan struct {
-		Root        string `json:"root"`
-		PodUID      string `json:"pod_uid"`
-		Container   string `json:"container_name"`
-		ContainerID string `json:"container_id"`
+		Profile     string                                       `json:"profile"`
+		CSI         struct{ Driver, Handle, Destination string } `json:"csi"`
+		Root        string                                       `json:"root"`
+		PodUID      string                                       `json:"pod_uid"`
+		Container   string                                       `json:"container_name"`
+		ContainerID string                                       `json:"container_id"`
 		Node        struct {
 			BootID    string `json:"boot_id"`
 			MachineID string `json:"machine_id"`
@@ -132,7 +151,14 @@ func (i *Installer) PrepareOriginalMinIOHistoryNativePlan(ctx context.Context, p
 			DeploymentID string `json:"deployment_id"`
 		} `json:"format"`
 	}
-	if json.Unmarshal(output.Bytes(), &plan) != nil || plan.Root != root || plan.PodUID != p.Pod.UID || plan.Container != p.Container || plan.ContainerID != containerID || plan.Node.BootID != node.Status.NodeInfo.BootID || plan.Node.MachineID != node.Status.NodeInfo.MachineID || plan.Format.DeploymentID != p.DeploymentID {
+	if json.Unmarshal(output.Bytes(), &plan) != nil || plan.PodUID != p.Pod.UID || plan.Container != p.Container || plan.ContainerID != containerID || plan.Node.BootID != node.Status.NodeInfo.BootID || plan.Node.MachineID != node.Status.NodeInfo.MachineID || plan.Format.DeploymentID != p.DeploymentID {
+		return zero, ErrInstall
+	}
+	if csiHandle == "" {
+		if plan.Profile != "original-minio-hostpath-native-raw-cut.v1" || plan.Root != root {
+			return zero, ErrInstall
+		}
+	} else if plan.Profile != "original-minio-longhorn-csi-native-raw-cut.v1" || plan.CSI.Driver != "driver.longhorn.io" || plan.CSI.Handle != csiHandle || plan.CSI.Destination != "/data" || !filepath.IsAbs(plan.Root) || filepath.Clean(plan.Root) != plan.Root || plan.Root == "/" || custodyWithin(plan.Root, in.OutputDirectory) {
 		return zero, ErrInstall
 	}
 	again, e := i.originalPublicationActor(ctx, p.Deployment.Name, p.Pod.Name)

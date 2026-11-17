@@ -190,7 +190,7 @@ func (p *OriginalAdoptionArchiveProvider) sourcePath() (string, string, string, 
 		return "", "", "", ErrInstall
 	}
 	pv, err := kube.CoreV1().PersistentVolumes().Get(ctx, d.PVName, metav1.GetOptions{})
-	if err != nil || string(pv.UID) != d.PVUID || pv.DeletionTimestamp != nil || pv.Spec.HostPath == nil ||
+	if err != nil || string(pv.UID) != d.PVUID || pv.DeletionTimestamp != nil ||
 		pv.Spec.ClaimRef == nil || string(pv.Spec.ClaimRef.UID) != d.PVCUID ||
 		pv.Spec.ClaimRef.Namespace != p.minio.Grant.Namespace || pv.Spec.ClaimRef.Name != d.PVCName {
 		return "", "", "", ErrInstall
@@ -198,6 +198,16 @@ func (p *OriginalAdoptionArchiveProvider) sourcePath() (string, string, string, 
 	node, err := kube.CoreV1().Nodes().Get(ctx, provider.Node, metav1.GetOptions{})
 	if err != nil || string(node.UID) != provider.NodeUID || node.DeletionTimestamp != nil ||
 		node.Status.NodeInfo.BootID == "" || node.Status.NodeInfo.MachineID == "" {
+		return "", "", "", ErrInstall
+	}
+	if pv.Spec.HostPath == nil {
+		handle, e := originalMinIOCSIHandle(pv, claim)
+		if e != nil || p.physical == nil {
+			return "", "", "", ErrInstall
+		}
+		return p.originalMinIOCSIPath(handle, node.Status.NodeInfo.BootID, node.Status.NodeInfo.MachineID)
+	}
+	if pv.Spec.CSI != nil || p.physical != nil {
 		return "", "", "", ErrInstall
 	}
 	path := pv.Spec.HostPath.Path

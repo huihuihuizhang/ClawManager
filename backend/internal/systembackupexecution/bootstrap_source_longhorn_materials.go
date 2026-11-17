@@ -142,6 +142,10 @@ func observeOriginalLonghornHoldMaterials(ctx context.Context, clients *producti
 		case corev1.ReadWriteOnce:
 			// This task's RWO source is a real running tenant Deployment. A
 			// future keeper is supplied by the existing task registration owner.
+			if part == originalMinIOArchivePart {
+				provider, err = observeOriginalMinIOArchivePod(ctx, clients.API, cfg, source)
+				if err != nil { return out, err }
+			} else {
 			var tenant *runningTenantProMount
 			for n := range scope.RunningTenantPro {
 				m := &scope.RunningTenantPro[n]
@@ -158,6 +162,7 @@ func observeOriginalLonghornHoldMaterials(ctx context.Context, clients *producti
 			provider, err = clients.API.CoreV1().Pods(source.Namespace).Get(ctx, tenant.Source.Pod, metav1.GetOptions{})
 			if err != nil {
 				return out, err
+			}
 			}
 			volumes := map[string]bool{}
 			for _, v := range provider.Spec.Volumes {

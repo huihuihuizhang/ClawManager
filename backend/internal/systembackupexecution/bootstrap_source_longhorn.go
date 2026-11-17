@@ -20,6 +20,7 @@ type OriginalLonghornStorageSelection struct {
 	ProviderNamespace string
 	SnapshotClass     string
 	CloneClass        string
+	MinIOArchivePVC string `json:",omitempty"`
 }
 
 func observeOriginalLonghornSources(ctx context.Context, clients *productionMetadataClients, cfg DeploymentConfig, inventory b.SourceInventory, scope *productionPersistentMountScope, selection *OriginalLonghornStorageSelection) (map[string]originalLonghornSource, error) {
@@ -120,6 +121,10 @@ func observeOriginalLonghornSources(ctx context.Context, clients *productionMeta
 		return nil
 	}
 
+	if selection.MinIOArchivePVC != "" {
+		if err := add(originalMinIOArchivePart, cfg.Namespace, selection.MinIOArchivePVC, nil, true); err != nil { return nil, err }
+		if _, err := observeOriginalMinIOArchivePod(ctx, clients.API, cfg, out[originalMinIOArchivePart]); err != nil { return nil, err }
+	}
 	instances := make(map[int]b.InstanceIdentity, len(inventory.Instances))
 	for _, instance := range inventory.Instances {
 		instances[instance.ID] = instance
@@ -184,6 +189,9 @@ func (x *bootstrapSourceRegistryReader) checkOriginalLonghornSources(ctx context
 	for _, source := range discovery.LonghornSources {
 		selection = &OriginalLonghornStorageSelection{ProviderNamespace: source.ProviderNamespace, SnapshotClass: source.SnapshotClass, CloneClass: source.CloneClass}
 		break
+	}
+	if source, ok := discovery.LonghornSources[originalMinIOArchivePart]; ok {
+		if selection == nil { return install.ErrInstall }; selection.MinIOArchivePVC = source.Source.Name
 	}
 	current, err := observeOriginalLonghornSources(ctx, clients, x.config, inventory, discovery.PersistentMounts, selection)
 	if err != nil || (len(current) != 0 || len(discovery.LonghornSources) != 0) && !reflect.DeepEqual(current, discovery.LonghornSources) {

@@ -34,6 +34,7 @@ class Refused(Exception):
 
 
 PROFILE = "original-minio-hostpath-native-raw-cut.v1"
+CSI_PROFILE = "original-minio-longhorn-csi-native-raw-cut.v1"
 
 
 def canonical(value):
@@ -70,7 +71,7 @@ def unescape(value):
     return re.sub(r"\\([0-7]{3})", lambda m: chr(int(m[1], 8)), value)
 
 
-def source_mount(root):
+def source_mount(root, allow_readonly=False):
     check(str(root) != "/" and root.is_absolute() and str(root) == os.path.realpath(root),
           "original path must be canonical and must not be node root")
     rows = []
@@ -85,7 +86,7 @@ def source_mount(root):
     check(selected, "original hostPath mount missing")
     selected = max(selected, key=lambda row: len(row["path"]))
     check(selected["root"] == "/" and selected["filesystem"] in ("ext4", "xfs") and
-          selected["source"].startswith("/dev/") and "rw" in selected["options"].split(","),
+          selected["source"].startswith("/dev/") and ("rw" in selected["options"].split(",") or allow_readonly),
           "unsupported original filesystem/bind/subtree/read-only mount")
     check(not any(r["path"].startswith(str(root) + "/") for r in rows),
           "nested mount would exclude original bytes")
@@ -181,10 +182,102 @@ def format_identity(root):
             "drive_id": xl["this"], "sets": xl["sets"]}
 
 
-def native_plan(args):
-    root = Path(args.root)
+def cri_mount(native, destination):
+    mounts = native.get("info", {}).get("runtimeSpec", {}).get("mounts", [])
+    matches = [m for m in mounts if m.get("destination") == destination]
+    check(len(matches) == 1, "actual CRI data mount must be unique")
+    item = matches[0]
+    source = item.get("source", "")
+    options = item.get("options", [])
+    check(isinstance(source, str) and source.startswith("/") and
+          os.path.normpath(source) == source and source != "/" and
+          item.get("type") == "bind" and isinstance(options, list) and
+          ((destination == "/data" and "ro" not in options) or
+           (destination == "/source" and "ro" in options)) and
+          ("rbind" in options or "bind" in options),
+          "actual CRI whole writable bind required")
+    return source
+
+
+def longhorn_mount(native, destination, handle):
+    # The handle originates in the authenticated PV, never a caller root path.
+    check(isinstance(handle, str) and re.fullmatch(r"pvc-[a-f0-9-]{36}", handle),
+          "original Longhorn volume handle invalid")
+    source = Path(cri_mount(native, destination))
+    check(str(source) == os.path.realpath(source), "actual CRI source must be canonical")
+    bound = source_mount(source, allow_readonly=destination == "/source")
+    check(bound["path"] == str(source) and bound["root"] == "/" and
+          bound["filesystem"] == "ext4", "actual CRI mount must cover entire ext4 drive")
+    device_path = "/dev/longhorn/" + handle
+    device = os.stat(device_path)
+    check(stat.S_ISBLK(device.st_mode) and device.st_rdev == source.stat().st_dev,
+          "actual Longhorn handle/device differs from CRI mount")
+    major_minor = f"{os.major(device.st_rdev)}:{os.minor(device.st_rdev)}"
+    candidates = set()
+    for line in mount_text().splitlines():
+        left, right = line.split(" - ", 1)
+        a, b = left.split(), right.split()
+        path = unescape(a[4])
+        if a[2] == major_minor and unescape(a[3]) == "/" and b[0] == "ext4" and            path.startswith("/var/lib/kubelet/plugins/kubernetes.io/csi/driver.longhorn.io/") and path.endswith("/globalmount"):
+            candidates.add(path)
+    check(len(candidates) == 1, "unique actual Longhorn whole-drive global mount required")
+    root = Path(next(iter(candidates)))
     mount = source_mount(root)
+    check(mount["path"] == str(root) and mount["device"] == major_minor and
+          mount["filesystem"] == "ext4", "Longhorn global mount differs from actual CRI device")
+    return root, mount, {"driver": "driver.longhorn.io", "handle": handle,
+                         "device_path": device_path, "major_minor": major_minor,
+                         "cri_source": str(source), "destination": destination}
+
+
+def plan_mount(plan):
+    mount = source_mount(Path(plan["root"]))
+    if plan["profile"] == CSI_PROFILE:
+        csi = plan["csi"]
+        check(csi["driver"] == "driver.longhorn.io" and
+              re.fullmatch(r"pvc-[a-f0-9-]{36}", csi["handle"]) and
+              csi["device_path"] == "/dev/longhorn/" + csi["handle"], "pinned CSI identity invalid")
+        device = os.stat(csi["device_path"])
+        check(stat.S_ISBLK(device.st_mode) and
+              f"{os.major(device.st_rdev)}:{os.minor(device.st_rdev)}" == csi["major_minor"] and
+              mount["device"] == csi["major_minor"] and mount["path"] == plan["root"] and
+              mount["root"] == "/" and mount["filesystem"] == "ext4",
+              "pinned CSI device/global mount changed")
+    return mount
+
+
+def recheck_cri_binding(plan, native):
+    if plan["profile"] == CSI_PROFILE:
+        check(cri_mount(native, "/data") == plan["csi"]["cri_source"] and
+              plan["csi"]["destination"] == "/data", "original MinIO CRI data binding changed")
+
+
+def observe_csi(args):
     native = inspect(args.cri_endpoint, args.container_id, args.crictl_file, args.crictl_sha256)
+    status = native["status"]
+    labels = status.get("labels", {})
+    pid = native.get("info", {}).get("pid", 0)
+    check(status["state"] == "CONTAINER_RUNNING" and isinstance(pid, int) and pid > 1 and
+          labels.get("io.kubernetes.pod.uid") == args.pod_uid and
+          labels.get("io.kubernetes.container.name") == args.container_name,
+          "actual held keeper runtime identity unavailable")
+    start = pid_start(pid)
+    root, mount, csi = longhorn_mount(native, args.destination, args.csi_handle)
+    check(pid_start(pid) == start, "actual keeper PID changed during mount observation")
+    return {"root": str(root), "mount": mount, "node": node_identity(), "csi": csi,
+            "container_id": args.container_id, "pod_uid": args.pod_uid,
+            "container_name": args.container_name}
+
+
+def native_plan(args):
+    native = inspect(args.cri_endpoint, args.container_id, args.crictl_file, args.crictl_sha256)
+    check(bool(args.root) != bool(args.csi_handle), "exactly one original source profile required")
+    csi = None
+    if args.csi_handle:
+        root, mount, csi = longhorn_mount(native, "/data", args.csi_handle)
+    else:
+        root = Path(args.root)
+        mount = source_mount(root)
     status = native["status"]
     pid = native.get("info", {}).get("pid", 0)
     check(status["state"] == "CONTAINER_RUNNING" and isinstance(pid, int) and pid > 1,
@@ -193,19 +286,23 @@ def native_plan(args):
     check(labels.get("io.kubernetes.pod.uid") == args.pod_uid and
           labels.get("io.kubernetes.container.name") == args.container_name,
           "original runtime Pod/container labels differ")
-    return {"profile": PROFILE, "authority": "UNBOUND_NATIVE_OBSERVATION_NOT_B_HOLD",
+    plan = {"profile": CSI_PROFILE if csi else PROFILE, "authority": "UNBOUND_NATIVE_OBSERVATION_NOT_B_HOLD",
             "root": str(root), "mount": mount, "node": node_identity(), "cut_mode": "raw-copy",
             "container_id": args.container_id, "cri_endpoint": args.cri_endpoint,
             "crictl_file": args.crictl_file, "crictl_sha256": args.crictl_sha256,
             "pod_uid": args.pod_uid, "container_name": args.container_name,
             "pid": pid, "pid_start": pid_start(pid), "format": format_identity(root),
             "observed_unix_ns": time.time_ns()}
+    if csi is not None:
+        plan["csi"] = csi
+    return plan
 
 
 def stopped(plan):
     check(node_identity() == plan["node"], "original native node/boot changed")
     native = inspect(plan["cri_endpoint"], plan["container_id"], plan["crictl_file"], plan["crictl_sha256"])
     status = native["status"]
+    recheck_cri_binding(plan, native)
     finished = status.get("finishedAt", "")
     # crictl's native JSON presents RFC3339Nano, not an integer nanosecond field.
     check(isinstance(finished, str) and re.fullmatch(
@@ -320,10 +417,10 @@ def stream_raw(args):
           "raw plaintext export requires an original encrypted-producer pipe")
     raw = read_private(args.plan_file, args.plan_sha256)
     plan = json.loads(raw)
-    check(plan["profile"] == PROFILE and plan["cut_mode"] == "raw-copy",
+    check(plan["profile"] in (PROFILE, CSI_PROFILE) and plan["cut_mode"] == "raw-copy",
           "stream mode requires original raw-copy plan; no filesystem freeze")
     root = Path(plan["root"])
-    check(source_mount(root) == plan["mount"] and format_identity(root) == plan["format"],
+    check(plan_mount(plan) == plan["mount"] and format_identity(root) == plan["format"],
           "original stream source identity changed")
     before = stopped(plan)
     check(args.max_files > 0 and args.max_bytes > 0 and 0 < args.max_seconds <= 600,
@@ -354,9 +451,9 @@ def stream_raw(args):
                       sha(canonical(rows)) == expected_tree,
                       "actual archive tree differs from original fully stopped cold cut")
             after = stopped(plan)
-            check(source_mount(root) == plan["mount"] and format_identity(root) == plan["format"],
+            check(plan_mount(plan) == plan["mount"] and format_identity(root) == plan["format"],
                   "original final stream source identity changed")
-            manifest = canonical({"profile": PROFILE, "status": "RAW_PIPE_ONLY_NOT_ADOPTABLE",
+            manifest = canonical({"profile": plan["profile"], "status": "RAW_PIPE_ONLY_NOT_ADOPTABLE",
                                   "plan_sha256": sha(raw), "original_plan": plan,
                                   "started_unix_ns": started, "stopped_before": before,
                                   "stopped_after": after, "complete_reachable_tree": rows,
@@ -379,6 +476,7 @@ def running_original(plan):
     check(node_identity() == plan["node"], "original warm node/boot changed")
     native = inspect(plan["cri_endpoint"], plan["container_id"], plan["crictl_file"], plan["crictl_sha256"])
     status = native["status"]
+    recheck_cri_binding(plan, native)
     labels = status.get("labels", {})
     check(status["state"] == "CONTAINER_RUNNING" and native.get("info", {}).get("pid") == plan["pid"] and
           pid_start(plan["pid"]) == plan["pid_start"] and
@@ -393,9 +491,9 @@ def inventory_raw(args):
     # installer owns original S3 write fencing and the later B cold proof.
     raw = read_private(args.plan_file, args.plan_sha256)
     plan = json.loads(raw)
-    check(plan["profile"] == PROFILE and plan["cut_mode"] == "raw-copy", "original raw inventory plan required")
+    check(plan["profile"] in (PROFILE, CSI_PROFILE) and plan["cut_mode"] == "raw-copy", "original raw inventory plan required")
     root = Path(plan["root"])
-    check(source_mount(root) == plan["mount"] and format_identity(root) == plan["format"], "original inventory source identity changed")
+    check(plan_mount(plan) == plan["mount"] and format_identity(root) == plan["format"], "original inventory source identity changed")
     actor = running_original if args.phase == "warm" else stopped
     before = actor(plan)
     check(args.max_files > 0 and args.max_bytes > 0 and 0 < args.max_seconds <= 600, "finite original inventory limits required")
@@ -407,10 +505,10 @@ def inventory_raw(args):
             archive_tree(sink, fd, "", os.fstat(fd).st_dev, rows, [args.max_files, args.max_bytes], deadline)
         with tarfile.open(fileobj=Discard(), mode="w|") as sink:
             archive_tree(sink, fd, "", os.fstat(fd).st_dev, second, [args.max_files, args.max_bytes], deadline)
-        check(rows == second and source_mount(root) == plan["mount"] and format_identity(root) == plan["format"], "original full inventory/EOF changed")
+        check(rows == second and plan_mount(plan) == plan["mount"] and format_identity(root) == plan["format"], "original full inventory/EOF changed")
         after = actor(plan)
         check(time.monotonic() < deadline, "original full inventory deadline exceeded")
-        value = {"profile": PROFILE, "phase": args.phase, "plan_sha256": sha(raw),
+        value = {"profile": plan["profile"], "phase": args.phase, "plan_sha256": sha(raw),
                  "node": plan["node"], "root": plan["root"], "mount": plan["mount"],
                  "format": plan["format"], "before": before, "after": after,
                  "complete_reachable_tree": rows, "tree_sha256": sha(canonical(rows)),
@@ -429,8 +527,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     actions = parser.add_subparsers(dest="action", required=True)
     prepare = actions.add_parser("prepare")
-    for name in ("root", "cri-endpoint", "crictl-file", "crictl-sha256", "container-id", "pod-uid", "container-name"):
+    for name in ("cri-endpoint", "crictl-file", "crictl-sha256", "container-id", "pod-uid", "container-name"):
         prepare.add_argument("--" + name, required=True)
+    prepare.add_argument("--root")
+    prepare.add_argument("--csi-handle")
+    observe = actions.add_parser("observe-csi")
+    for name in ("cri-endpoint", "crictl-file", "crictl-sha256", "container-id", "pod-uid", "container-name", "csi-handle", "destination"):
+        observe.add_argument("--" + name, required=True)
     stream = actions.add_parser("stream")
     for name in ("plan-file", "plan-sha256"):
         stream.add_argument("--" + name, required=True)
@@ -443,6 +546,9 @@ def main():
     for name in ("max-files", "max-bytes", "max-seconds"):
         inventory.add_argument("--" + name, type=int, required=True)
     args = parser.parse_args()
+    if args.action == "observe-csi":
+        print(canonical(observe_csi(args)).decode())
+        return
     if args.action == "inventory":
         inventory_raw(args)
         return

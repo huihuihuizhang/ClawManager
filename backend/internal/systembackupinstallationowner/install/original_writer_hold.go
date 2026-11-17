@@ -3,6 +3,7 @@ package install
 import (
 	"context"
 	"database/sql"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"sync"
 	"time"
@@ -568,7 +569,24 @@ func (h *OriginalWriterHold) PrepareArchiveProvider(ctx context.Context, passwor
 	}{claim, sourceFile, sourceSHA}) != nil {
 		return nil, ErrInstall
 	}
-	provider, err := h.set.owner.operator.installer.PrepareOriginalAdoptionArchiveProvider(ctx, password, enrollment, claim, sourceFile, sourceSHA)
+	var physical *OriginalMinIOCSIPhysicalSource
+	definitionRaw, definitionErr := readOriginalArchivePrivateFile(sourceFile)
+	var definition OriginalArchiveProviderDefinition
+	if definitionErr != nil || hash(definitionRaw) != sourceSHA || decodeExact(definitionRaw, &definition) != nil {
+		return nil, ErrInstall
+	}
+	pv, pvErr := h.set.owner.operator.installer.kube.CoreV1().PersistentVolumes().Get(ctx, definition.PVName, metav1.GetOptions{})
+	if pvErr != nil || string(pv.UID) != definition.PVUID {
+		return nil, ErrInstall
+	}
+	if pv.Spec.CSI != nil {
+		var e error
+		physical, e = h.originalMinIOCSIHeldSourceLocked(ctx, BootstrapSourceFilePin{File: sourceFile, SHA256: sourceSHA})
+		if e != nil {
+			return nil, e
+		}
+	}
+	provider, err := h.set.owner.operator.installer.prepareOriginalAdoptionArchiveProvider(ctx, password, enrollment, claim, sourceFile, sourceSHA, physical)
 	if err != nil {
 		return nil, err
 	}
