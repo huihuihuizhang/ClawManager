@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -59,7 +58,7 @@ func TestStatusRelayReferenceIssuerUsesOriginalEnrollmentAndCurrentTLS(t *testin
 			t.Fatal(e)
 		}
 	}
-	coreRaw, e := json.Marshal(map[string]any{"schema_version": "system-backup-public-deployment.v1", "installation_id": target.InstallationID, "namespace": target.Namespace, "namespace_uid": target.NamespaceUID, "control_url": strings.TrimSuffix(d.Endpoint, "/relay"), "runtime_sources": map[string]any{}})
+	coreRaw, e := json.Marshal(map[string]any{"schema_version": "system-backup-public-deployment.v1", "installation_id": target.InstallationID, "namespace": target.Namespace, "namespace_uid": target.NamespaceUID, "control_url": d.Endpoint, "runtime_sources": map[string]any{}})
 	if e != nil || os.WriteFile(d.Deployment.File, coreRaw, 0600) != nil {
 		t.Fatal("original component core")
 	}

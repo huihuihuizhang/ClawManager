@@ -19,6 +19,7 @@ const MinIOPermissionProfileV2 = "minio-2025-04-22-builtin-flat.v2"
 const MinIOPermissionDefinitionVersion = "original-minio-permission-definition.v2"
 const minioGrantDomain = "system-backup-minio-permission-owner.v1\x00"
 const minioHeadDomain = "system-backup-minio-permission-head.v1\x00"
+const minioPermissionManagedLabel = "backup.clawreef.io/minio-permission-authority"
 
 // These transport declarations match the consumer wire schema. Neither a
 // declaration nor an owner signature is a claim about native permissions.
@@ -95,6 +96,21 @@ func DecodeMinIOPermissionDefinition(raw []byte, sha string) (MinIOPermissionDef
 // Authenticate an EXISTING enrollment and the real original SQL local admin
 // and Kubernetes subject. No enrollment, user, policy or SQL mutation occurs.
 func (i *Installer) PrepareMinIOPermissionIssue(ctx context.Context, password []byte, enrollment EnrollmentPin, file, sha string) (*MinIOPermissionIssuer, error) {
+	p, e := i.prepareMinIOPermission(ctx, password, enrollment, file, sha)
+	if e != nil {
+		return nil, e
+	}
+	d := p.definition
+	for _, name := range []string{d.GrantName, d.HeadName} {
+		_, e := i.kube.CoreV1().ConfigMaps(d.Grant.Namespace).Get(ctx, name, metav1.GetOptions{})
+		if !apierrors.IsNotFound(e) {
+			return nil, ErrInstall
+		}
+	}
+	return p, nil
+}
+
+func (i *Installer) prepareMinIOPermission(ctx context.Context, password []byte, enrollment EnrollmentPin, file, sha string) (*MinIOPermissionIssuer, error) {
 	raw, e := ReadSourceMaterialFile(file)
 	if e != nil {
 		return nil, ErrInstall
@@ -114,12 +130,6 @@ func (i *Installer) PrepareMinIOPermissionIssue(ctx context.Context, password []
 	p := &MinIOPermissionIssuer{s, enrollment, d, file, sha, current.cas}
 	if p.Recheck(ctx) != nil {
 		return nil, ErrInstall
-	}
-	for _, name := range []string{d.GrantName, d.HeadName} {
-		_, e := i.kube.CoreV1().ConfigMaps(d.Grant.Namespace).Get(ctx, name, metav1.GetOptions{})
-		if !apierrors.IsNotFound(e) {
-			return nil, ErrInstall
-		}
 	}
 	return p, nil
 }
@@ -154,6 +164,71 @@ type MinIOPermissionCommit struct {
 	Epoch                   uint64
 }
 
+type minIOPermissionRecord struct {
+	name      string
+	raw       []byte
+	domain    string
+	immutable bool
+}
+
+func (d MinIOPermissionDefinition) permissionRecords() ([2]minIOPermissionRecord, error) {
+	var records [2]minIOPermissionRecord
+	grant, e := canonical(d.Grant)
+	if e != nil {
+		return records, ErrInstall
+	}
+	head, e := canonical(MinIOPermissionHead{Version: "minio-permission-head.v1", Installation: d.Grant.Installation, State: "active", GrantSHA256: hash(grant), Epoch: 1, NotBefore: d.Grant.NotBefore, Until: d.Grant.Until})
+	if e != nil {
+		return records, ErrInstall
+	}
+	return [2]minIOPermissionRecord{{d.GrantName, grant, minioGrantDomain, true}, {d.HeadName, head, minioHeadDomain, false}}, nil
+}
+
+// PrepareInstalledMinIOPermissionCheck binds an authenticated reader to the
+// exact signed, active grant and head for this definition. It exposes only a
+// recheck and does not return an issuer capable of creating a new pair.
+func (i *Installer) PrepareInstalledMinIOPermissionCheck(ctx context.Context, password []byte, enrollment EnrollmentPin, file, sha string) (func() error, error) {
+	p, e := i.prepareMinIOPermission(ctx, password, enrollment, file, sha)
+	if e != nil {
+		return nil, e
+	}
+	records, e := p.definition.permissionRecords()
+	if e != nil {
+		return nil, e
+	}
+	objects := i.kube.CoreV1().ConfigMaps(p.definition.Grant.Namespace)
+	type objectVersion struct{ uid, version string }
+	read := func() ([2]objectVersion, error) {
+		var versions [2]objectVersion
+		if p.Recheck(ctx) != nil {
+			return versions, ErrInstall
+		}
+		for n, v := range records {
+			cm, e := objects.Get(ctx, v.name, metav1.GetOptions{})
+			if e != nil || cm == nil || cm.Name != v.name || cm.Namespace != p.definition.Grant.Namespace ||
+				cm.UID == "" || cm.ResourceVersion == "" || cm.DeletionTimestamp != nil || cm.Immutable == nil ||
+				*cm.Immutable != v.immutable || len(cm.Data) != 1 || len(cm.BinaryData) != 1 ||
+				cm.Data["record.json"] != string(v.raw) ||
+				!ed25519.Verify(i.public, append([]byte(v.domain), v.raw...), cm.BinaryData["signature"]) {
+				return versions, ErrInstall
+			}
+			versions[n] = objectVersion{string(cm.UID), cm.ResourceVersion}
+		}
+		return versions, nil
+	}
+	initial, e := read()
+	if e != nil {
+		return nil, e
+	}
+	return func() error {
+		current, e := read()
+		if e != nil || current != initial {
+			return ErrInstall
+		}
+		return nil
+	}, nil
+}
+
 // CreateOriginal is deliberately initial-install-only. It signs exactly the
 // independently pinned definition with the existing enrolled key, then uses
 // Kubernetes Create (never Apply/Update) for two NEW owner-named resources.
@@ -170,20 +245,10 @@ func (p *MinIOPermissionIssuer) CreateOriginal(ctx context.Context, issuerPrivat
 	}
 	defer clear(key)
 	d := p.definition
-	grant, e := canonical(d.Grant)
+	values, e := d.permissionRecords()
 	if e != nil {
 		return zero, ErrInstall
 	}
-	head, e := canonical(MinIOPermissionHead{Version: "minio-permission-head.v1", Installation: d.Grant.Installation, State: "active", GrantSHA256: hash(grant), Epoch: 1, NotBefore: d.Grant.NotBefore, Until: d.Grant.Until})
-	if e != nil {
-		return zero, ErrInstall
-	}
-	values := []struct {
-		name      string
-		raw       []byte
-		domain    string
-		immutable bool
-	}{{d.GrantName, grant, minioGrantDomain, true}, {d.HeadName, head, minioHeadDomain, false}}
 	committed := []MinIOPermissionObject{}
 	for _, v := range values {
 		if p.Recheck(ctx) != nil {
@@ -193,13 +258,13 @@ func (p *MinIOPermissionIssuer) CreateOriginal(ctx context.Context, issuerPrivat
 			return zero, ErrInstall
 		}
 		sig := ed25519.Sign(key, append([]byte(v.domain), v.raw...))
-		cm := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: v.name, Namespace: d.Grant.Namespace}, Immutable: &v.immutable, Data: map[string]string{"record.json": string(v.raw)}, BinaryData: map[string][]byte{"signature": sig}}
+		cm := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: v.name, Namespace: d.Grant.Namespace, Labels: map[string]string{minioPermissionManagedLabel: "true"}}, Immutable: &v.immutable, Data: map[string]string{"record.json": string(v.raw)}, BinaryData: map[string][]byte{"signature": sig}}
 		created, e := p.operator.installer.kube.CoreV1().ConfigMaps(d.Grant.Namespace).Create(ctx, cm, metav1.CreateOptions{})
 		if e != nil || created == nil || created.UID == "" {
 			return zero, ErrCommitUnknown
 		}
 		back, e := p.operator.installer.kube.CoreV1().ConfigMaps(d.Grant.Namespace).Get(ctx, v.name, metav1.GetOptions{})
-		if e != nil || back == nil || back.UID != created.UID || back.ResourceVersion == "" || back.DeletionTimestamp != nil || back.Namespace != d.Grant.Namespace || len(back.Data) != 1 || len(back.BinaryData) != 1 || back.Data["record.json"] != string(v.raw) || !bytes.Equal(back.BinaryData["signature"], sig) || back.Immutable == nil || *back.Immutable != v.immutable {
+		if e != nil || back == nil || back.UID != created.UID || back.ResourceVersion == "" || back.DeletionTimestamp != nil || back.Namespace != d.Grant.Namespace || back.Labels[minioPermissionManagedLabel] != "true" || len(back.Data) != 1 || len(back.BinaryData) != 1 || back.Data["record.json"] != string(v.raw) || !bytes.Equal(back.BinaryData["signature"], sig) || back.Immutable == nil || *back.Immutable != v.immutable {
 			return zero, ErrCommitUnknown
 		}
 		committed = append(committed, MinIOPermissionObject{v.name, string(back.UID)})
@@ -210,11 +275,11 @@ func (p *MinIOPermissionIssuer) CreateOriginal(ctx context.Context, issuerPrivat
 	// Re-read BOTH after the head exists, including exact epoch/signatures.
 	for n, v := range values {
 		back, e := p.operator.installer.kube.CoreV1().ConfigMaps(d.Grant.Namespace).Get(ctx, v.name, metav1.GetOptions{})
-		if e != nil || back == nil || string(back.UID) != committed[n].UID || back.ResourceVersion == "" || back.DeletionTimestamp != nil || len(back.Data) != 1 || len(back.BinaryData) != 1 || back.Data["record.json"] != string(v.raw) || !ed25519.Verify(p.operator.installer.public, append([]byte(v.domain), v.raw...), back.BinaryData["signature"]) {
+		if e != nil || back == nil || string(back.UID) != committed[n].UID || back.ResourceVersion == "" || back.DeletionTimestamp != nil || back.Labels[minioPermissionManagedLabel] != "true" || len(back.Data) != 1 || len(back.BinaryData) != 1 || back.Data["record.json"] != string(v.raw) || !ed25519.Verify(p.operator.installer.public, append([]byte(v.domain), v.raw...), back.BinaryData["signature"]) {
 			return zero, ErrCommitUnknown
 		}
 	}
-	return MinIOPermissionCommit{bytes.Clone(p.operator.installer.public), committed[0], committed[1], hash(grant), hash(head), 1}, nil
+	return MinIOPermissionCommit{bytes.Clone(p.operator.installer.public), committed[0], committed[1], hash(values[0].raw), hash(values[1].raw), 1}, nil
 }
 
 // Export only generated startup bytes. The caller must still use the native

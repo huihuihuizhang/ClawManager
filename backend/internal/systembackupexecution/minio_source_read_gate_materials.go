@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/url"
 	"os"
@@ -62,6 +63,7 @@ func produceOriginalMinIOSourceReadMaterials(ctx context.Context, write *install
 	if write == nil || read == nil || kube == nil || write.CheckOriginalMinIOSourceSetup(ctx, read) != nil || nativeInstallEmptyDirectory(directory) != nil {
 		return receipt, install.ErrInstall
 	}
+	receipt.Stage = "source_reader"
 	x, e := newBootstrapSourceAuthoringReader(ctx, read)
 	if e != nil {
 		return receipt, e
@@ -77,9 +79,15 @@ func produceOriginalMinIOSourceReadMaterials(ctx context.Context, write *install
 	defer clear(raw)
 	// The existing reader has checked the exact original source templates and
 	// scopes. Run its actual finite SQL/API/native collection, not just parsing.
+	receipt.Stage = "source_facts"
 	if _, e = x.collectBootstrapSourceFacts(); e != nil {
+		var failure *WriterAPIReadFailure
+		if errors.As(e, &failure) {
+			receipt.Stage = failure.Step
+		}
 		return receipt, e
 	}
+	receipt.Stage = "source_minio_coordinates"
 	var conn install.BootstrapSourceConnection
 	for _, c := range selection.Connections {
 		if c.Purpose == "source_objects" {
@@ -134,9 +142,15 @@ func produceOriginalMinIOSourceReadMaterials(ctx context.Context, write *install
 		return receipt, e
 	}
 	defer n.close()
-	if _, e = n.collectNativeInstallServer(ctx, ma.SeptemberPermissionProfile); e != nil {
+	receipt.Stage = "source_minio_server"
+	permission := ma.SeptemberPermissionProfile
+	if ma.MatchesDeleteCompatImageID(provider.ImageID) {
+		permission = ma.DeleteCompatPermissionProfile
+	}
+	if _, e = n.collectNativeInstallServer(ctx, permission); e != nil {
 		return receipt, e
 	}
+	receipt.Stage = "source_minio_inventory"
 	if wholeHistory {
 		names, e = collectOriginalWholeHistoryBuckets(ctx, n, names)
 		if e != nil {
@@ -179,6 +193,7 @@ func produceOriginalMinIOSourceReadMaterials(ctx context.Context, write *install
 	if !start.Before(until) {
 		return receipt, install.ErrInstall
 	}
+	receipt.Stage = "source_minio_materials"
 	var id [16]byte
 	if _, e = rand.Read(id[:]); e != nil {
 		return receipt, e

@@ -9,6 +9,7 @@ import (
 	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	authn "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -49,17 +50,26 @@ type originalArchiveEvidenceMaterial struct {
 // Existing C1 signed files and keys are never overwritten. Its updated C1
 // material is independently signed in a new directory for downstream owners.
 func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, password []byte, enrollment EnrollmentPin, o OriginalArchiveEvidenceMaterialOptions, issuerPrivate []byte) (OriginalArchiveEvidenceMaterialReceipt, error) {
+	return i.produceOriginalArchiveEvidenceMaterial(ctx, password, enrollment, o, issuerPrivate, nil)
+}
+
+func (i *Installer) RecoverOriginalArchiveEvidenceMaterial(ctx context.Context, password []byte, enrollment EnrollmentPin, o OriginalArchiveEvidenceMaterialOptions, issuerPrivate []byte, recovery OriginalArchiveEvidenceRecovery) (OriginalArchiveEvidenceMaterialReceipt, error) {
+	return i.produceOriginalArchiveEvidenceMaterial(ctx, password, enrollment, o, issuerPrivate, &recovery)
+}
+
+func (i *Installer) produceOriginalArchiveEvidenceMaterial(ctx context.Context, password []byte, enrollment EnrollmentPin, o OriginalArchiveEvidenceMaterialOptions, issuerPrivate []byte, recovery *OriginalArchiveEvidenceRecovery) (OriginalArchiveEvidenceMaterialReceipt, error) {
 	var zero OriginalArchiveEvidenceMaterialReceipt
 	if i == nil || ctx == nil || o.Version != "original-archive-evidence-material-inputs.v1" || privateDirectory(o.OutputDirectory) != nil || o.OutputDirectory == filepath.Dir(o.C1Material.File) {
 		return zero, ErrInstall
 	}
-	original, e := i.QueryOriginalC1EvidenceMaterial(ctx, password, enrollment, filepath.Dir(o.C1Material.File))
-	if e != nil || original.Material != o.C1Material || original.Signature != o.C1Signature {
-		return zero, ErrInstall
+	if recovery == nil {
+		original, e := i.QueryOriginalC1EvidenceMaterial(ctx, password, enrollment, filepath.Dir(o.C1Material.File))
+		if e != nil || original.Material != o.C1Material || original.Signature != o.C1Signature {
+			return zero, ErrInstall
+		}
 	}
-	raw, e := readBootstrapSourcePin(original.Material, 262144)
-	var m OriginalC1EvidenceMaterial
-	if e != nil || decodeExact(raw, &m) != nil {
+	m, e := i.readArchiveC1Source(enrollment, o)
+	if e != nil {
 		return zero, ErrInstall
 	}
 	op, e := i.authenticate(ctx, password)
@@ -67,7 +77,7 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 		return zero, ErrInstall
 	}
 	state, now, e := originalRuntimeAuthoritySnapshot(ctx, op, enrollment)
-	if e != nil || state.cas != (HeadCAS{}) || !now.Before(m.Until) {
+	if e != nil || state.cas != (HeadCAS{}) || now.Before(m.ObservedAt) || recovery == nil && !now.Before(m.Until) {
 		return zero, ErrInstall
 	}
 	issuer, e := op.privateKey(issuerPrivate)
@@ -98,19 +108,6 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 		return zero, ErrInstall
 	}
 	originalPins := []BootstrapSourceFilePin{o.C1Material, o.C1Signature, m.InstalledObserver, m.WriterSelection, m.RuntimeJWT}
-	beforeObserver, e := owner.NewInstalledVaultDependencyObserver(cfg, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID)
-	if e != nil {
-		return zero, ErrInstall
-	}
-	defer beforeObserver.Close()
-	observed, e := beforeObserver.Observe(ctx)
-	if e != nil {
-		return zero, ErrInstall
-	}
-	before, _, e := observed.Data(ctx)
-	if e != nil {
-		return zero, ErrInstall
-	}
 	root, e := originalPublicationOwnerToken(m.Source.VaultOwnerMaterial, m.Source.VaultOwnerMaterialIsInitJSON)
 	if e != nil {
 		return zero, ErrInstall
@@ -135,25 +132,52 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 		return zero, ErrInstall
 	}
 	until := minTime(m.Until.Add(-6*time.Second), op.until)
+	updated := cfg
+	profile := *cfg.EvidenceWrap
+	profile.ArchiveUnwrap = &role
+	updated.EvidenceWrap = &profile
+	intentData := originalArchiveEvidenceIntent{"original-archive-evidence-material-intent.v1", i.planHash, enrollment.DocumentSHA256, o, role}
+	observerInput := cfg
+	if recovery != nil {
+		until = op.until
+		observerInput = updated
+		originalPins = append(originalPins, recovery.Intent, recovery.BeforeMetadata, m.Source.WriterSelection, m.BeforeMetadata, m.AfterMetadata)
+		if recovery.Previous != nil {
+			originalPins = append(originalPins, recovery.Previous.Material, recovery.Previous.Signature)
+		}
+	}
+	beforeObserver, e := owner.NewInstalledVaultDependencyObserver(observerInput, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID)
+	if e != nil {
+		return zero, ErrInstall
+	}
+	defer beforeObserver.Close()
+	observed, e := beforeObserver.Observe(ctx)
+	if e != nil {
+		return zero, fmt.Errorf("archive initial metadata observation: %w", ErrInstall)
+	}
+	before, _, e := observed.Data(ctx)
+	if e != nil {
+		return zero, ErrInstall
+	}
 	auth := func() error {
 		if op.authority(ctx, enrollment) != nil || !time.Now().Before(until) {
-			return ErrInstall
+			return fmt.Errorf("archive enrollment authority or deadline: %w", ErrInstall)
 		}
 		current, _, e := originalRuntimeAuthoritySnapshot(ctx, op, enrollment)
 		if e != nil || current.cas != state.cas {
-			return ErrInstall
+			return fmt.Errorf("archive SQL head check: %w", ErrInstall)
 		}
 		actual, e := i.originalPublicationActor(ctx, o.UnwrapDeployment, o.UnwrapPodName)
 		if e != nil || actual != actor {
-			return ErrInstall
+			return fmt.Errorf("archive unwrap actor check: %w", ErrInstall)
 		}
 		actual, e = i.originalPublicationActor(ctx, m.Source.ControllerDeployment, m.Source.ControllerPodName)
 		if e != nil || actual != m.Binding {
-			return ErrInstall
+			return fmt.Errorf("archive wrap actor check: %w", ErrInstall)
 		}
 		scope, e := ObserveInstalledVaultProviderScope(ctx, i.db, i.kube, i.plan.Target, selected.PreAdoptionVaultDependencies[0].Workload, cfg.Endpoint)
 		if e != nil || !reflect.DeepEqual(scope, m.ProviderScope) {
-			return ErrInstall
+			return fmt.Errorf("archive Vault workload scope check: %w", ErrInstall)
 		}
 		wd, e := i.kube.AppsV1().Deployments(i.plan.Target.Namespace).Get(ctx, m.Source.ControllerDeployment, metav1.GetOptions{})
 		if e != nil || wd.UID != wrapDP.UID {
@@ -185,12 +209,21 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 	if e != nil {
 		return zero, ErrInstall
 	}
-	intent, e := canonical(struct {
-		Version, Plan, Enrollment string
-		Source                    OriginalArchiveEvidenceMaterialOptions
-		Role                      a.VaultPermissionRole
-	}{"original-archive-evidence-material-intent.v1", i.planHash, enrollment.DocumentSHA256, o, role})
-	if e != nil || auth() != nil || writeNewFiles(o.OutputDirectory, map[string][]byte{"archive-evidence.intent.json": intent, "archive-provider-metadata.before.json": beforeRaw}) != nil {
+	intent, e := canonical(intentData)
+	if recovery != nil {
+		currentMetadata := beforeRaw
+		intent, beforeRaw, e = recoverOriginalArchiveIntent(*recovery, intentData, beforeMeta)
+		if e == nil {
+			e = i.checkArchiveRenewal(*recovery, intentData, beforeRaw, currentMetadata)
+		}
+	}
+	if e != nil {
+		return zero, fmt.Errorf("archive intent and baseline check: %w", ErrInstall)
+	}
+	if e = auth(); e != nil {
+		return zero, e
+	}
+	if writeNewFiles(o.OutputDirectory, map[string][]byte{"archive-evidence.intent.json": intent, "archive-provider-metadata.before.json": beforeRaw}) != nil {
 		return zero, ErrInstall
 	}
 	pending := OriginalArchiveEvidenceMaterialReceipt{Version: "original-archive-evidence-material-result.v1", State: "original_archive_native_write_unconfirmed_query_only_preserve_intent"}
@@ -199,15 +232,28 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 	if writeNewFiles(o.OutputDirectory, map[string][]byte{"archive-native.sent.json": intent}) != nil {
 		return pending, ErrInstall
 	}
-	if v.policy(ctx, role.Policy, acl, root, auth) != nil {
-		return pending, ErrInstall
+	providerWrite := auth
+	if recovery != nil {
+		providerWrite = func() error { return ErrInstall }
 	}
-	actualRole, e := v.role(ctx, role.AuthMount, role.Role, desired, root, auth)
+	if e = v.policy(ctx, role.Policy, acl, root, providerWrite); e != nil {
+		return pending, fmt.Errorf("archive decrypt ACL check: %w", e)
+	}
+	actualRole, e := v.role(ctx, role.AuthMount, role.Role, desired, root, providerWrite)
 	if e != nil {
 		return pending, ErrInstall
 	}
-	if auth() != nil {
-		return pending, ErrInstall
+	if e = auth(); e != nil {
+		return pending, e
+	}
+	if recovery != nil {
+		if i.refreshArchiveWrapJWT(ctx, o.OutputDirectory, &m, &until) != nil {
+			return pending, fmt.Errorf("archive wrap JWT issuance: %w", ErrInstall)
+		}
+		originalPins = append(originalPins, m.RuntimeJWT)
+		if e = auth(); e != nil {
+			return pending, e
+		}
 	}
 	seconds := int64(600)
 	token, e := i.kube.CoreV1().ServiceAccounts(actor.Namespace).CreateToken(ctx, actor.ServiceAccountName, &authn.TokenRequest{Spec: authn.TokenRequestSpec{Audiences: []string{role.Audience}, ExpirationSeconds: &seconds, BoundObjectRef: &authn.BoundObjectReference{Kind: "Pod", APIVersion: "v1", Name: actor.PodName, UID: types.UID(actor.PodUID)}}}, metav1.CreateOptions{})
@@ -223,8 +269,22 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 	jwtFile := filepath.Join(o.OutputDirectory, "archive-evidence-unwrap.jwt")
 	observerPolicy := "sbk-c1-observe-" + hash([]byte(i.planHash + actor.PodUID + m.Binding.PodUID))[:24]
 	observerACL, e := a.VaultObserverACL(m.Transit.Transit.KeyName, cfg.EvidenceWrap.Role, role, observerPolicy)
-	if e != nil || v.policy(ctx, observerPolicy, observerACL, root, auth) != nil {
+	if e != nil {
 		return pending, ErrInstall
+	}
+	var observerGuard error
+	observerWrite := func() error {
+		observerGuard = auth()
+		return observerGuard
+	}
+	if recovery != nil && recovery.Previous != nil {
+		observerWrite = providerWrite
+	}
+	if e = v.policy(ctx, observerPolicy, observerACL, root, observerWrite); e != nil {
+		if observerGuard != nil {
+			return pending, observerGuard
+		}
+		return pending, fmt.Errorf("archive observer ACL HTTP or readback check: %w", ErrInstall)
 	}
 	started := time.Now()
 	observerToken, e := v.observerToken(ctx, observerPolicy, root, auth)
@@ -261,10 +321,6 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 		return pending, ErrInstall
 	}
 	// Preserve exact native metadata for all other keys, roles and policies.
-	updated := cfg
-	profile := *cfg.EvidenceWrap
-	profile.ArchiveUnwrap = &role
-	updated.EvidenceWrap = &profile
 	afterObserver, e := owner.NewInstalledVaultDependencyObserver(updated, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID)
 	if e != nil {
 		return pending, ErrInstall
@@ -312,6 +368,9 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 	selectionPin := BootstrapSourceFilePin{File: filepath.Join(o.OutputDirectory, "c1-vault-writer-selection.json"), SHA256: hash(selectionRaw)}
 	m.InstalledObserver, m.WriterSelection = updatedPin, selectionPin
 	m.Source.OutputDirectory = o.OutputDirectory
+	if recovery != nil {
+		m.Source.Until = until
+	}
 	m.AfterMetadata = BootstrapSourceFilePin{File: filepath.Join(o.OutputDirectory, "c1-provider-metadata.after.json"), SHA256: hash(afterRaw)}
 	m.ObservedAt, m.Until = time.Now().UTC(), until
 	c1Raw, e := canonical(m)
@@ -329,7 +388,7 @@ func (i *Installer) ProduceOriginalArchiveEvidenceMaterial(ctx context.Context, 
 	wrapSource := OriginalArchiveJWTSource{File: m.RuntimeJWT.File, SHA256: m.RuntimeJWT.SHA256, PodName: m.Binding.PodName, PodUID: m.Binding.PodUID, DeploymentName: m.Source.ControllerDeployment, DeploymentUID: string(wrapDP.UID)}
 	readSource := OriginalArchiveJWTSource{File: jwtFile, SHA256: hash(jwt), PodName: actor.PodName, PodUID: actor.PodUID, DeploymentName: o.UnwrapDeployment, DeploymentUID: string(readDP.UID)}
 	material := originalArchiveEvidenceMaterial{Version: "original-archive-evidence-material.v1", PlanSHA256: i.planHash, EnrollmentSHA256: enrollment.DocumentSHA256, Source: o, C1: c1, Vault: vault, WrapJWT: wrapSource, UnwrapJWT: readSource, UnwrapActor: actor, RoleSHA256: hash(actualRole), PolicySHA256: hash([]byte(acl)), BeforeMetadataSHA256: hash(beforeRaw), AfterMetadataSHA256: hash(afterRaw), ObservedAt: time.Now().UTC(), Until: until}
-	raw, e = canonical(material)
+	raw, e := canonical(material)
 	if e != nil {
 		return pending, ErrInstall
 	}

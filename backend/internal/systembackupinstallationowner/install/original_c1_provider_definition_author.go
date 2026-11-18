@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net"
 	"net/url"
@@ -58,7 +59,7 @@ func (i *Installer) PrepareOriginalC1ProviderDefinitions(ctx context.Context, pa
 	}
 	archive, e := i.QueryOriginalArchiveEvidenceMaterial(ctx, password, enrollment, in.ArchiveMaterialDirectory)
 	if e != nil {
-		return zero, ErrInstall
+		return zero, fmt.Errorf("definitions archive acceptance: %w", ErrInstall)
 	}
 	raw, e := readBootstrapSourcePin(in.S3Profile, 262144)
 	var s3 probe.S3Profile
@@ -94,7 +95,7 @@ func (i *Installer) PrepareOriginalC1ProviderDefinitions(ctx context.Context, pa
 	until := minTime(archive.Until, op.until)
 	six := SixReferenceDefinition{Version: SixReferenceVersion, References: refs, Deployment: in.Deployment, S3: s3, Vault: archive.Vault, VaultCA: in.VaultCA, NotBefore: now, Until: until}
 	if _, e = observeSixReference(ctx, i.kube, i.plan.Target, six); e != nil {
-		return zero, ErrInstall
+		return zero, fmt.Errorf("definitions six-reference native observation: %w", ErrInstall)
 	}
 	actor, e := i.originalPublicationActor(ctx, in.ControllerDeployment, in.ControllerPod)
 	if e != nil {
@@ -190,10 +191,14 @@ func (i *Installer) PrepareOriginalC1ProviderDefinitions(ctx context.Context, pa
 	if e != nil {
 		return zero, ErrInstall
 	}
-	until = minTime(until, minTime(clientLeaf.NotAfter, server.NotAfter))
-	relay := StatusRelayReferenceDefinition{Version: StatusRelayReferenceVersion, ReferenceVersion: "relay-" + hash(append(spec, cert...))[:24], Deployment: in.Deployment, Controller: controller, Service: svc.Name, ServiceUID: string(svc.UID), Endpoint: in.RelayEndpoint, Container: in.RelayContainer, ContainerImageID: image, PodSpecSHA256: hash(spec), CA: in.RelayCA, ClientCertificate: in.RelayCertificate, ClientPrivateKey: in.RelayPrivateKey, ServerLeafSHA256: hash(server.Raw), ServerSPKISHA256: hash(spki), NotBefore: now, Until: until}
+	// Config selects the exact relay definition digest. Its transport window is
+	// bounded by the verified certificates. Each relay consumer still performs
+	// its own fresh observation and applies the current authorization window.
+	relayUntil := minTime(now.Add(24*time.Hour), minTime(clientLeaf.NotAfter, server.NotAfter))
+	until = minTime(until, relayUntil)
+	relay := StatusRelayReferenceDefinition{Version: StatusRelayReferenceVersion, ReferenceVersion: "relay-" + hash(append(spec, cert...))[:24], Deployment: in.Deployment, Controller: controller, Service: svc.Name, ServiceUID: string(svc.UID), Endpoint: in.RelayEndpoint, Container: in.RelayContainer, ContainerImageID: image, PodSpecSHA256: hash(spec), CA: in.RelayCA, ClientCertificate: in.RelayCertificate, ClientPrivateKey: in.RelayPrivateKey, ServerLeafSHA256: hash(server.Raw), ServerSPKISHA256: hash(spki), NotBefore: now, Until: relayUntil}
 	if _, e = observeStatusRelayReference(ctx, i.kube, i.plan.Target, relay); e != nil {
-		return zero, ErrInstall
+		return zero, fmt.Errorf("definitions status relay native observation: %w", ErrInstall)
 	}
 	// This is the independent native A owner channel principal, never generic
 	// evidence_write (PUT only), metadata observer or MinIO root credentials.
@@ -210,7 +215,7 @@ func (i *Installer) PrepareOriginalC1ProviderDefinitions(ctx context.Context, pa
 	// Native named/effective policy and deny-admin observation authenticates
 	// this separate upstream purpose before converting its retained credentials.
 	if probe.ObserveOriginalS3Channel(ctx, s3, in.ChannelPrincipal) != nil {
-		return zero, ErrInstall
+		return zero, fmt.Errorf("definitions S3 channel native observation: %w", ErrInstall)
 	}
 	lowerRaw, e := probe.ReadPinned(in.ChannelPrincipal.Credential, 16384)
 	if e != nil {
@@ -243,7 +248,6 @@ func (i *Installer) PrepareOriginalC1ProviderDefinitions(ctx context.Context, pa
 	}
 	until = minTime(until, channelMaterial.Until)
 	six.Until = until
-	relay.Until = until
 	// Exact original native material, no fabricated recovery or success flag.
 	recovery, e := canonical(struct {
 		Profile  probe.S3Profile
@@ -280,7 +284,7 @@ func (i *Installer) PrepareOriginalC1ProviderDefinitions(ctx context.Context, pa
 	defer clear(credentialsRaw)
 	current, _, e := originalRuntimeAuthoritySnapshot(ctx, op, enrollment)
 	if e != nil || current.cas != state.cas || op.authority(ctx, enrollment) != nil || !time.Now().Before(until) || observeBootstrapSourceController(ctx, i.kube, i.plan.Target, controller) != nil || recheckSixReferenceFiles(six) != nil {
-		return zero, ErrInstall
+		return zero, fmt.Errorf("definitions final authority, deadline or pin check: %w", ErrInstall)
 	}
 	for _, p := range []BootstrapSourceFilePin{in.ChannelMaterial, in.ChannelCredentials, {File: in.ChannelPrincipal.Credential.File, SHA256: in.ChannelPrincipal.Credential.SHA256}} {
 		b, e := readBootstrapSourcePin(p, 262144)

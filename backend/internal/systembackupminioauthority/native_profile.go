@@ -1,6 +1,6 @@
 package systembackupminioauthority
 
-import "strings"
+import "clawreef/internal/systembackup/minionative"
 
 // These are closed source compatibility declarations, never observations,
 // current permissions, image attestations or admission capabilities.
@@ -9,18 +9,16 @@ const SeptemberNativeObservationProfile = "minio-2025-09-07-six-principal-curren
 
 const DeleteCompatPermissionProfile = "minio-2026-11-05-delete-compat-builtin-flat.v1"
 const DeleteCompatNativeObservationProfile = "minio-2026-11-05-delete-compat-six-principal-current-source.v1"
-const DeleteCompatImageManifest = "sha256:b01b328707219c9d27f818583e0aef896a10e7580e59ad5bb2930a6965969548"
+const DeleteCompatImageManifest = minionative.DeleteCompatManifest
 
 // MatchesDeleteCompatImageID accepts the observed manifest ID and immutable
 // repository references carrying exactly that manifest.
 func MatchesDeleteCompatImageID(imageID string) bool {
-	return imageID == DeleteCompatImageManifest || MatchesDeleteCompatImageReference(strings.TrimPrefix(imageID, "docker-pullable://"))
+	return minionative.MatchesDeleteCompatImageID(imageID)
 }
 
 func MatchesDeleteCompatImageReference(image string) bool {
-	repository, digest, ok := strings.Cut(image, "@")
-	return ok && repository != "" && !strings.ContainsAny(repository, " \t\r\n?#\\") &&
-		!strings.Contains(repository, "://") && digest == DeleteCompatImageManifest
+	return minionative.MatchesDeleteCompatImageReference(image)
 }
 
 // MatchesBuiltinFlatImage keeps the patched image on its separate source row.
@@ -52,13 +50,13 @@ func NativeProfile(permission string) (NativeCompatibilityProfile, bool) {
 	case SeptemberPermissionProfile:
 		return NativeCompatibilityProfile{SeptemberPermissionProfile, SeptemberNativeObservationProfile,
 			"original-minio-september-permission-definition.v1", "minio-publication-september-effective-permission-source.v1",
-			"2025-09-07T16:13:09Z", "07c3a429bfed433e49018cb0f78a52145d4bedeb",
+			minionative.SeptemberServerVersion, minionative.SeptemberServerCommit,
 			"original-minio-september-terminal-provider.v1", "original-minio-september-terminal-reference.v1",
 			"original-minio-september-terminal-scope.v1", "original-minio-september-terminal-s3-protocol.v1"}, true
 	case DeleteCompatPermissionProfile:
 		return NativeCompatibilityProfile{DeleteCompatPermissionProfile, DeleteCompatNativeObservationProfile,
 			"original-minio-delete-compat-permission-definition.v1", "minio-publication-delete-compat-effective-permission-source.v1",
-			"2026-11-05T07:23:54Z", "0f7c8e3a781129ddbf1c7a6ce834727ff5efdedb",
+			minionative.DeleteCompatVersion, minionative.DeleteCompatCommit,
 			"original-minio-delete-compat-terminal-provider.v1", "original-minio-delete-compat-terminal-reference.v1",
 			"original-minio-delete-compat-terminal-scope.v1", "original-minio-delete-compat-terminal-s3-protocol.v1"}, true
 	}

@@ -146,7 +146,6 @@ func CaptureOriginalCatalogInitialInventory(ctx context.Context, owner *install.
 	defer p.clear()
 	ctx, cancel := context.WithDeadline(ctx, p.window.until)
 	defer cancel()
-	// Authority stores this exact context; every sign/recheck uses it.
 	issuer, e := owner.PrepareMinIOPermissionIssue(ctx, password, enrollment, definitionFile, definitionSHA)
 	if e != nil {
 		return zero, e
@@ -233,8 +232,7 @@ func originalCatalogInitialInventoryPublished(ctx context.Context, owner *instal
 	defer p.clear()
 	ctx, cancel := context.WithDeadline(ctx, p.window.until)
 	defer cancel()
-	// Authority stores this exact context; every sign/recheck uses it.
-	issuer, e := owner.PrepareMinIOPermissionIssue(ctx, password, enrollment, definitionFile, definitionSHA)
+	recheck, e := owner.PrepareInstalledMinIOPermissionCheck(ctx, password, enrollment, definitionFile, definitionSHA)
 	if e != nil {
 		return zero, e
 	}
@@ -272,7 +270,7 @@ func originalCatalogInitialInventoryPublished(ctx context.Context, owner *instal
 		return zero, e
 	}
 	if minioTerminalError(current, 404, "NoSuchKey", record.Key, p.grant.Provider.Region) {
-		if !allowWrite {
+		if !allowWrite || recheck() != nil {
 			return zero, install.ErrInstall
 		}
 		reply, e := minioTerminalProbeRequest(ctx, writer, record.Bucket, record.Key, "", http.MethodPut, raw, false, "")
@@ -294,7 +292,7 @@ func originalCatalogInitialInventoryPublished(ctx context.Context, owner *instal
 			return zero, install.ErrCommitUnknown
 		}
 	}
-	if issuer.Recheck(ctx) != nil {
+	if recheck() != nil {
 		return zero, install.ErrCommitUnknown
 	}
 	if _, e = ObserveOriginalMinIOPermissions(ctx, kube, definitionFile, definitionSHA); e != nil {

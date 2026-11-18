@@ -228,7 +228,7 @@ func observeStatusRelayReference(ctx context.Context, client kubernetes.Interfac
 		return zero, ErrInstall
 	}
 	base, e := url.Parse(core.ControlURL)
-	if e != nil || base.Path != "" || base.RawQuery != "" || base.Fragment != "" || base.User != nil {
+	if e != nil || (base.Path != "" && base.Path != "/relay") || base.RawPath != "" || base.RawQuery != "" || base.ForceQuery || base.Fragment != "" || base.User != nil {
 		return zero, ErrInstall
 	}
 	base.Path = "/relay"

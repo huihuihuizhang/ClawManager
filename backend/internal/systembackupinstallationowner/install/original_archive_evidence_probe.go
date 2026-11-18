@@ -11,6 +11,7 @@ import (
 	authn "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -79,7 +80,7 @@ func (i *Installer) originalArchiveMaterialProbe(ctx context.Context, v *origina
 	if e != nil {
 		return ErrInstall
 	}
-	payload, _ := json.Marshal(map[string]any{"context": ec, "plaintext": base64.StdEncoding.EncodeToString(dek[:]), "key_version": wrap.Transit.KeyVersion})
+	payload, _ := json.Marshal(map[string]string{"context": ec, "plaintext": base64.StdEncoding.EncodeToString(dek[:]), "key_version": strconv.FormatUint(uint64(wrap.Transit.KeyVersion), 10)})
 	defer clear(payload)
 	encrypted, status, e := v.call(probe, "POST", "/v1/transit/encrypt/"+wrap.Transit.KeyName, wt, payload)
 	defer clear(encrypted)

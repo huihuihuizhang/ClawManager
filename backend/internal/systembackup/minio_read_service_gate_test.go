@@ -6,6 +6,21 @@ import (
 	"testing"
 )
 
+func TestMinIOReadServiceNativeGlobalResourceReadback(t *testing.T) {
+	keeper, _, err := MinIOReadGatePolicies([]string{"business"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	native := []byte(strings.ReplaceAll(string(keeper), `["*"]`, `["**"]`))
+	if !OriginalMinIOReadGatePoliciesMatch(keeper, native) {
+		t.Fatal("native global resources changed the policy comparison")
+	}
+	widened := []byte(strings.Replace(string(native), `"arn:aws:s3:::business"`, `"**"`, 1))
+	if OriginalMinIOReadGatePoliciesMatch(keeper, widened) {
+		t.Fatal("native comparison accepted a widened bucket scope")
+	}
+}
+
 func TestMinIOReadServicePolicyProtectsActualBusinessScope(t *testing.T) {
 	k, r, e := MinIOReadGatePolicies([]string{"business"})
 	if e != nil || !minioGateSamePolicy(k, k) || !minioGateSamePolicy(r, r) || minioGateSamePolicy(k, r) {

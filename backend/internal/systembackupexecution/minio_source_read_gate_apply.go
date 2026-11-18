@@ -136,7 +136,7 @@ func applyOriginalMinIOSourceAccounts(ctx context.Context, write *install.Origin
 			if status != 200 || minioPermissionDecode(raw, &p) != nil || p.PolicyName != name {
 				return true, false, install.ErrInstall
 			}
-			return true, sourceGatePolicySame(p.Policy, policyBody), nil
+			return true, sb.OriginalMinIOReadGatePoliciesMatch(p.Policy, policyBody), nil
 		}
 		attempt, e := sourceGateSetupStep(ctx, write, read, dir, name+"-policy", policy, policyObserve, func() error {
 			return nativeInstallMC(ctx, dir, n, admin, "admin", "policy", "create", "native", name, policy.File)

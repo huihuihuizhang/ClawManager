@@ -115,7 +115,13 @@ func nativeInstallOwnUser(ctx context.Context, n *minioPermissionHTTP, role MinI
 		MemberOf                      []string
 		UpdatedAt                     time.Time
 	}
-	if status != 200 || minioPermissionDecode(raw, &user) != nil || user.SecretKey != "" || user.Status != "enabled" || len(user.MemberOf) != 0 || user.UpdatedAt.IsZero() || user.PolicyName != "" && user.PolicyName != role.PolicyName || user.AuthInfo != nil && (user.AuthInfo.Type != "builtin" || user.AuthInfo.AuthServer != "" || user.AuthInfo.AuthServerUserID != role.Account) {
+	if status != 200 || minioPermissionDecode(raw, &user) != nil || user.SecretKey != "" || user.Status != "enabled" || len(user.MemberOf) != 0 ||
+		user.AuthInfo != nil && (user.AuthInfo.Type != "builtin" || user.AuthInfo.AuthServer != "" || user.AuthInfo.AuthServerUserID != role.Account) {
+		return false, install.ErrInstall
+	}
+	// MinIO reports the policy mapping's update time. A newly created
+	// unbound user has no mapping, and proves its identity below.
+	if user.PolicyName != "" && (user.PolicyName != role.PolicyName || user.UpdatedAt.IsZero()) {
 		return false, install.ErrInstall
 	}
 	// A same-name record is never updated or re-keyed. Resume requires proof
@@ -192,8 +198,16 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 	defer p.clear()
 	// Retain the ORIGINAL minimum grant/credential window for every mc child
 	// and native request; the operator's two-minute cap never extends it.
+	// The issuer remains bound to the context that authenticated the operator.
+	authorityContext := ctx
 	ctx, stop := context.WithDeadline(ctx, p.window.until)
 	defer stop()
+	recheck := func() error {
+		if ctx.Err() != nil {
+			return install.ErrInstall
+		}
+		return issuer.Recheck(authorityContext)
+	}
 	if p.grant.Provider.DeploymentID == "" || minioPermissionKubernetesCheck(ctx, kube, p) != nil {
 		return receipt, install.ErrInstall
 	}
@@ -324,6 +338,7 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 		if e != nil {
 			return receipt, e
 		}
+		enableVersioning := true
 		if minioTerminalError(minioTerminalReply{status: status, body: raw}, 404, "NoSuchBucket", "", p.grant.Provider.Region) {
 			receipt.NativeWritesAttempted = true
 			if e = nativeInstallMC(ctx, m.Directory, n, files, "mb", "native/"+bucket); e != nil {
@@ -337,20 +352,23 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 			if status != 200 || xml.Unmarshal(raw, &v) != nil || v.Status != "" && v.Status != "Enabled" && v.Status != "Suspended" {
 				return receipt, install.ErrInstall
 			}
+			enableVersioning = v.Status != "Enabled"
 		}
 		// Refuse an existing bucket policy; never delete or replace one.
 		raw, status, e = n.get(ctx, "/"+bucket, url.Values{"policy": {""}})
 		if e != nil || !minioTerminalError(minioTerminalReply{status: status, body: raw}, 404, "NoSuchBucketPolicy", "", p.grant.Provider.Region) {
 			return receipt, install.ErrInstall
 		}
-		receipt.NativeWritesAttempted = true
-		if e = nativeInstallMC(ctx, m.Directory, n, files, "version", "enable", "native/"+bucket); e != nil {
-			return receipt, e
+		if enableVersioning {
+			receipt.NativeWritesAttempted = true
+			if e = nativeInstallMC(ctx, m.Directory, n, files, "version", "enable", "native/"+bucket); e != nil {
+				return receipt, e
+			}
 		}
 		if _, e = n.bucket(ctx, bucket); e != nil {
 			return receipt, e
 		}
-		if issuer.Recheck(ctx) != nil {
+		if recheck() != nil {
 			return receipt, install.ErrInstall
 		}
 	}
@@ -414,7 +432,7 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 		if e = nativeInstallMC(ctx, m.Directory, n, files, "admin", "policy", "attach", "native", r.PolicyName, "--user", r.Account); e != nil {
 			return receipt, e
 		}
-		if _, e = n.userAndPolicyV2(ctx, r.Account, r.PolicyName, r.PolicySHA256, rules); e != nil || issuer.Recheck(ctx) != nil {
+		if _, e = n.userAndPolicyV2(ctx, r.Account, r.PolicyName, r.PolicySHA256, rules); e != nil || recheck() != nil {
 			return receipt, install.ErrInstall
 		}
 	}
@@ -422,7 +440,7 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 	if _, e = ObserveOriginalMinIOPermissions(ctx, kube, m.DefinitionFile, m.DefinitionSHA256); e != nil {
 		return receipt, e
 	}
-	if issuer.Recheck(ctx) != nil {
+	if recheck() != nil {
 		return receipt, install.ErrInstall
 	}
 	receipt.Stage, receipt.State = "complete", "native_materials_installed_source_reobserved_not_issued"

@@ -46,6 +46,9 @@ func minioPermissionOwnerFixture(t *testing.T) (*authorityFixture, context.Conte
 
 func TestMinIOPermissionOwnerCreatesOnlyEnrolledOriginalSources(t *testing.T) {
 	f, ctx, file, sha, d := minioPermissionOwnerFixture(t)
+	if _, e := f.i.PrepareInstalledMinIOPermissionCheck(ctx, f.password, f.enrollment, file, sha); e == nil {
+		t.Fatal("accepted an uninstalled permission pair")
+	}
 	p, e := f.i.PrepareMinIOPermissionIssue(ctx, f.password, f.enrollment, file, sha)
 	if e != nil {
 		t.Fatal(e)
@@ -59,12 +62,28 @@ func TestMinIOPermissionOwnerCreatesOnlyEnrolledOriginalSources(t *testing.T) {
 	}
 	for _, v := range []struct{ name, domain, sha string }{{d.GrantName, minioGrantDomain, committed.GrantSHA256}, {d.HeadName, minioHeadDomain, committed.HeadSHA256}} {
 		cm, e := f.i.kube.CoreV1().ConfigMaps(d.Grant.Namespace).Get(ctx, v.name, metav1.GetOptions{})
-		if e != nil || hash([]byte(cm.Data["record.json"])) != v.sha || !ed25519.Verify(f.i.public, append([]byte(v.domain), cm.Data["record.json"]...), cm.BinaryData["signature"]) || ed25519.Verify(f.i.public, []byte(cm.Data["record.json"]), cm.BinaryData["signature"]) {
+		if e != nil || cm.Labels[minioPermissionManagedLabel] != "true" || hash([]byte(cm.Data["record.json"])) != v.sha || !ed25519.Verify(f.i.public, append([]byte(v.domain), cm.Data["record.json"]...), cm.BinaryData["signature"]) || ed25519.Verify(f.i.public, []byte(cm.Data["record.json"]), cm.BinaryData["signature"]) {
 			t.Fatal("missing original domain-separated signature", e)
 		}
 	}
 	if _, e = f.i.PrepareMinIOPermissionIssue(ctx, f.password, f.enrollment, file, sha); e == nil {
 		t.Fatal("overwrote original names")
+	}
+	recheck, e := f.i.PrepareInstalledMinIOPermissionCheck(ctx, f.password, f.enrollment, file, sha)
+	if e != nil || recheck() != nil {
+		t.Fatal("rejected the installed permission pair", e)
+	}
+	configMaps := f.i.kube.CoreV1().ConfigMaps(d.Grant.Namespace)
+	head, e := configMaps.Get(ctx, d.HeadName, metav1.GetOptions{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	head.BinaryData["signature"][0] ^= 1
+	if _, e = configMaps.Update(ctx, head, metav1.UpdateOptions{}); e != nil {
+		t.Fatal(e)
+	}
+	if recheck() == nil {
+		t.Fatal("accepted a changed permission head")
 	}
 }
 

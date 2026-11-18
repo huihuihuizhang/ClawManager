@@ -61,6 +61,9 @@ func minioGateNormalizedPolicy(raw []byte) (minioGatePolicy, bool) {
 			return p, false
 		}
 		s.Sid = ""
+		if len(s.Resource) == 1 && s.Resource[0] == "**" && len(s.Action) == 1 && (s.Action[0] == "admin:*" || s.Action[0] == "s3:ListAllMyBuckets") {
+			s.Resource[0] = "*"
+		}
 		sort.Strings(s.Action)
 		sort.Strings(s.Resource)
 	}
@@ -74,6 +77,12 @@ func minioGateSamePolicy(a, b []byte) bool {
 	}
 	y, ok := minioGateNormalizedPolicy(b)
 	return ok && minioGateHash(x) == minioGateHash(y)
+}
+
+// OriginalMinIOReadGatePoliciesMatch compares the effective read gate policy
+// with its native readback, including MinIO's spelling for global resources.
+func OriginalMinIOReadGatePoliciesMatch(a, b []byte) bool {
+	return minioGateSamePolicy(a, b)
 }
 func minioGateOutputPolicy(raw []byte, business []string) bool {
 	p, ok := minioGateNormalizedPolicy(raw)

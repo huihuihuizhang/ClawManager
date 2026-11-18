@@ -24,8 +24,6 @@ import (
 )
 
 const minioGateMCRelease = "RELEASE.2025-08-13T08-35-41Z"
-const minioGateServerVersion = "2025-09-07T16:13:09Z"
-const minioGateServerCommit = "07c3a429bfed433e49018cb0f78a52145d4bedeb"
 
 type minioGateNative struct {
 	g           *MinIOReadServiceGate
@@ -316,7 +314,8 @@ func (g *MinIOReadServiceGate) identity(ctx context.Context, initial bool) error
 			CommitID       string `json:"commitID"`
 		}
 	}
-	if json.Unmarshal(b, &info) != nil || info.DeploymentID != g.in.DeploymentID || info.Region != g.in.Region || len(info.Servers) != 1 || info.Servers[0].State != "online" || info.Servers[0].Version != minioGateServerVersion || info.Servers[0].CommitID != minioGateServerCommit {
+	if json.Unmarshal(b, &info) != nil || info.DeploymentID != g.in.DeploymentID || info.Region != g.in.Region || len(info.Servers) != 1 || info.Servers[0].State != "online" ||
+		!mn.MatchesReadGateServer(g.in.ImageID, info.Servers[0].Version, info.Servers[0].CommitID) {
 		return ErrMinIOReadGate
 	}
 	_, e = minioGateReadPin(g.in.CAFile, g.in.CASHA256, 65536)

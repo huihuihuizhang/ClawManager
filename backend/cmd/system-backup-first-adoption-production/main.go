@@ -62,11 +62,12 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 2
 	}
 	get := func(n string) string { return *values[n] }
-	if *action != "run" && *action != "run-minio-metadata" && *action != "prepare-minio-history" && *action != "prepare-native-plan" && *action != "prepare-inputs" && *action != "query-disabled-initialization" && *action != "prepare-recovery-descriptor" && *action != "query-minio-recovery" && *action != "prepare-archive-materials" && *action != "query-archive-materials" && *action != "issue-minio-runtime-metadata" && *action != "query-minio-runtime-metadata" {
+	archiveWrite := *action == "prepare-archive-materials" || *action == "recover-archive-materials"
+	if *action != "run" && *action != "run-minio-metadata" && *action != "prepare-minio-history" && *action != "prepare-native-plan" && *action != "prepare-inputs" && *action != "query-disabled-initialization" && *action != "prepare-recovery-descriptor" && *action != "query-minio-recovery" && !archiveWrite && *action != "query-archive-materials" && *action != "issue-minio-runtime-metadata" && *action != "query-minio-runtime-metadata" {
 		return 2
 	}
 	for name, value := range values {
-		if (*action == "run" || *action == "run-minio-metadata" || *action == "prepare-archive-materials" || *action == "issue-minio-runtime-metadata" || name != "issuer-private-file" && name != "issuer-private-sha256") && *value == "" {
+		if (*action == "run" || *action == "run-minio-metadata" || archiveWrite || *action == "issue-minio-runtime-metadata" || name != "issuer-private-file" && name != "issuer-private-sha256") && *value == "" {
 			return 2
 		}
 	}
@@ -122,7 +123,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if *action == "issue-minio-runtime-metadata" || *action == "query-minio-runtime-metadata" {
 		return runMinIORuntimeMetadata(ctx, owner, password, enrollment, raw, get, out, *action == "query-minio-runtime-metadata")
 	}
-	if *action == "prepare-archive-materials" || *action == "query-archive-materials" {
+	if archiveWrite || *action == "query-archive-materials" {
 		active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancel()
 		var receipt install.OriginalArchiveEvidenceMaterialReceipt
@@ -135,18 +136,32 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			}
 			receipt, e = owner.QueryOriginalArchiveEvidenceMaterial(active, password, enrollment, in.OutputDirectory)
 		} else {
-			var in install.OriginalArchiveEvidenceMaterialOptions
-			d := json.NewDecoder(bytes.NewReader(raw))
-			d.DisallowUnknownFields()
-			if d.Decode(&in) != nil || d.Decode(new(any)) != io.EOF {
-				return 1
-			}
 			private, pe := readPin(get("issuer-private-file"), get("issuer-private-sha256"), 64)
 			if pe != nil {
 				return 1
 			}
 			defer clear(private)
-			receipt, e = owner.ProduceOriginalArchiveEvidenceMaterial(active, password, enrollment, in, private)
+			d := json.NewDecoder(bytes.NewReader(raw))
+			d.DisallowUnknownFields()
+			if *action == "recover-archive-materials" {
+				var in struct {
+					Options  install.OriginalArchiveEvidenceMaterialOptions
+					Recovery install.OriginalArchiveEvidenceRecovery
+				}
+				if d.Decode(&in) != nil || d.Decode(new(any)) != io.EOF {
+					return 1
+				}
+				receipt, e = owner.RecoverOriginalArchiveEvidenceMaterial(active, password, enrollment, in.Options, private, in.Recovery)
+			} else {
+				var in install.OriginalArchiveEvidenceMaterialOptions
+				if d.Decode(&in) != nil || d.Decode(new(any)) != io.EOF {
+					return 1
+				}
+				receipt, e = owner.ProduceOriginalArchiveEvidenceMaterial(active, password, enrollment, in, private)
+			}
+			if e != nil {
+				log.Print(e)
+			}
 		}
 		if json.NewEncoder(out).Encode(receipt) != nil {
 			return 3

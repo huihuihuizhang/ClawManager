@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
+	"os"
 	"time"
 )
 
@@ -67,6 +69,7 @@ func RunOriginalC1ProviderDefinitions(ctx context.Context, args []string, out io
 	defer cancel()
 	receipt, e := i.PrepareOriginalC1ProviderDefinitions(active, password, enrollment, in)
 	if e != nil {
+		fmt.Fprintln(os.Stderr, e)
 		return 1
 	}
 	if json.NewEncoder(out).Encode(receipt) != nil {
