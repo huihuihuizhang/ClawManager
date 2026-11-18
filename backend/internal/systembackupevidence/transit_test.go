@@ -68,7 +68,7 @@ func transitFixture(t *testing.T, mode string) (*TransitKeys, *atomic.Int32, *at
 			Plaintext  []byte `json:"plaintext"`
 			Ciphertext string `json:"ciphertext"`
 			Context    string `json:"context"`
-			Version    uint32 `json:"key_version"`
+			Version    uint32 `json:"key_version,string"`
 		}
 		if r.Method != "POST" || json.NewDecoder(r.Body).Decode(&body) != nil || body.Context != wantContext {
 			t.Error("incorrect method, context or version wire type")

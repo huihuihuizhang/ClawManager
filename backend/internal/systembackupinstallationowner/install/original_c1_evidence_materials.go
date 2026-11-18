@@ -46,12 +46,29 @@ type OriginalC1EvidenceMaterialReceipt struct {
 	Key                                ev.KeyRef
 }
 
+type originalC1EvidenceIntent struct {
+	Version, Plan, Enrollment, Key, Role string
+	Options                              OriginalC1EvidenceMaterialOptions
+}
+
+type OriginalC1EvidenceRecovery struct {
+	Intent, BeforeMetadata BootstrapSourceFilePin
+}
+
 // Original owner installation only. Real source selection/native endpoint,
 // provider cluster and current Pod/SA are read independently. A dedicated
 // derived evidence key and encrypt-only batch role are issued; this creates
 // neither a producer handle nor a KEK Generate/Unwrap authority or retention
 // registry row. The real C1 pipeline still needs original SDK authorization.
 func (i *Installer) ProduceOriginalC1EvidenceMaterial(ctx context.Context, password []byte, enrollment EnrollmentPin, o OriginalC1EvidenceMaterialOptions, issuerPrivate []byte) (OriginalC1EvidenceMaterialReceipt, error) {
+	return i.produceOriginalC1EvidenceMaterial(ctx, password, enrollment, o, issuerPrivate, nil)
+}
+
+func (i *Installer) RecoverOriginalC1EvidenceMaterial(ctx context.Context, password []byte, enrollment EnrollmentPin, o OriginalC1EvidenceMaterialOptions, issuerPrivate []byte, recovery OriginalC1EvidenceRecovery) (OriginalC1EvidenceMaterialReceipt, error) {
+	return i.produceOriginalC1EvidenceMaterial(ctx, password, enrollment, o, issuerPrivate, &recovery)
+}
+
+func (i *Installer) produceOriginalC1EvidenceMaterial(ctx context.Context, password []byte, enrollment EnrollmentPin, o OriginalC1EvidenceMaterialOptions, issuerPrivate []byte, recovery *OriginalC1EvidenceRecovery) (OriginalC1EvidenceMaterialReceipt, error) {
 	var zero OriginalC1EvidenceMaterialReceipt
 	if i == nil || ctx == nil || ctx.Err() != nil || privateDirectory(o.OutputDirectory) != nil {
 		return zero, ErrInstall
@@ -102,19 +119,6 @@ func (i *Installer) ProduceOriginalC1EvidenceMaterial(ctx context.Context, passw
 	}
 	trust, err := owner.ReadInstalledVaultKubernetesTrust(ctx, i.kube)
 	if err != nil || !reflect.DeepEqual(trust, original.Trust) {
-		return zero, ErrInstall
-	}
-	native, err := owner.NewInstalledVaultDependencyObserver(original, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID)
-	if err != nil {
-		return zero, ErrInstall
-	}
-	defer native.Close()
-	observation, err := native.Observe(ctx)
-	if err != nil {
-		return zero, ErrInstall
-	}
-	beforeNative, _, err := observation.Data(ctx)
-	if err != nil {
 		return zero, ErrInstall
 	}
 	ca := bytes.Clone(original.CAPEM)
@@ -180,6 +184,27 @@ func (i *Installer) ProduceOriginalC1EvidenceMaterial(ctx context.Context, passw
 	roleName := "sbk-c1-wrap-" + hash([]byte(i.planHash + actor.PodUID))[:24]
 	audience := "system-backup-c1-evidence-wrap:" + i.plan.Target.InstallationID
 	role := a.VaultPermissionRole{AuthMount: original.JWTMount, Role: roleName, Policy: roleName, Audience: audience, Namespace: actor.Namespace, ServiceAccountName: actor.ServiceAccountName, ServiceAccountUID: actor.ServiceAccountUID, PodUID: actor.PodUID}
+	updated := original
+	updated.EvidenceWrap = &owner.InstalledVaultEvidenceWrapProfile{Transit: cfg, Role: role}
+	observerInput := original
+	if recovery != nil {
+		// The retained provider role is already installed. Validate its exact
+		// profile while gathering the metadata to compare with the prior intent.
+		observerInput = updated
+	}
+	native, err := owner.NewInstalledVaultDependencyObserver(observerInput, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID)
+	if err != nil {
+		return zero, ErrInstall
+	}
+	defer native.Close()
+	observation, err := native.Observe(ctx)
+	if err != nil {
+		return zero, ErrInstall
+	}
+	beforeNative, _, err := observation.Data(ctx)
+	if err != nil {
+		return zero, ErrInstall
+	}
 	acl, err := a.EvidenceVaultRuntimeACL(cfg, ev.TransitWrap)
 	if err != nil {
 		return zero, ErrInstall
@@ -208,12 +233,22 @@ func (i *Installer) ProduceOriginalC1EvidenceMaterial(ctx context.Context, passw
 	if err != nil {
 		return zero, ErrInstall
 	}
+	expectedIntent := originalC1EvidenceIntent{"original-c1-evidence-material-intent.v1", i.planHash, enrollment.DocumentSHA256, keyName, roleName, o}
+	intent, err := canonical(expectedIntent)
+	if err != nil {
+		return zero, ErrInstall
+	}
+	providerWrite := auth
+	if recovery != nil {
+		intent, beforeRaw, err = recoverOriginalC1EvidenceIntent(*recovery, expectedIntent, beforeMetadata, original.JWTMount)
+		beforeMetadata = nil
+		if err != nil || decodeExact(beforeRaw, &beforeMetadata) != nil {
+			return zero, ErrInstall
+		}
+		providerWrite = func() error { return ErrInstall }
+	}
 	beforePin := BootstrapSourceFilePin{File: filepath.Join(o.OutputDirectory, "c1-provider-metadata.before.json"), SHA256: hash(beforeRaw)}
-	intent, err := canonical(struct {
-		Version, Plan, Enrollment, Key, Role string
-		Options                              OriginalC1EvidenceMaterialOptions
-	}{"original-c1-evidence-material-intent.v1", i.planHash, enrollment.DocumentSHA256, keyName, roleName, o})
-	if err != nil || auth() != nil || writeNewFiles(o.OutputDirectory, map[string][]byte{"c1-evidence-material.intent.json": intent, "c1-provider-metadata.before.json": beforeRaw}) != nil {
+	if auth() != nil || writeNewFiles(o.OutputDirectory, map[string][]byte{"c1-evidence-material.intent.json": intent, "c1-provider-metadata.before.json": beforeRaw}) != nil {
 		return zero, ErrInstall
 	}
 	receipt := OriginalC1EvidenceMaterialReceipt{Version: "original-c1-evidence-material-result.v1", State: "original_provider_write_unconfirmed_no_retry", Key: key}
@@ -224,7 +259,7 @@ func (i *Installer) ProduceOriginalC1EvidenceMaterial(ctx context.Context, passw
 		return receipt, ErrInstall
 	}
 	if status == 404 {
-		if auth() != nil || writeNewFiles(o.OutputDirectory, map[string][]byte{"c1-key.sent.json": intent}) != nil {
+		if providerWrite() != nil || writeNewFiles(o.OutputDirectory, map[string][]byte{"c1-key.sent.json": intent}) != nil {
 			return receipt, ErrInstall
 		}
 		response, _, e := vault.call(ctx, "POST", keyPath, root, a.VaultTransitKeyPayload())
@@ -239,10 +274,10 @@ func (i *Installer) ProduceOriginalC1EvidenceMaterial(ctx context.Context, passw
 	if err != nil || !originalC1DedicatedKey(metadata, keyName) {
 		return receipt, ErrInstall
 	}
-	if vault.policy(ctx, role.Policy, acl, root, auth) != nil {
+	if vault.policy(ctx, role.Policy, acl, root, providerWrite) != nil {
 		return receipt, ErrInstall
 	}
-	actualRole, err := vault.role(ctx, role.AuthMount, role.Role, desiredRole, root, auth)
+	actualRole, err := vault.role(ctx, role.AuthMount, role.Role, desiredRole, root, providerWrite)
 	if err != nil {
 		return receipt, ErrInstall
 	}
@@ -275,8 +310,6 @@ func (i *Installer) ProduceOriginalC1EvidenceMaterial(ctx context.Context, passw
 	if err != nil || !bytes.Equal(finalMetadata, metadata) || auth() != nil || !time.Now().Before(until) {
 		return receipt, ErrInstall
 	}
-	updated := original
-	updated.EvidenceWrap = &owner.InstalledVaultEvidenceWrapProfile{Transit: cfg, Role: role}
 	updatedObserver, err := owner.NewInstalledVaultDependencyObserver(updated, i.kube, i.plan.Target.Namespace, i.plan.Target.NamespaceUID)
 	if err != nil {
 		return receipt, ErrInstall

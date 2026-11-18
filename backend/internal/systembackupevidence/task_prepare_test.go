@@ -88,7 +88,7 @@ func newTaskPrepareFixture(t *testing.T) *taskPrepareFixture {
 			var body struct {
 				Plaintext []byte `json:"plaintext"`
 				Context   string `json:"context"`
-				Version   uint32 `json:"key_version"`
+				Version   uint32 `json:"key_version,string"`
 			}
 			wantContext, _ := EvidenceTransitContext(f.c.Installation, x.c.Transit.Key)
 			if r.Header.Get("X-Vault-Token") != "writer-batch-token-0123456789" || json.NewDecoder(r.Body).Decode(&body) != nil || len(body.Plaintext) != 32 || body.Context != wantContext || body.Version != 1 {

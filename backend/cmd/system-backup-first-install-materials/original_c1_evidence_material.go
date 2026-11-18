@@ -10,21 +10,25 @@ import (
 )
 
 func runOriginalC1EvidenceMaterial(ctx context.Context, action string, args []string, out io.Writer) int {
-	if ctx == nil || ctx.Err() != nil || out == nil || action != "issue-initial-c1-evidence-material" && action != "query-initial-c1-evidence-material" {
+	recovering := action == "recover-initial-c1-evidence-material"
+	if ctx == nil || ctx.Err() != nil || out == nil || action != "issue-initial-c1-evidence-material" && action != "query-initial-c1-evidence-material" && !recovering {
 		return 2
 	}
 	f := flag.NewFlagSet(action, flag.ContinueOnError)
 	f.SetOutput(io.Discard)
 	names := []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "output-directory"}
-	if action == "issue-initial-c1-evidence-material" {
+	if action != "query-initial-c1-evidence-material" {
 		names = append(names, "writer-selection-file", "writer-selection-sha256", "vault-owner-material-file", "vault-owner-material-sha256", "source-issuer-private-file", "controller-deployment", "controller-pod-name", "until")
+	}
+	if recovering {
+		names = append(names, "prior-intent-file", "prior-intent-sha256", "prior-before-metadata-file", "prior-before-metadata-sha256")
 	}
 	values := map[string]*string{}
 	for _, n := range names {
 		values[n] = f.String(n, "", "")
 	}
 	var initJSON *bool
-	if action == "issue-initial-c1-evidence-material" {
+	if action != "query-initial-c1-evidence-material" {
 		initJSON = f.Bool("vault-owner-material-is-init-json", false, "")
 	}
 	if f.Parse(args) != nil || f.NArg() != 0 {
@@ -38,7 +42,7 @@ func runOriginalC1EvidenceMaterial(ctx context.Context, action string, args []st
 	get := func(n string) string { return *values[n] }
 	var until time.Time
 	var err error
-	if action == "issue-initial-c1-evidence-material" {
+	if action != "query-initial-c1-evidence-material" {
 		until, err = time.Parse(time.RFC3339Nano, get("until"))
 		if err != nil {
 			return 2
@@ -89,7 +93,13 @@ func runOriginalC1EvidenceMaterial(ctx context.Context, action string, args []st
 			return 1
 		}
 		defer clear(private)
-		receipt, err = installer.ProduceOriginalC1EvidenceMaterial(active, password, enrollment, install.OriginalC1EvidenceMaterialOptions{WriterSelection: install.BootstrapSourceFilePin{File: get("writer-selection-file"), SHA256: get("writer-selection-sha256")}, VaultOwnerMaterial: install.BootstrapSourceFilePin{File: get("vault-owner-material-file"), SHA256: get("vault-owner-material-sha256")}, VaultOwnerMaterialIsInitJSON: *initJSON, ControllerDeployment: get("controller-deployment"), ControllerPodName: get("controller-pod-name"), OutputDirectory: get("output-directory"), Until: until}, private)
+		options := install.OriginalC1EvidenceMaterialOptions{WriterSelection: install.BootstrapSourceFilePin{File: get("writer-selection-file"), SHA256: get("writer-selection-sha256")}, VaultOwnerMaterial: install.BootstrapSourceFilePin{File: get("vault-owner-material-file"), SHA256: get("vault-owner-material-sha256")}, VaultOwnerMaterialIsInitJSON: *initJSON, ControllerDeployment: get("controller-deployment"), ControllerPodName: get("controller-pod-name"), OutputDirectory: get("output-directory"), Until: until}
+		if recovering {
+			recovery := install.OriginalC1EvidenceRecovery{Intent: install.BootstrapSourceFilePin{File: get("prior-intent-file"), SHA256: get("prior-intent-sha256")}, BeforeMetadata: install.BootstrapSourceFilePin{File: get("prior-before-metadata-file"), SHA256: get("prior-before-metadata-sha256")}}
+			receipt, err = installer.RecoverOriginalC1EvidenceMaterial(active, password, enrollment, options, private, recovery)
+		} else {
+			receipt, err = installer.ProduceOriginalC1EvidenceMaterial(active, password, enrollment, options, private)
+		}
 	}
 	if receipt.Version != "" {
 		if json.NewEncoder(out).Encode(receipt) != nil {

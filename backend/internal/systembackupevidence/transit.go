@@ -106,7 +106,7 @@ func (k *TransitKeys) Wrap(ctx context.Context, key KeyRef, dek []byte) ([]byte,
 	body, e := json.Marshal(struct {
 		Plaintext []byte `json:"plaintext"`
 		Context   string `json:"context"`
-		Version   uint32 `json:"key_version"`
+		Version   uint32 `json:"key_version,string"`
 	}{dek, k.contextBase64, k.keyVersion})
 	if e != nil {
 		return nil, ErrKey

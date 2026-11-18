@@ -10,6 +10,7 @@ import (
 	authn "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -67,7 +68,8 @@ func (i *Installer) originalC1WrapProbe(ctx context.Context, v *originalPublicat
 		return ErrInstall
 	}
 	plain := base64.StdEncoding.EncodeToString(dek[:])
-	payload, _ := json.Marshal(map[string]any{"context": evidenceContext, "plaintext": plain, "key_version": c.Transit.KeyVersion})
+	version := strconv.FormatUint(uint64(c.Transit.KeyVersion), 10)
+	payload, _ := json.Marshal(map[string]string{"context": evidenceContext, "plaintext": plain, "key_version": version})
 	defer clear(payload)
 	encrypted, status, err := v.call(probe, "POST", "/v1/transit/encrypt/"+c.Transit.KeyName, token, payload)
 	defer clear(encrypted)
@@ -92,9 +94,9 @@ func (i *Installer) originalC1WrapProbe(ctx context.Context, v *originalPublicat
 	}
 	decrypt, _ := json.Marshal(map[string]string{"context": evidenceContext, "ciphertext": result.Data.Ciphertext})
 	defer clear(decrypt)
-	wrongContext, _ := json.Marshal(map[string]any{"context": base64.StdEncoding.EncodeToString([]byte("foreign-context")), "plaintext": plain, "key_version": 1})
+	wrongContext, _ := json.Marshal(map[string]string{"context": base64.StdEncoding.EncodeToString([]byte("foreign-context")), "plaintext": plain, "key_version": version})
 	defer clear(wrongContext)
-	wrongVersion, _ := json.Marshal(map[string]any{"context": evidenceContext, "plaintext": plain, "key_version": 2})
+	wrongVersion, _ := json.Marshal(map[string]string{"context": evidenceContext, "plaintext": plain, "key_version": "2"})
 	defer clear(wrongVersion)
 	if !deny("POST", "/v1/transit/decrypt/"+c.Transit.KeyName, decrypt) || !deny("GET", "/v1/transit/keys/"+c.Transit.KeyName, nil) || !deny("POST", "/v1/transit/encrypt/"+c.Transit.KeyName, wrongContext) || !deny("POST", "/v1/transit/encrypt/"+c.Transit.KeyName, wrongVersion) || !deny("POST", "/v1/transit/datakey/plaintext/"+c.Transit.KeyName, []byte(`{}`)) {
 		return ErrInstall

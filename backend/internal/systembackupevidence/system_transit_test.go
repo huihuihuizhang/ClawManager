@@ -71,7 +71,7 @@ func newSystemTransitFixture(t *testing.T, mode string) *systemTransitFixture {
 			var payload struct {
 				Plaintext []byte `json:"plaintext"`
 				Context   string `json:"context"`
-				Version   uint32 `json:"key_version"`
+				Version   uint32 `json:"key_version,string"`
 			}
 			want, _ := EvidenceTransitContext(i.Installation, x.c.Transit.Key)
 			if r.Header.Get("X-Vault-Token") != "system-batch-token-0123456789" || json.NewDecoder(r.Body).Decode(&payload) != nil || len(payload.Plaintext) != 32 || payload.Context != want || payload.Version != 1 {

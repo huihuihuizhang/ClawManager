@@ -58,7 +58,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if len(args) > 0 && args[0] == "prepare-initial-request" {
 		return runOriginalInitialRequestAuthor(ctx, args[1:], out)
 	}
-	if len(args) > 0 && (args[0] == "issue-initial-c1-evidence-material" || args[0] == "query-initial-c1-evidence-material") {
+	if len(args) > 0 && (args[0] == "issue-initial-c1-evidence-material" || args[0] == "query-initial-c1-evidence-material" || args[0] == "recover-initial-c1-evidence-material") {
 		return runOriginalC1EvidenceMaterial(ctx, args[0], args[1:], out)
 	}
 	if len(args) > 0 && args[0] == "prepare-initial-capture-draft" {

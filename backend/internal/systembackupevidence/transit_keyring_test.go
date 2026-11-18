@@ -35,7 +35,7 @@ func keyringProvider(t *testing.T, ref KeyRef, version uint32, material byte) (T
 			Plaintext  []byte `json:"plaintext"`
 			Ciphertext string `json:"ciphertext"`
 			Context    string `json:"context"`
-			Version    uint32 `json:"key_version"`
+			Version    uint32 `json:"key_version,string"`
 		}
 		if r.Method != "POST" || json.NewDecoder(r.Body).Decode(&body) != nil || body.Context != wantContext {
 			t.Error("incorrect Transit request binding")
