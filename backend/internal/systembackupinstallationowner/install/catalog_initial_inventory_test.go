@@ -29,6 +29,21 @@ func TestCatalogInitialInventorySignatureBindsInitialScopeAndMode(t *testing.T) 
 	if got, e := InspectCatalogInitialInventory(signed, public); e != nil || got != r {
 		t.Fatal("original initial checkpoint refused", e)
 	}
+	successor := r
+	successor.Root = r.Installation + "/catalog-" + r.ConfigSHA256 + "/"
+	successor.CoveragePrefix = successor.Root
+	successor.Key = CatalogInitialInventoryKey(r.DefinitionSHA256, r.Reference, successor.Root)
+	if got, e := InspectCatalogInitialInventory(sign(successor), public); e != nil || got != successor {
+		t.Fatal("config-bound successor checkpoint refused", e)
+	}
+	for _, root := range []string{r.Installation + "/catalog-" + strings.Repeat("f", 64) + "/", r.Root + r.ConfigSHA256 + "/"} {
+		foreign := successor
+		foreign.Root, foreign.CoveragePrefix = root, root
+		foreign.Key = CatalogInitialInventoryKey(r.DefinitionSHA256, r.Reference, root)
+		if _, e := InspectCatalogInitialInventory(sign(foreign), public); e == nil {
+			t.Fatalf("foreign or overlapping catalog root admitted: %s", root)
+		}
+	}
 	changed := r
 	changed.Count = 1
 	if _, e := InspectCatalogInitialInventory(sign(changed), public); e == nil {

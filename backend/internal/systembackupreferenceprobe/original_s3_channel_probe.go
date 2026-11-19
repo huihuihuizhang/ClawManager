@@ -7,9 +7,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -179,6 +183,7 @@ type originalS3Reply struct {
 
 func originalS3Request(ctx context.Context, r *minioPermissionHTTP, method, path string, q url.Values, body []byte, headers http.Header) (originalS3Reply, error) {
 	if ctx == nil || ctx.Err() != nil || time.Now().Before(r.credential.NotBefore) || !time.Now().Before(r.credential.Until) {
+		fmt.Fprintln(os.Stderr, "original_c1_s3_native_http failed=request_window")
 		return originalS3Reply{}, ErrObservation
 	}
 	ctx, cancel := context.WithDeadline(ctx, r.credential.Until)
@@ -202,13 +207,30 @@ func originalS3Request(ctx context.Context, r *minioPermissionHTTP, method, path
 	req = signer.SignV4(*req, r.credential.AccessKey, r.credential.SecretKey, "", r.provider.Region)
 	response, e := r.client.Do(req)
 	if e != nil {
+		var networkError net.Error
+		fmt.Fprintf(os.Stderr, "original_c1_s3_native_http method=%s transport_error=%T timeout=%t context_done=%t\n", method, e, errors.As(e, &networkError) && networkError.Timeout(), ctx.Err() != nil)
 		return originalS3Reply{}, ErrObservation
 	}
 	defer response.Body.Close()
 	raw, e := io.ReadAll(io.LimitReader(response.Body, 65537))
 	if e != nil || len(raw) > 65536 {
+		fmt.Fprintln(os.Stderr, "original_c1_s3_native_http failed=response_body")
 		return originalS3Reply{}, ErrObservation
 	}
+	code := ""
+	if response.StatusCode >= 400 {
+		var problem struct{ Code string }
+		if xml.Unmarshal(raw, &problem) == nil && len(problem.Code) <= 64 {
+			code = problem.Code
+			for _, c := range code {
+				if c < 'A' || c > 'Z' && c < 'a' || c > 'z' {
+					code = "unrecognized"
+					break
+				}
+			}
+		}
+	}
+	fmt.Fprintf(os.Stderr, "original_c1_s3_native_http method=%s status=%d code=%q version_present=%t denied=%t\n", method, response.StatusCode, code, response.Header.Get("X-Amz-Version-Id") != "" && response.Header.Get("X-Amz-Version-Id") != "null", originalS3Denied(originalS3Reply{body: raw, status: response.StatusCode}))
 	return originalS3Reply{raw, response.StatusCode, response.Header.Get("X-Amz-Version-Id")}, nil
 }
 func originalS3Denied(r originalS3Reply) bool {
@@ -224,9 +246,16 @@ func originalS3Denied(r originalS3Reply) bool {
 // denials. Cleanup deletes only exact random keys/versions created here. Root
 // is used only to clean these exact probe versions, never as an evidence principal.
 func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel Principal, rootPin FilePin) (resultErr error) {
+	stage := "channel_identity"
+	defer func() {
+		if resultErr != nil {
+			fmt.Fprintln(os.Stderr, "original_c1_s3_native_check failed="+stage)
+		}
+	}()
 	if ObserveOriginalS3Channel(ctx, c, channel) != nil {
 		return ErrObservation
 	}
+	stage = "principal_transport"
 	clients := map[string]*minioPermissionHTTP{}
 	defer func() {
 		for _, r := range clients {
@@ -249,6 +278,7 @@ func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel 
 			r.close()
 		}
 	}()
+	stage = "root_credential"
 	raw, e := ReadPinned(rootPin, 16384)
 	if e != nil {
 		return e
@@ -259,6 +289,7 @@ func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel 
 		return ErrObservation
 	}
 	defer clear(root.SecretKey)
+	stage = "root_transport"
 	owner, e := newMinioPermissionHTTP(c.Provider, nativePublicationCredential{AccessKey: root.AccessKey, SecretKey: string(root.SecretKey), NotBefore: root.NotBefore, Until: root.Until})
 	if e != nil {
 		return e
@@ -275,11 +306,16 @@ func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel 
 		for _, o := range created {
 			r, e := originalS3Request(ctx, owner, http.MethodDelete, "/"+o.bucket+"/"+o.key, url.Values{"versionId": {o.version}}, nil, nil)
 			if e != nil || r.status != 204 {
+				fmt.Fprintln(os.Stderr, "original_c1_s3_native_check failed=cleanup_exact_version")
+				if resultErr == nil {
+					stage = "cleanup_exact_version"
+				}
 				resultErr = ErrObservation
 			}
 		}
 	}()
 	deniedPut := func(purpose, bucket, key string) error {
+		stage = "denied_put_" + purpose
 		r, e := originalS3Request(ctx, clients[purpose], http.MethodPut, "/"+bucket+"/"+key, nil, []byte("original-c1-forbidden-probe"), http.Header{"If-None-Match": {"*"}})
 		if e == nil && r.status == 200 && r.version != "" && r.version != "null" {
 			created = append(created, cleanupObject{bucket, key, r.version})
@@ -291,6 +327,7 @@ func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel 
 	}
 	payload := []byte("original-c1-native-permission-probe.v1")
 	put := func(purpose, bucket, key string) (string, error) {
+		stage = "put_" + purpose
 		r, e := originalS3Request(ctx, clients[purpose], http.MethodPut, "/"+bucket+"/"+key, nil, payload, http.Header{"If-None-Match": {"*"}})
 		if e != nil || r.status != 200 || r.version == "" || r.version == "null" {
 			return "", ErrObservation
@@ -303,11 +340,13 @@ func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel 
 	if e != nil {
 		return e
 	}
+	stage = "evidence_version_get"
 	r, e := originalS3Request(ctx, clients["evidence_read"], http.MethodGet, "/"+c.Evidence.Bucket+"/"+evidenceKey, url.Values{"versionId": {version}}, nil, nil)
 	if e != nil || r.status != 200 || !bytes.Equal(r.body, payload) {
 		return ErrObservation
 	}
 	for _, purpose := range []string{"artifact_upload_issuer", "evidence_write", "evidence_delete", "metadata_observer"} {
+		stage = "denied_get_" + purpose
 		r, e := originalS3Request(ctx, clients[purpose], http.MethodGet, "/"+c.Evidence.Bucket+"/"+evidenceKey, url.Values{"versionId": {version}}, nil, nil)
 		if e != nil || !originalS3Denied(r) {
 			return ErrObservation
@@ -324,16 +363,20 @@ func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel 
 	if _, e = put("artifact_upload_issuer", c.UploadBucket, c.UploadStagingRoot+suffix); e != nil {
 		return e
 	}
+	stage = "channel_versioning"
 	channelKey := evidenceKey + "-channel"
 	r, e = originalS3Request(ctx, clients["c1_channel_upstream"], http.MethodGet, "/"+c.Evidence.Bucket, url.Values{"versioning": {""}}, nil, nil)
+	stage = "channel_versioning_xml"
 	var vc struct {
 		XMLName xml.Name
 		Status  string
 	}
 	if e != nil || r.status != 200 || xml.Unmarshal(r.body, &vc) != nil || vc.XMLName.Local != "VersioningConfiguration" || vc.Status != "Enabled" {
+		fmt.Fprintf(os.Stderr, "original_c1_s3_native_xml root_match=%t enabled=%t\n", vc.XMLName.Local == "VersioningConfiguration", vc.Status == "Enabled")
 		return ErrObservation
 	}
 	r, e = originalS3Request(ctx, clients["c1_channel_upstream"], http.MethodGet, "/"+c.Evidence.Bucket, url.Values{"versions": {""}, "prefix": {channelKey}, "max-keys": {"1"}}, nil, nil)
+	stage = "channel_list_xml"
 	var listing struct {
 		XMLName      xml.Name
 		Name, Prefix string
@@ -342,22 +385,26 @@ func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel 
 		Markers      []struct{ Key string } `xml:"DeleteMarker"`
 	}
 	if e != nil || r.status != 200 || xml.Unmarshal(r.body, &listing) != nil || listing.XMLName.Local != "ListVersionsResult" || listing.Name != c.Evidence.Bucket || listing.Prefix != channelKey || listing.IsTruncated == nil || *listing.IsTruncated || len(listing.Versions) != 0 || len(listing.Markers) != 0 {
+		fmt.Fprintf(os.Stderr, "original_c1_s3_native_xml root_match=%t bucket_match=%t prefix_match=%t truncated_present=%t truncated=%t versions=%d markers=%d\n", listing.XMLName.Local == "ListVersionsResult", listing.Name == c.Evidence.Bucket, listing.Prefix == channelKey, listing.IsTruncated != nil, listing.IsTruncated != nil && *listing.IsTruncated, len(listing.Versions), len(listing.Markers))
 		return ErrObservation
 	}
 	channelVersion, e := put("c1_channel_upstream", c.Evidence.Bucket, channelKey)
 	if e != nil {
 		return e
 	}
+	stage = "channel_version_head"
 	r, e = originalS3Request(ctx, clients["c1_channel_upstream"], http.MethodHead, "/"+c.Evidence.Bucket+"/"+channelKey, url.Values{"versionId": {channelVersion}}, nil, nil)
 	if e != nil || r.status != 200 || r.version != channelVersion {
 		return ErrObservation
 	}
 	for _, purpose := range []string{"artifact_upload_issuer", "evidence_read", "evidence_write", "evidence_delete"} {
+		stage = "denied_versioning_" + purpose
 		r, e = originalS3Request(ctx, clients[purpose], http.MethodGet, "/"+c.Evidence.Bucket, url.Values{"versioning": {""}}, nil, nil)
 		if e != nil || !originalS3Denied(r) {
 			return ErrObservation
 		}
 	}
+	stage = "channel_outside_list_denied"
 	r, e = originalS3Request(ctx, clients["c1_channel_upstream"], http.MethodGet, "/"+c.Evidence.Bucket, url.Values{"versions": {""}, "prefix": {"outside-" + suffix}, "max-keys": {"1"}}, nil, nil)
 	if e != nil || !originalS3Denied(r) {
 		return ErrObservation
@@ -365,6 +412,7 @@ func VerifyOriginalS3NativeOperations(ctx context.Context, c S3Profile, channel 
 	if deniedPut("c1_channel_upstream", c.Evidence.Bucket, "outside-"+suffix) != nil {
 		return ErrObservation
 	}
+	stage = "evidence_version_delete"
 	r, e = originalS3Request(ctx, clients["evidence_delete"], http.MethodDelete, "/"+c.Evidence.Bucket+"/"+evidenceKey, url.Values{"versionId": {version}}, nil, nil)
 	if e != nil || r.status != 204 {
 		return ErrObservation

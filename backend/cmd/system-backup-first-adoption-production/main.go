@@ -43,7 +43,7 @@ func readPin(file, digest string, limit int64) ([]byte, error) {
 func run(ctx context.Context, args []string, out io.Writer) int {
 	f := flag.NewFlagSet("system-backup-first-adoption-production", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
-	action := f.String("action", "run", "run, prepare-minio-history, prepare-native-plan, prepare-inputs query-disabled-initialization prepare-recovery-descriptor or query-minio-recovery")
+	action := f.String("action", "run", "run, prepare-minio-history, continue-minio-history, continue-unsent-minio-accounts, prepare-native-plan, prepare-inputs query-disabled-initialization prepare-recovery-descriptor or query-minio-recovery")
 	helperFile := f.String("longhorn-pre-cold-helper-file", "", "pinned one-shot same-process Longhorn continuation")
 	pythonSHA := f.String("longhorn-pre-cold-python-sha256", "", "SHA256 of fixed /usr/bin/python3.12 interpreter")
 	helperSHA := f.String("longhorn-pre-cold-helper-sha256", "", "independent helper SHA256")
@@ -63,7 +63,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	get := func(n string) string { return *values[n] }
 	archiveWrite := *action == "prepare-archive-materials" || *action == "recover-archive-materials"
-	if *action != "run" && *action != "run-minio-metadata" && *action != "prepare-minio-history" && *action != "prepare-native-plan" && *action != "prepare-inputs" && *action != "query-disabled-initialization" && *action != "prepare-recovery-descriptor" && *action != "query-minio-recovery" && !archiveWrite && *action != "query-archive-materials" && *action != "issue-minio-runtime-metadata" && *action != "query-minio-runtime-metadata" {
+	if *action != "run" && *action != "run-minio-metadata" && *action != "prepare-minio-history" && *action != "continue-minio-history" && *action != "continue-unsent-minio-accounts" && *action != "retain-minio-history-identities" && *action != "prepare-native-plan" && *action != "prepare-inputs" && *action != "query-disabled-initialization" && *action != "prepare-recovery-descriptor" && *action != "query-minio-recovery" && !archiveWrite && *action != "query-archive-materials" && *action != "issue-minio-runtime-metadata" && *action != "query-minio-runtime-metadata" {
 		return 2
 	}
 	for name, value := range values {
@@ -254,6 +254,10 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		defer cancel()
 		plan, e := owner.PrepareOriginalMinIOHistoryNativePlan(active, password, enrollment, in)
 		if e != nil {
+			var refusal *install.OriginalNativePlanError
+			if errors.As(e, &refusal) {
+				_ = json.NewEncoder(out).Encode(struct{ Stage string }{Stage: refusal.Stage})
+			}
 			return 1
 		}
 		if json.NewEncoder(out).Encode(plan) != nil {
@@ -279,20 +283,47 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		}
 		return 0
 	}
-	if *action == "prepare-minio-history" {
+	if *action == "prepare-minio-history" || *action == "continue-minio-history" || *action == "continue-unsent-minio-accounts" || *action == "retain-minio-history-identities" {
 		var in struct {
-			Version                   string
-			SourceSelection, Provider install.BootstrapSourceFilePin
-			OutputDirectory           string
-			Policy                    c.GatePolicy
-			Admin                     execution.MinIONativeAdminFiles
+			Version                                             string
+			SourceSelection, Provider, Previous, PreviousSource install.BootstrapSourceFilePin
+			CatalogDefinition, Interrupted                      install.BootstrapSourceFilePin
+			CompletedSetup                                       install.BootstrapSourceFilePin
+			OutputDirectory                                     string
+			Policy                                              c.GatePolicy
+			Admin                                               execution.MinIONativeAdminFiles
 		}
 		d := json.NewDecoder(bytes.NewReader(raw))
 		d.DisallowUnknownFields()
-		if d.Decode(&in) != nil || d.Decode(new(any)) != io.EOF || in.Version != "original-minio-whole-history-setup-inputs.v1" {
+		if d.Decode(&in) != nil || d.Decode(new(any)) != io.EOF {
 			return 1
 		}
-		active, cancel := context.WithTimeout(ctx, 2*time.Minute)
+		previousSet := in.Previous != (install.BootstrapSourceFilePin{})
+		interrupted := in.Interrupted != (install.BootstrapSourceFilePin{})
+		completed := in.CompletedSetup != (install.BootstrapSourceFilePin{})
+		limit := 2 * time.Minute
+		if completed != (*action == "retain-minio-history-identities") {
+			return 1
+		}
+		if completed {
+			if previousSet || interrupted || in.PreviousSource == (install.BootstrapSourceFilePin{}) ||
+				in.CatalogDefinition == (install.BootstrapSourceFilePin{}) || in.Version != "original-minio-history-identity-inputs.v1" {
+				return 1
+			}
+		} else if *action == "continue-unsent-minio-accounts" {
+			if !previousSet || !interrupted || in.CatalogDefinition == (install.BootstrapSourceFilePin{}) ||
+				in.PreviousSource != (install.BootstrapSourceFilePin{}) || in.Version != "original-minio-unsent-history-accounts.v1" {
+				return 1
+			}
+		} else if *action == "continue-minio-history" {
+			if !previousSet || interrupted || in.Version != "original-minio-whole-history-keeper-policy-continuation.v1" {
+				return 1
+			}
+			limit = 8 * time.Minute
+		} else if previousSet || interrupted || in.PreviousSource != (install.BootstrapSourceFilePin{}) || in.CatalogDefinition != (install.BootstrapSourceFilePin{}) || in.Version != "original-minio-whole-history-setup-inputs.v1" {
+			return 1
+		}
+		active, cancel := context.WithTimeout(ctx, limit)
 		defer cancel()
 		read, e := owner.PrepareBootstrapSourceRegistryAuthoring(active, password, enrollment, in.SourceSelection.File, in.SourceSelection.SHA256)
 		if e != nil {
@@ -303,7 +334,16 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		if e != nil {
 			return 1
 		}
-		receipt, e := execution.ProduceOriginalMinIOWholeHistoryReadMaterials(active, write, read, kube, in.Provider.File, in.Provider.SHA256, in.OutputDirectory, in.Admin)
+		var receipt execution.OriginalMinIOSourceSetupReceipt
+		if completed {
+			receipt, e = execution.RetainOriginalMinIOHistoryIdentities(active, write, read, kube, in.CompletedSetup, in.PreviousSource, in.Provider, in.CatalogDefinition, in.OutputDirectory, in.Admin)
+		} else if interrupted {
+			receipt, e = execution.ContinueOriginalMinIOUnsentHistoryAccounts(active, write, read, kube, in.Previous, in.Interrupted, in.Provider, in.CatalogDefinition, in.OutputDirectory, in.Admin)
+		} else if previousSet {
+			receipt, e = execution.ContinueOriginalMinIOWholeHistoryKeeperPolicy(active, write, read, kube, in.Previous, in.PreviousSource, in.Provider, in.CatalogDefinition, in.OutputDirectory, in.Admin)
+		} else {
+			receipt, e = execution.ProduceOriginalMinIOWholeHistoryReadMaterials(active, write, read, kube, in.Provider.File, in.Provider.SHA256, in.OutputDirectory, in.Admin)
+		}
 		if json.NewEncoder(out).Encode(receipt) != nil {
 			return 3
 		}

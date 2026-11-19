@@ -12,6 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	mn "clawreef/internal/systembackup/minionative"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -109,6 +110,10 @@ func (n *minioGateNative) config(ctx context.Context, subsystem string) ([]minio
 		return nil, e
 	}
 	defer clear(b)
+	return decodeMinioGateConfig(b, subsystem, n.g.in.ImageID)
+}
+
+func decodeMinioGateConfig(b []byte, subsystem, imageID string) ([]minioGateConfig, error) {
 	var out struct {
 		Status string            `json:"status"`
 		Config []minioGateConfig `json:"config"`
@@ -117,8 +122,21 @@ func (n *minioGateNative) config(ctx context.Context, subsystem string) ([]minio
 		return nil, ErrMinIOReadGate
 	}
 	for _, c := range out.Config {
-		if c.SubSystem != subsystem || len(c.KV) == 0 || len(c.KV) > 256 {
+		if c.SubSystem != subsystem || len(c.KV) > 256 {
 			return nil, ErrMinIOReadGate
+		}
+		if len(c.KV) == 0 {
+			// The pinned delete-compat release reports the retired OPA
+			// subsystem as exactly one targetless record with an explicit
+			// null kv. The active plugin is checked independently.
+			var explicit struct {
+				Config []struct{ KV json.RawMessage }
+			}
+			if subsystem != "policy_opa" || !mn.MatchesDeleteCompatImageID(imageID) ||
+				len(out.Config) != 1 || c.Target != "" || json.Unmarshal(b, &explicit) != nil ||
+				len(explicit.Config) != 1 || !bytes.Equal(explicit.Config[0].KV, []byte("null")) {
+				return nil, ErrMinIOReadGate
+			}
 		}
 		seen := map[string]bool{}
 		for _, kv := range c.KV {
@@ -150,6 +168,7 @@ func (n *minioGateNative) apiConfig(ctx context.Context) (json.RawMessage, strin
 	if root != "on" && root != "off" {
 		return nil, "", ErrMinIOReadGate
 	}
+	sort.Slice(c[0].KV, func(a, b int) bool { return c[0].KV[a].Key < c[0].KV[b].Key })
 	raw, _ := json.Marshal(c)
 	return raw, root, nil
 }
@@ -199,6 +218,82 @@ func (n *minioGateNative) user(ctx context.Context, name string) (minioGateUser,
 	}
 	return minioGateUser{Name: name, Status: u.Status, PolicyName: u.PolicyName, Policy: policy.Policy}, nil
 }
+func minioGatePolicyReadbackEqual(left, right []byte) bool {
+	if bytes.Equal(left, right) {
+		return true
+	}
+	canonical := func(raw []byte) ([]byte, bool) {
+		if !minioGateJSON(raw) {
+			return nil, false
+		}
+		decoder := json.NewDecoder(bytes.NewReader(raw))
+		decoder.UseNumber()
+		var policy map[string]any
+		if decoder.Decode(&policy) != nil || policy == nil {
+			return nil, false
+		}
+		statements, ok := policy["Statement"].([]any)
+		if !ok {
+			return nil, false
+		}
+		for _, entry := range statements {
+			statement, ok := entry.(map[string]any)
+			if !ok {
+				return nil, false
+			}
+			// MinIO serializes these policy sets in arbitrary order. Preserve
+			// statement order, scalar forms, Sids and all condition values.
+			for _, key := range []string{"Action", "NotAction", "Resource", "NotResource"} {
+				items, ok := statement[key].([]any)
+				if !ok {
+					continue
+				}
+				values := make([]string, len(items))
+				for index, item := range items {
+					value, ok := item.(string)
+					if !ok {
+						return nil, false
+					}
+					values[index] = value
+				}
+				sort.Strings(values)
+				statement[key] = values
+			}
+		}
+		out, err := json.Marshal(policy)
+		return out, err == nil
+	}
+	a, ok := canonical(left)
+	if !ok {
+		return false
+	}
+	b, ok := canonical(right)
+	return ok && bytes.Equal(a, b)
+}
+
+func minioGateUsersReadbackEqual(left, right []minioGateUser) bool {
+	if (left == nil) != (right == nil) || len(left) != len(right) {
+		return false
+	}
+	for index, a := range left {
+		b := right[index]
+		if a.Name != b.Name || a.Status != b.Status || a.PolicyName != b.PolicyName ||
+			!minioGatePolicyReadbackEqual(a.Policy, b.Policy) {
+			return false
+		}
+	}
+	return true
+}
+
+func minioGateSnapshotsEqual(left, right *minioGateOriginal) bool {
+	if left == nil || right == nil {
+		return left == right
+	}
+	a, b := *left, *right
+	a.Users, b.Users = nil, nil
+	return reflect.DeepEqual(a, b) && minioGateUsersReadbackEqual(left.Users, right.Users)
+}
+
 func (n *minioGateNative) users(ctx context.Context) ([]minioGateUser, error) {
 	b, e := n.mc(ctx, "admin", "user", "list", "native")
 	if e != nil {
@@ -253,18 +348,31 @@ func (n *minioGateNative) noDerived(ctx context.Context) error {
 }
 
 func (g *MinIOReadServiceGate) collect(ctx context.Context) (*minioGateOriginal, error) {
+	stage := ""
+	return g.collectWithStage(ctx, &stage)
+}
+
+func (g *MinIOReadServiceGate) collectWithStage(ctx context.Context, stage *string) (*minioGateOriginal, error) {
+	*stage = "snapshot_server_identity"
 	if g.identity(ctx, false) != nil {
 		return nil, ErrMinIOReadGate
 	}
+	*stage = "api_config"
 	api, root, e := g.native.apiConfig(ctx)
 	if e != nil {
 		return nil, e
 	}
+	*stage = "builtin_user_metadata"
 	users, e := g.native.users(ctx)
-	if e != nil || g.native.noDerived(ctx) != nil {
+	if e != nil {
+		return nil, ErrMinIOReadGate
+	}
+	*stage = "derived_credentials"
+	if g.native.noDerived(ctx) != nil {
 		return nil, ErrMinIOReadGate
 	}
 	keeper, reader, rootUser := false, false, false
+	*stage = "keeper_reader_policies"
 	kp, rp, e := MinIOReadGatePolicies(g.in.BusinessBuckets)
 	if e != nil {
 		return nil, e
@@ -296,6 +404,7 @@ func (g *MinIOReadServiceGate) collect(ctx context.Context) (*minioGateOriginal,
 			return nil, ErrMinIOReadGate
 		}
 	}
+	*stage = "native_bucket_list"
 	all, e := g.admin.ListBuckets(ctx)
 	if e != nil || len(all) > 1000 {
 		return nil, ErrMinIOReadGate
@@ -315,12 +424,14 @@ func (g *MinIOReadServiceGate) collect(ctx context.Context) (*minioGateOriginal,
 		if !seen[bucket] {
 			return nil, ErrMinIOReadGate
 		}
+		*stage = "native_bucket_policy"
 		policies[bucket], e = g.native.bucketPolicy(ctx, bucket)
 		if e != nil {
 			return nil, e
 		}
 		// Supported first native profile has no configured asynchronous source
 		// transformation. Presence (even a disabled/unknown future rule) refuses.
+		*stage = "native_bucket_lifecycle"
 		l, e := g.admin.GetBucketLifecycle(ctx, bucket)
 		if e != nil && !minioGateS3Missing(e, "NoSuchLifecycleConfiguration") {
 			return nil, ErrMinIOReadGate
@@ -328,6 +439,7 @@ func (g *MinIOReadServiceGate) collect(ctx context.Context) (*minioGateOriginal,
 		if e == nil && l != nil && len(l.Rules) != 0 {
 			return nil, ErrMinIOReadGate
 		}
+		*stage = "native_bucket_replication"
 		r, e := g.admin.GetBucketReplication(ctx, bucket)
 		if e != nil && !minioGateS3Missing(e, "ReplicationConfigurationNotFoundError") {
 			return nil, ErrMinIOReadGate
@@ -336,6 +448,7 @@ func (g *MinIOReadServiceGate) collect(ctx context.Context) (*minioGateOriginal,
 			return nil, ErrMinIOReadGate
 		}
 	}
+	*stage = "native_background_controls"
 	if g.native.noBackground(ctx) != nil || g.identity(ctx, false) != nil {
 		return nil, ErrMinIOReadGate
 	}
@@ -369,7 +482,7 @@ func (g *MinIOReadServiceGate) recheckRecoverable(ctx context.Context) error {
 	}
 	for n, u := range current.Users {
 		old := g.original.Users[n]
-		if u.Name != old.Name || u.PolicyName != old.PolicyName || !bytes.Equal(u.Policy, old.Policy) || u.Status != old.Status && u.Status != "disabled" {
+		if u.Name != old.Name || u.PolicyName != old.PolicyName || !minioGatePolicyReadbackEqual(u.Policy, old.Policy) || u.Status != old.Status && u.Status != "disabled" {
 			return ErrMinIOReadGate
 		}
 	}
@@ -416,7 +529,7 @@ func (g *MinIOReadServiceGate) recheckState(ctx context.Context, held bool) erro
 		return ErrMinIOReadGate
 	}
 	current.APIConfig = expected.APIConfig
-	if !reflect.DeepEqual(*current, expected) {
+	if !minioGateSnapshotsEqual(current, &expected) {
 		return ErrMinIOReadGate
 	}
 	return g.native.rootAccessProbe(ctx, held || g.original.RootAccess == "off")

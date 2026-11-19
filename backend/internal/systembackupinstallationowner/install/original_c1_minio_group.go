@@ -82,7 +82,7 @@ func (p *OriginalC1Production) newMinIOReferenceObservation(ctx context.Context,
 	catalogPin := BootstrapSourceFilePin{File: t.CatalogMaterialsFile, SHA256: t.CatalogMaterialsSHA256}
 	raw, err = readBootstrapSourcePin(catalogPin, 65536)
 	var c originalC1CatalogTarget
-	if err != nil || decodeExact(raw, &c) != nil || c.Version != "system-backup-native-catalog-s3.v1" || c.InstallationID != t.InstallationID || c.Endpoint != t.Endpoint || c.Region != t.Region || c.Bucket == t.Bucket || c.Root != t.InstallationID+"/catalog/" || c.CAIdentityHash != t.CAIdentityHash || c.CARefVersion != t.CARefVersion || c.CAFile != t.CAFile || c.CASHA256 != t.CASHA256 {
+	if err != nil || decodeExact(raw, &c) != nil || c.Version != "system-backup-native-catalog-s3.v1" || c.InstallationID != t.InstallationID || c.Endpoint != t.Endpoint || c.Region != t.Region || c.Bucket == t.Bucket || !ValidOriginalCatalogRoot(t.InstallationID, c.Root, d.ConfigSHA256) || c.CAIdentityHash != t.CAIdentityHash || c.CARefVersion != t.CARefVersion || c.CAFile != t.CAFile || c.CASHA256 != t.CASHA256 {
 		return nil, ErrInstall
 	}
 	providerRaw, err := canonical(d.Grant.Provider)

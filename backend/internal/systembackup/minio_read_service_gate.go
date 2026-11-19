@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"reflect"
 	"sort"
 	"sync"
 	"time"
@@ -133,7 +132,7 @@ func PrepareMinIOReadServiceGate(ctx context.Context, kube kubernetes.Interface,
 		return nil, e
 	}
 	second, e := g.collect(ctx)
-	if e != nil || !reflect.DeepEqual(first, second) {
+	if e != nil || !minioGateSnapshotsEqual(first, second) {
 		g.Close()
 		return nil, ErrMinIOReadGate
 	}
@@ -197,7 +196,7 @@ func (g *MinIOReadServiceGate) Acquire(ctx context.Context) error {
 		return ErrMinIOReadGate
 	}
 	current, e := g.collect(ctx)
-	if e != nil || !reflect.DeepEqual(*current, g.original) {
+	if e != nil || !minioGateSnapshotsEqual(current, &g.original) {
 		return ErrMinIOReadGate
 	}
 	if g.original.RootAccess != "off" {

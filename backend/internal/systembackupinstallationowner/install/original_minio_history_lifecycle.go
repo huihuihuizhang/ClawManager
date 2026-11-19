@@ -104,7 +104,9 @@ func (s *PreparedOriginalWriterSet) PrepareOriginalMinIOHistoryCapture(ctx conte
 		Version string
 		Native  sb.MinIOReadGateInput
 	}
-	if e != nil || json.Unmarshal(raw, &projection) != nil || projection.Version != "original-minio-source-read-materials.v1" || projection.Native.Operation != "" || projection.Native.InventorySHA256 != "" || len(projection.Native.OutputAccounts) != 0 || projection.Native.NamespaceUID != s.initial.NamespaceUID {
+	if e != nil || json.Unmarshal(raw, &projection) != nil ||
+		projection.Version != "original-minio-source-read-materials.v1" && projection.Version != "original-minio-source-read-identities.v2" ||
+		projection.Native.Operation != "" || projection.Native.InventorySHA256 != "" || len(projection.Native.OutputAccounts) != 0 || projection.Native.NamespaceUID != s.initial.NamespaceUID {
 		return ErrInstall
 	}
 	var selected *originalDeploymentMaintenance

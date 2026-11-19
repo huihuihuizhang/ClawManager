@@ -153,6 +153,10 @@ func runOriginalRuntimeMaterialsForSQLProfile(ctx context.Context, args []string
 	}
 	result, e := issue(active, runtimeDB, password, enrollment, install.OriginalRuntimeExecutionIssueInputs{Issuers: pin("runtime-issuers-file", "runtime-issuers-sha256"), Core: pin("core-file", "core-sha256"), Profile: pin("profile-file", "profile-sha256"), RecordExport: pin("record-export-file", "record-export-sha256"), Request: request, ControllerDeployment: get("controller-deployment"), ControllerPodName: get("controller-pod-name"), Until: until, OutputDirectory: get("output-directory")})
 	if e != nil {
+		var refusal *install.OriginalForwardIssueError
+		if errors.As(e, &refusal) {
+			_ = json.NewEncoder(out).Encode(struct{ Stage string }{Stage: refusal.Stage})
+		}
 		return 1
 	}
 	if json.NewEncoder(out).Encode(result) != nil {

@@ -154,7 +154,7 @@ func CaptureOriginalCatalogInitialInventory(ctx context.Context, owner *install.
 	if e != nil {
 		return zero, e
 	}
-	if p.catalog.Root != p.grant.Installation+"/catalog/" || minioPermissionKubernetesCheck(ctx, kube, p) != nil {
+	if !install.ValidOriginalCatalogRoot(p.grant.Installation, p.catalog.Root, p.definition.ConfigSHA256) || minioPermissionKubernetesCheck(ctx, kube, p) != nil {
 		return zero, install.ErrInstall
 	}
 	native, e := nativeInstallAdmin(p.grant.Provider, ctx, admin)

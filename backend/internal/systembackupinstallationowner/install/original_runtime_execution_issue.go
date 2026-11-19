@@ -59,8 +59,22 @@ type originalRuntimeCoreScope struct {
 // Actual FIRST execution-purpose issuance: authenticated original enrollment,
 // Plan-signed purpose manifest, native SQL peer, real Pod chain/worker SA,
 // actual full disabled config and original worker CA. No caller grant DTO.
-func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalRuntimeExecutionIssueInputs) (OriginalRuntimeExecutionIssueReceipt, error) {
+type OriginalForwardIssueError struct {
+	Stage string
+	cause error
+}
+
+func (e *OriginalForwardIssueError) Error() string { return "original Forward refused at " + e.Stage }
+func (e *OriginalForwardIssueError) Unwrap() error { return e.cause }
+
+func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalRuntimeExecutionIssueInputs) (_ OriginalRuntimeExecutionIssueReceipt, resultErr error) {
 	var zero OriginalRuntimeExecutionIssueReceipt
+	stage := "owner_authentication"
+	defer func() {
+		if resultErr != nil {
+			resultErr = &OriginalForwardIssueError{Stage: stage, cause: resultErr}
+		}
+	}()
 	s, e := i.authenticate(ctx, password)
 	if e != nil || runtimeDB == nil || privateDirectory(in.OutputDirectory) != nil {
 		return zero, ErrInstall
@@ -69,10 +83,12 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 	if e != nil {
 		return zero, ErrInstall
 	}
+	stage = "runtime_issuers"
 	material, e := i.readOriginalRuntimeIssuerMaterial(in.Issuers, enrollment)
 	if e != nil {
 		return zero, ErrInstall
 	}
+	stage = "runtime_record_export"
 	exported, e := i.readOriginalRuntimeRecordExport(enrollment, in.Issuers, in.RecordExport)
 	if e != nil {
 		return zero, ErrInstall
@@ -99,6 +115,7 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 	if recordKey.SHA256 != material.RecordKey.SHA256 || captureKey.SHA256 != material.CaptureKey.SHA256 || recordKey.SHA256 == captureKey.SHA256 {
 		return zero, ErrInstall
 	}
+	stage = "bootstrap_request"
 	request, e := readRequest(i, in.Request)
 	if e != nil {
 		return zero, ErrInstall
@@ -107,6 +124,7 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 	if request.grant.InstallationID != i.plan.Target.InstallationID || request.grant.ServerUUID != i.plan.Target.ServerUUID || request.grant.Database != i.plan.Target.Database || request.grant.UserID != s.userID || request.grant.Username != i.plan.LocalAdminUsername {
 		return zero, ErrInstall
 	}
+	stage = "deployment_core"
 	raw, e := readBootstrapSourcePin(in.Core, 262144)
 	var core originalRuntimeCoreScope
 	if e != nil {
@@ -116,13 +134,16 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 		return zero, ErrInstall
 	}
 	target := i.plan.Target
+	stage = "runtime_sql_profile"
 	runtimeAccount, e := i.checkOriginalRuntimeSQLPeer(ctx, runtimeDB, "")
 	if e != nil {
 		return zero, ErrInstall
 	}
+	stage = "deployment_binding"
 	if core.InstallationID != target.InstallationID || core.Namespace != target.Namespace || core.NamespaceUID != target.NamespaceUID || core.SourceDatabase != target.Database || core.SourceServerUUID != target.ServerUUID || (core.SourceUser == "" || strings.EqualFold(core.SourceUser, "root")) || core.ProfileFile != in.Profile.File || core.KeyDirectory != filepath.Dir(recordKey.File) || core.KeyDirectory != filepath.Dir(captureKey.File) || core.Forward.PublicKey != base64.StdEncoding.EncodeToString(keys["forward_execution"].Public().(ed25519.PublicKey)) || filepath.Dir(core.Forward.Path) != in.OutputDirectory || !filepath.IsAbs(core.Forward.Path) || filepath.Clean(core.Forward.Path) != core.Forward.Path {
 		return zero, ErrInstall
 	}
+	stage = "source_sql_tls"
 	if core.SourceTLS == nil || !core.SourceTLS.Selected() {
 		return zero, ErrInstall
 	}
@@ -141,6 +162,7 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 	if strings.Split(sourceIdentity.Account, "@")[0] != core.SourceUser || sourceIdentity.ServerUUID != core.SourceServerUUID || sourceIdentity.Database != core.SourceDatabase {
 		return zero, ErrInstall
 	}
+	stage = "execution_profile"
 	profile, e := api.LoadExecutionProfile(in.Profile.File)
 	if e != nil {
 		return zero, ErrInstall
@@ -149,6 +171,7 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 	if e != nil || profileSHA != in.Profile.SHA256 || profile.InstallationID != target.InstallationID || profile.TargetClass != "same-cluster-copy" {
 		return zero, ErrInstall
 	}
+	stage = "controller_and_worker_binding"
 	actor, e := i.originalPublicationActor(ctx, in.ControllerDeployment, in.ControllerPodName)
 	if e != nil {
 		return zero, ErrInstall
@@ -157,6 +180,7 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 	if e != nil || string(worker.UID) != core.Security.ServiceAccountUID || worker.UID == "" || worker.DeletionTimestamp != nil {
 		return zero, ErrInstall
 	}
+	stage = "worker_issuer_certificate"
 	certificate, e := ReadPrivateFile(core.IssuerCertificate, 65536)
 	if e != nil {
 		return zero, ErrInstall
@@ -169,6 +193,7 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 	if e != nil || !ca.IsCA || ca.KeyUsage&x509.KeyUsageCertSign == 0 || hash(ca.Raw) != core.IssuerSHA256 || now.Before(ca.NotBefore) || !now.Before(ca.NotAfter) {
 		return zero, ErrInstall
 	}
+	stage = "grant_window"
 	until := minTime(in.Until, minTime(request.end, ca.NotAfter))
 	if before.cas.HeadRevision > 0 {
 		if !request.matchesDraft(before.record) {
@@ -255,9 +280,15 @@ func (i *Installer) IssueOriginalRuntimeExecution(ctx context.Context, runtimeDB
 		floor = t
 		return nil
 	}
-	if recheck() != nil || writeNewFiles(in.OutputDirectory, map[string][]byte{filepath.Base(core.Forward.Path): envelope}) != nil {
+	stage = "pre_send_authority_recheck"
+	if recheck() != nil {
 		return zero, ErrInstall
 	}
+	stage = "forward_material_write"
+	if writeNewFiles(in.OutputDirectory, map[string][]byte{filepath.Base(core.Forward.Path): envelope}) != nil {
+		return zero, ErrInstall
+	}
+	stage = "forward_native_readback"
 	forward, e := c.NewPinnedExecutionIdentity(core.Forward.Path, hash(envelope), core.KeyDirectory, keys["forward_execution"].Public().(ed25519.PublicKey))
 	if e != nil || forward.CheckDeployment(ctx, runtimeDB) != nil || recheck() != nil {
 		return zero, ErrInstall

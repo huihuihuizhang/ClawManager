@@ -12,7 +12,7 @@ import (
 
 // Maintenance has admin permissions but is still a genuine independent
 // builtin user. Its legitimate ConfigUpdate permission is not a root bypass.
-func sourceGateOwnUser(ctx context.Context, n *minioPermissionHTTP, c sb.MinIOGateCredential) (bool, error) {
+func sourceGateOwnUser(ctx context.Context, n *minioPermissionHTTP, c sb.MinIOGateCredential, policyName string) (bool, error) {
 	path := "/minio/admin/v3/user-info"
 	raw, status, e := n.get(ctx, path, url.Values{"accessKey": {c.AccessKey}})
 	if e != nil {
@@ -27,7 +27,7 @@ func sourceGateOwnUser(ctx context.Context, n *minioPermissionHTTP, c sb.MinIOGa
 		UpdatedAt                     time.Time
 		AuthInfo                      *struct{ Type, AuthServer, AuthServerUserID string } `json:"userAuthInfo,omitempty"`
 	}
-	if status != 200 || minioPermissionDecode(raw, &user) != nil || user.SecretKey != "" || user.Status != "enabled" || len(user.MemberOf) != 0 || user.PolicyName != "" && user.PolicyName != c.AccessKey || user.AuthInfo != nil && (user.AuthInfo.Type != "builtin" || user.AuthInfo.AuthServer != "" || user.AuthInfo.AuthServerUserID != c.AccessKey) || c.AccessKey == n.credential.AccessKey {
+	if status != 200 || minioPermissionDecode(raw, &user) != nil || user.SecretKey != "" || user.Status != "enabled" || len(user.MemberOf) != 0 || user.PolicyName != "" && user.PolicyName != policyName || user.AuthInfo != nil && (user.AuthInfo.Type != "builtin" || user.AuthInfo.AuthServer != "" || user.AuthInfo.AuthServerUserID != c.AccessKey) || c.AccessKey == n.credential.AccessKey {
 		return false, install.ErrInstall
 	}
 	self, e := newMinioPermissionHTTP(n.provider, nativePublicationCredential{AccessKey: c.AccessKey, SecretKey: string(c.SecretKey), NotBefore: c.NotBefore, Until: c.Until})

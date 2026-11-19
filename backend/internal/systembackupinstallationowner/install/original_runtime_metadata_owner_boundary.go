@@ -66,7 +66,7 @@ func (i *Installer) originalMetadataOwnerProfile(ctx context.Context, db *sql.DB
 func (i *Installer) IssueOriginalRuntimeExecutionForMinIOMetadata(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalRuntimeExecutionIssueInputs) (OriginalRuntimeExecutionIssueReceipt, error) {
 	actual, close, e := i.originalMetadataOwnerContext(ctx, runtimeDB, password, enrollment)
 	if e != nil {
-		return OriginalRuntimeExecutionIssueReceipt{}, e
+		return OriginalRuntimeExecutionIssueReceipt{}, &OriginalForwardIssueError{Stage: "metadata_owner_context", cause: e}
 	}
 	defer close()
 	return i.IssueOriginalRuntimeExecution(actual, runtimeDB, password, enrollment, in)

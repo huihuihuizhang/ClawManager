@@ -10,10 +10,25 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+type MinIOBuiltinObservationError struct {
+	Stage string
+}
+
+func (e *MinIOBuiltinObservationError) Error() string {
+	return "MinIO builtin identity observation refused at " + e.Stage
+}
+func (e *MinIOBuiltinObservationError) Unwrap() error { return ErrMinIOReadGate }
+
 // Actual native observation before the original owner freezes builtin identity
 // records. V1 descriptors must STILL be live; this cannot rescue expired setup
 // input. No gate journal/hold/task/capture authority is made or returned.
-func ObserveOriginalMinIOBuiltinIdentityMaterial(ctx context.Context, kube kubernetes.Interface, file, sha string, check TeamSourceCheck) error {
+func ObserveOriginalMinIOBuiltinIdentityMaterial(ctx context.Context, kube kubernetes.Interface, file, sha string, check TeamSourceCheck) (resultErr error) {
+	stage := "owner_and_transport_files"
+	defer func() {
+		if resultErr != nil {
+			resultErr = &MinIOBuiltinObservationError{Stage: stage}
+		}
+	}()
 	if ctx == nil || kube == nil || check == nil || check(ctx) != nil {
 		return ErrMinIOReadGate
 	}
@@ -48,21 +63,44 @@ func ObserveOriginalMinIOBuiltinIdentityMaterial(ctx context.Context, kube kuber
 	g := &MinIOReadServiceGate{in: mat.Native, kube: kube, check: check, credentials: creds, until: until}
 	g.origin = g
 	defer g.Close()
+	stage = "native_transport"
 	g.native, e = newMinioGateNative(ctx, g)
 	if e != nil {
 		return e
 	}
+	stage = "native_server_identity"
 	if g.identity(ctx, true) != nil {
 		return ErrMinIOReadGate
 	}
-	first, e := g.collect(ctx)
+	first, e := g.collectWithStage(ctx, &stage)
 	if e != nil {
 		return e
 	}
-	second, e := g.collect(ctx)
-	if e != nil || !reflect.DeepEqual(first, second) || g.identity(ctx, false) != nil || check(ctx) != nil {
+	second, e := g.collectWithStage(ctx, &stage)
+	if e != nil {
 		return ErrMinIOReadGate
 	}
+	stage = "snapshot_stability"
+	if !minioGateSnapshotsEqual(first, second) {
+		switch {
+		case !reflect.DeepEqual(first.APIConfig, second.APIConfig):
+			stage = "snapshot_api"
+		case !minioGateUsersReadbackEqual(first.Users, second.Users):
+			stage = "snapshot_users"
+		case !reflect.DeepEqual(first.BucketNames, second.BucketNames) || !reflect.DeepEqual(first.BucketPolicies, second.BucketPolicies):
+			stage = "snapshot_buckets"
+		}
+		return ErrMinIOReadGate
+	}
+	stage = "snapshot_tail_native_identity"
+	if g.identity(ctx, false) != nil {
+		return ErrMinIOReadGate
+	}
+	stage = "snapshot_tail_owner"
+	if check(ctx) != nil {
+		return ErrMinIOReadGate
+	}
+	stage = "root_status"
 	if g.native.rootAccessProbe(ctx, first.RootAccess == "off") != nil || check(ctx) != nil {
 		return ErrMinIOReadGate
 	}

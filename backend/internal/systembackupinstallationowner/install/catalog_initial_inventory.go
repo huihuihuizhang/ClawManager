@@ -27,8 +27,18 @@ type SignedCatalogInitialInventory struct {
 	Signature []byte
 }
 
+// ValidOriginalCatalogRoot allows the original default or a disjoint root
+// addressed by the exact accepted configuration. A successor cannot reuse
+// or overlap the previous configuration's append scope.
+func ValidOriginalCatalogRoot(installation, root, configSHA256 string) bool {
+	if installation == "" || !digestPattern.MatchString(configSHA256) {
+		return false
+	}
+	return root == installation+"/catalog/" || root == installation+"/catalog-"+configSHA256+"/"
+}
+
 func validCatalogInitialInventory(r CatalogInitialInventory) bool {
-	return r.Version == CatalogInitialInventoryVersion && r.Mode == "inventory_manifest_initial_checkpoint" && r.Count == 0 && r.Reference.Purpose == "catalog_snapshot" && digestPattern.MatchString(r.Reference.IdentityHash) && r.Reference.Version != "" && r.Reference.Version != "latest" && r.Reference.Version != "current" && r.Reference.Version != "default" && digestPattern.MatchString(r.DefinitionSHA256) && digestPattern.MatchString(r.ConfigSHA256) && digestPattern.MatchString(r.ProviderSHA256) && digestPattern.MatchString(r.ScanSHA256) && r.Installation != "" && r.NamespaceUID != "" && r.Bucket != "" && r.Root == r.Installation+"/catalog/" && r.CoveragePrefix == r.Root && !r.NotBefore.IsZero() && !r.CapturedAt.IsZero() && !r.CapturedAt.Before(r.NotBefore) && r.CapturedAt.Before(r.Until) && r.Until.Sub(r.NotBefore) <= 24*time.Hour && r.Key == CatalogInitialInventoryKey(r.DefinitionSHA256, r.Reference, r.Root)
+	return r.Version == CatalogInitialInventoryVersion && r.Mode == "inventory_manifest_initial_checkpoint" && r.Count == 0 && r.Reference.Purpose == "catalog_snapshot" && digestPattern.MatchString(r.Reference.IdentityHash) && r.Reference.Version != "" && r.Reference.Version != "latest" && r.Reference.Version != "current" && r.Reference.Version != "default" && digestPattern.MatchString(r.DefinitionSHA256) && digestPattern.MatchString(r.ProviderSHA256) && digestPattern.MatchString(r.ScanSHA256) && r.NamespaceUID != "" && r.Bucket != "" && ValidOriginalCatalogRoot(r.Installation, r.Root, r.ConfigSHA256) && r.CoveragePrefix == r.Root && !r.NotBefore.IsZero() && !r.CapturedAt.IsZero() && !r.CapturedAt.Before(r.NotBefore) && r.CapturedAt.Before(r.Until) && r.Until.Sub(r.NotBefore) <= 24*time.Hour && r.Key == CatalogInitialInventoryKey(r.DefinitionSHA256, r.Reference, r.Root)
 }
 func CatalogInitialInventoryKey(definitionSHA string, ref sec.BootstrapSecretRef, root string) string {
 	raw, _ := canonical([]string{CatalogInitialInventoryVersion, definitionSHA, ref.IdentityHash, ref.Version})

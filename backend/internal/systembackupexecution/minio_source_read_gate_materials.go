@@ -34,6 +34,7 @@ type OriginalMinIOSourceReadMaterials struct {
 	Native                                                                                  sb.MinIOReadGateInput
 	RootCredential, KeeperCredential, ReaderCredential, CaptureReaderCredential, CustodyKey install.BootstrapSourceFilePin
 	KeeperPolicy, ReaderPolicy                                                              install.BootstrapSourceFilePin
+	KeeperPolicyName                                                                        string `json:",omitempty"`
 	Until                                                                                   time.Time
 }
 type OriginalMinIOSourceSetupReceipt struct {

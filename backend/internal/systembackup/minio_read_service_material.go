@@ -16,6 +16,7 @@ type minioGateMaterial struct {
 	Native                                                                                  MinIOReadGateInput
 	RootCredential, KeeperCredential, ReaderCredential, CaptureReaderCredential, CustodyKey minioGateMaterialPin
 	KeeperPolicy, ReaderPolicy                                                              minioGateMaterialPin
+	KeeperPolicyName                                                                        string `json:",omitempty"`
 	Until                                                                                   time.Time
 }
 

@@ -4,7 +4,27 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	mn "clawreef/internal/systembackup/minionative"
 )
+
+func TestMinIOReadGateRetiredOPARequiresExplicitCompatNull(t *testing.T) {
+	const observed = `{"status":"success","config":[{"subSystem":"policy_opa","kv":null}]}`
+	if _, err := decodeMinioGateConfig([]byte(observed), "policy_opa", mn.DeleteCompatManifest); err != nil {
+		t.Fatal("pinned MinIO retired OPA response refused", err)
+	}
+	for _, tc := range []struct{ raw, subsystem, image string }{
+		{observed, "policy_opa", ""},
+		{strings.Replace(observed, `,"kv":null`, "", 1), "policy_opa", mn.DeleteCompatManifest},
+		{strings.Replace(observed, "null", "[]", 1), "policy_opa", mn.DeleteCompatManifest},
+		{strings.Replace(observed, "policy_opa", "policy_plugin", 1), "policy_plugin", mn.DeleteCompatManifest},
+		{strings.Replace(observed, `"kv":null`, `"target":"other","kv":null`, 1), "policy_opa", mn.DeleteCompatManifest},
+	} {
+		if _, err := decodeMinioGateConfig([]byte(tc.raw), tc.subsystem, tc.image); err == nil {
+			t.Fatalf("unqualified empty native config allowed: %s", tc.raw)
+		}
+	}
+}
 
 func TestMinIOReadServiceNativeGlobalResourceReadback(t *testing.T) {
 	keeper, _, err := MinIOReadGatePolicies([]string{"business"})
@@ -72,5 +92,21 @@ func TestMinIOReadServiceRejectsUnboundAndUnknownInputs(t *testing.T) {
 	v := &VerifiedMinIOReadServiceObservation{}
 	if v.Data().Version != "" {
 		t.Fatal("zero observation became native result")
+	}
+}
+
+func TestMinIOGatePolicyReadbackSortsOnlyPolicySets(t *testing.T) {
+	current := []byte(`{"Version":"2012-10-17","Statement":[{"Sid":"fixed","Effect":"Deny","Action":["s3:PutObject","s3:DeleteObject"],"Resource":["arn:aws:s3:::b/*","arn:aws:s3:::a/*"],"Condition":{"StringEquals":{"s3:prefix":["private","staff"]}}}]}`)
+	reordered := []byte(`{"Statement":[{"Effect":"Deny","Sid":"fixed","Action":["s3:DeleteObject","s3:PutObject"],"Resource":["arn:aws:s3:::a/*","arn:aws:s3:::b/*"],"Condition":{"StringEquals":{"s3:prefix":["private","staff"]}}}],"Version":"2012-10-17"}`)
+	if !minioGatePolicyReadbackEqual(current, reordered) {
+		t.Fatal("equivalent MinIO readbacks differ")
+	}
+	for _, changed := range [][]byte{
+		[]byte(`{"Statement":[{"Effect":"Deny","Sid":"fixed","Action":["s3:DeleteObject","s3:PutObject"],"Resource":["arn:aws:s3:::a/*","arn:aws:s3:::b/*"],"Condition":{"StringEquals":{"s3:prefix":["private","other"]}}}],"Version":"2012-10-17"}`),
+		[]byte(`{"Statement":[{"Effect":"Allow","Sid":"fixed","Action":["s3:DeleteObject","s3:PutObject"],"Resource":["arn:aws:s3:::a/*","arn:aws:s3:::b/*"],"Condition":{"StringEquals":{"s3:prefix":["private","staff"]}}}],"Version":"2012-10-17"}`),
+	} {
+		if minioGatePolicyReadbackEqual(current, changed) {
+			t.Fatal("different MinIO policy accepted as equivalent")
+		}
 	}
 }

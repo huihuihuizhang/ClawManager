@@ -52,14 +52,22 @@ type OriginalPublicationSigningReceipt struct {
 }
 
 func (i *Installer) originalPublicationActor(ctx context.Context, deploymentName, podName string) (owner.Binding, error) {
+	return i.originalDeploymentActor(ctx, deploymentName, podName, nil)
+}
+
+func (i *Installer) originalDeploymentActor(ctx context.Context, deploymentName, podName string, minio *MinIOPermissionProvider) (owner.Binding, error) {
 	var zero owner.Binding
 	p := i.plan.Target
 	dep, e := i.kube.AppsV1().Deployments(p.Namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 	if e != nil || dep.UID == "" || dep.DeletionTimestamp != nil {
 		return zero, ErrInstall
 	}
+	account := dep.Spec.Template.Spec.ServiceAccountName
+	if minio != nil && account == "" {
+		account = "default"
+	}
 	pod, e := i.kube.CoreV1().Pods(p.Namespace).Get(ctx, podName, metav1.GetOptions{})
-	if e != nil || pod.UID == "" || pod.DeletionTimestamp != nil || string(pod.Status.Phase) != "Running" || len(pod.OwnerReferences) != 1 || pod.Spec.ServiceAccountName != dep.Spec.Template.Spec.ServiceAccountName {
+	if e != nil || pod.UID == "" || pod.DeletionTimestamp != nil || string(pod.Status.Phase) != "Running" || len(pod.OwnerReferences) != 1 || pod.Spec.ServiceAccountName != account {
 		return zero, ErrInstall
 	}
 	parent := pod.OwnerReferences[0]
@@ -76,6 +84,12 @@ func (i *Installer) originalPublicationActor(ctx context.Context, deploymentName
 	}
 	sa, e := i.kube.CoreV1().ServiceAccounts(p.Namespace).Get(ctx, pod.Spec.ServiceAccountName, metav1.GetOptions{})
 	if e != nil || sa.UID == "" || sa.DeletionTimestamp != nil {
+		return zero, ErrInstall
+	}
+	if minio != nil && (minio.Deployment != (MinIOPermissionObject{dep.Name, string(dep.UID)}) ||
+		minio.ReplicaSet != (MinIOPermissionObject{rs.Name, string(rs.UID)}) ||
+		minio.Pod != (MinIOPermissionObject{pod.Name, string(pod.UID)}) ||
+		minio.ServiceAccount != (MinIOPermissionObject{sa.Name, string(sa.UID)})) {
 		return zero, ErrInstall
 	}
 	return owner.Binding{InstallationID: p.InstallationID, Namespace: p.Namespace, NamespaceUID: p.NamespaceUID, PodName: pod.Name, PodUID: string(pod.UID), ServiceAccountName: sa.Name, ServiceAccountUID: string(sa.UID)}, nil

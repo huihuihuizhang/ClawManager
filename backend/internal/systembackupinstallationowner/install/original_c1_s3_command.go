@@ -12,7 +12,7 @@ import (
 // untouched. Exit 2 is usage, 1 is rejection/native uncertainty, 3 is output
 // loss. Query recovers only a complete retained signed result without reissue.
 func RunOriginalC1S3Materials(ctx context.Context, args []string, out io.Writer) int {
-	if len(args) == 0 || (args[0] != "issue" && args[0] != "query") || ctx == nil || out == nil {
+	if len(args) == 0 || (args[0] != "issue" && args[0] != "query" && args[0] != "renew") || ctx == nil || out == nil {
 		return 2
 	}
 	action := args[0]
@@ -31,7 +31,7 @@ func RunOriginalC1S3Materials(ctx context.Context, args []string, out io.Writer)
 			return 2
 		}
 	}
-	if action == "issue" && (get("inputs-file") == "" || get("inputs-sha256") == "" || get("issuer-private-file") == "" || get("issuer-private-sha256") == "") {
+	if action != "query" && (get("inputs-file") == "" || get("inputs-sha256") == "" || get("issuer-private-file") == "" || get("issuer-private-sha256") == "") {
 		return 2
 	}
 	if action == "query" && (get("output-directory") == "" || get("issuer-private-file") != "" || get("issuer-private-sha256") != "" || get("inputs-file") != "" || get("inputs-sha256") != "") {
@@ -77,10 +77,9 @@ func RunOriginalC1S3Materials(ctx context.Context, args []string, out io.Writer)
 	active, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
 	var receipt OriginalC1S3Receipt
-	if action == "issue" {
+	if action != "query" {
 		b, e := read("inputs-file", "inputs-sha256", 262144)
-		var in OriginalC1S3Inputs
-		if e != nil || decodeExact(b, &in) != nil {
+		if e != nil {
 			return 1
 		}
 		private, e := read("issuer-private-file", "issuer-private-sha256", 64)
@@ -88,7 +87,19 @@ func RunOriginalC1S3Materials(ctx context.Context, args []string, out io.Writer)
 			return 1
 		}
 		defer clear(private)
-		receipt, e = i.ProduceOriginalC1S3Material(active, password, enrollment, in, private)
+		if action == "issue" {
+			var in OriginalC1S3Inputs
+			if decodeExact(b, &in) != nil {
+				return 1
+			}
+			receipt, e = i.ProduceOriginalC1S3Material(active, password, enrollment, in, private)
+		} else {
+			var in OriginalC1S3RenewalInputs
+			if decodeExact(b, &in) != nil {
+				return 1
+			}
+			receipt, e = i.RenewOriginalC1S3Material(active, password, enrollment, in, private)
+		}
 		if e != nil {
 			_ = json.NewEncoder(out).Encode(receipt)
 			return 1

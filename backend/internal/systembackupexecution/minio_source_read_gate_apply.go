@@ -119,33 +119,25 @@ func applyOriginalMinIOSourceAccounts(ctx context.Context, write *install.Origin
 			return e
 		}
 		name := c.AccessKey
-		policyPath := "/minio/admin/v3/info-canned-policy"
-		policyObserve := func() (bool, bool, error) {
-			raw, status, e := n.get(ctx, policyPath, url.Values{"name": {name}, "v": {"2"}})
-			if e != nil {
-				return false, false, e
+		policyName := name
+		if index == 0 && mat.KeeperPolicyName != "" {
+			if mat.KeeperPolicyName != name+"-catalog-"+hash(policyBody)[:12] {
+				return install.ErrInstall
 			}
-			if nativeInstallMissing(raw, status, "XMinioAdminNoSuchPolicy", policyPath, n.provider.Region) {
-				return false, false, nil
-			}
-			var p struct {
-				PolicyName             string
-				Policy                 json.RawMessage
-				CreateDate, UpdateDate time.Time
-			}
-			if status != 200 || minioPermissionDecode(raw, &p) != nil || p.PolicyName != name {
-				return true, false, install.ErrInstall
-			}
-			return true, sb.OriginalMinIOReadGatePoliciesMatch(p.Policy, policyBody), nil
+			policyName = mat.KeeperPolicyName
 		}
-		attempt, e := sourceGateSetupStep(ctx, write, read, dir, name+"-policy", policy, policyObserve, func() error {
-			return nativeInstallMC(ctx, dir, n, admin, "admin", "policy", "create", "native", name, policy.File)
+		policyObserve := func() (bool, bool, error) { return observeSourceReadGatePolicy(ctx, n, policyName, policyBody) }
+		attempt, e := sourceGateSetupStep(ctx, write, read, dir, policyName+"-policy", policy, policyObserve, func() error {
+			return nativeInstallMC(ctx, dir, n, admin, "admin", "policy", "create", "native", policyName, policy.File)
 		})
 		receipt.NativeWritesAttempted = receipt.NativeWritesAttempted || attempt
 		if e != nil {
 			return e
 		}
-		userObserve := func() (bool, bool, error) { present, e := sourceGateOwnUser(ctx, n, c); return present, present, e }
+		userObserve := func() (bool, bool, error) {
+			present, e := sourceGateOwnUser(ctx, n, c, policyName)
+			return present, present, e
+		}
 		attempt, e = sourceGateSetupStep(ctx, write, read, dir, name+"-user", pin, userObserve, func() error {
 			input := append(append([]byte(name+"\n"), c.SecretKey...), '\n')
 			defer clear(input)
@@ -169,10 +161,10 @@ func applyOriginalMinIOSourceAccounts(ctx context.Context, write *install.Origin
 			if u.PolicyName == "" {
 				return false, false, nil
 			}
-			return true, u.PolicyName == name, nil
+			return true, u.PolicyName == policyName, nil
 		}
-		attempt, e = sourceGateSetupStep(ctx, write, read, dir, name+"-attach", struct{ Account, Policy string }{name, name}, attachmentObserve, func() error {
-			return nativeInstallMC(ctx, dir, n, admin, "admin", "policy", "attach", "native", name, "--user", name)
+		attempt, e = sourceGateSetupStep(ctx, write, read, dir, name+"-attach", struct{ Account, Policy string }{name, policyName}, attachmentObserve, func() error {
+			return nativeInstallMC(ctx, dir, n, admin, "admin", "policy", "attach", "native", policyName, "--user", name)
 		})
 		receipt.NativeWritesAttempted = receipt.NativeWritesAttempted || attempt
 		if e != nil {
@@ -180,6 +172,26 @@ func applyOriginalMinIOSourceAccounts(ctx context.Context, write *install.Origin
 		}
 	}
 	return write.CheckOriginalMinIOSourceSetup(ctx, read)
+}
+
+func observeSourceReadGatePolicy(ctx context.Context, n *minioPermissionHTTP, name string, body []byte) (bool, bool, error) {
+	path := "/minio/admin/v3/info-canned-policy"
+	raw, status, e := n.get(ctx, path, url.Values{"name": {name}, "v": {"2"}})
+	if e != nil {
+		return false, false, e
+	}
+	if nativeInstallMissing(raw, status, "XMinioAdminNoSuchPolicy", path, n.provider.Region) {
+		return false, false, nil
+	}
+	var p struct {
+		PolicyName             string
+		Policy                 json.RawMessage
+		CreateDate, UpdateDate time.Time
+	}
+	if status != 200 || minioPermissionDecode(raw, &p) != nil || p.PolicyName != name {
+		return true, false, install.ErrInstall
+	}
+	return true, sb.OriginalMinIOReadGatePoliciesMatch(p.Policy, body), nil
 }
 
 // Concrete resume of C's ORIGINAL setup artifact. It never regenerates files,

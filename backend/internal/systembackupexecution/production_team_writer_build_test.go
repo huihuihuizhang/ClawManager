@@ -186,7 +186,15 @@ func TestTeamWriterImagePinRequiresOriginalImmutableRelease(t *testing.T) {
 // field order/scope; changing a business pin changes existing signed scope.
 func TestTeamWriterImagesUseExistingSourceMetadataScope(t *testing.T) {
 	pin := productionTeamWriterImage{Container: "app", Image: "original/app@sha256:" + strings.Repeat("a", 64), ConfigDigest: "sha256:" + strings.Repeat("c", 64), BuildCommit: strings.Repeat("1", 40)}
-	m := productionCaptureMaterials{Discovery: &productionSourceDiscovery{TeamWriterImages: map[string][]productionTeamWriterImage{"deployment/source/app": {pin}}}}
+	m := productionCaptureMaterials{
+		TeamObjects: &productionTeamObjectsSource{Codec: "files-only"},
+		Discovery: &productionSourceDiscovery{
+			TeamAttachments:  []originalTeamAttachment{{OriginalTeamAttachmentSelection: OriginalTeamAttachmentSelection{TeamID: 12}}},
+			LonghornSources:  map[string]originalLonghornSource{"pvc": {Handle: "persistent-source"}},
+			PersistentMounts: &productionPersistentMountScope{Version: persistentMountScopeVersion},
+			TeamWriterImages: map[string][]productionTeamWriterImage{"deployment/source/app": {pin}},
+		},
+	}
 	raw, err := json.Marshal(m)
 	if err != nil {
 		t.Fatal(err)

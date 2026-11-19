@@ -100,7 +100,13 @@ func newBootstrapSourceRegistryReader(ctx context.Context, source *install.Prepa
 		clear(raw)
 	}
 	m, g, cfg := &x.materials, r.Metadata, x.config
-	if cfg.Validate() != nil || cfg.CaptureScope != "six-part" || cfg.InstallationID != r.Target.InstallationID || cfg.ControllerOwner != g.ControllerOwner || cfg.Namespace != g.Namespace || cfg.NamespaceUID != g.NamespaceUID || cfg.CaptureModules == nil || cfg.CaptureModules.Path != r.Source.Materials.File || cfg.ProfileFile != r.Source.ExecutionProfile.File || m.Version != productionCaptureMaterialsVersion || m.InstallationID != cfg.InstallationID || m.ControllerOwner != cfg.ControllerOwner || m.DeploymentConfigSHA256 != r.Source.Deployment.SHA256 || m.CaptureGrantSHA256 != g.CaptureGrantSHA256 || m.Redis.Redis == nil || m.Objects.Objects == nil || m.Discovery == nil || m.Discovery.validate() != nil || m.Discovery.GrantFile != r.Source.MetadataGrant.File || m.Discovery.GrantSHA256 != r.Source.MetadataGrant.SHA256 || hash(m.Discovery.Issuer) != r.MetadataIssuerSHA256 {
+	if cfg.Validate() != nil || cfg.CaptureScope != "six-part" || cfg.InstallationID != r.Target.InstallationID || cfg.ControllerOwner != g.ControllerOwner || cfg.Namespace != g.Namespace || cfg.NamespaceUID != g.NamespaceUID || cfg.CaptureModules == nil || cfg.ProfileFile != r.Source.ExecutionProfile.File || m.Version != productionCaptureMaterialsVersion || m.InstallationID != cfg.InstallationID || m.ControllerOwner != cfg.ControllerOwner || m.DeploymentConfigSHA256 != r.Source.Deployment.SHA256 || m.CaptureGrantSHA256 != g.CaptureGrantSHA256 || m.Redis.Redis == nil || m.Objects.Objects == nil || m.Discovery == nil || m.Discovery.validate() != nil || m.Discovery.GrantFile != r.Source.MetadataGrant.File || m.Discovery.GrantSHA256 != r.Source.MetadataGrant.SHA256 || hash(m.Discovery.Issuer) != r.MetadataIssuerSHA256 {
+		return nil, install.ErrInstall
+	}
+	if r.Source.Materials.File != cfg.CaptureModules.Path &&
+		(r.Source.Materials.File != install.BootstrapSourceReadMaterialsPath(cfg.CaptureModules.Path) ||
+			m.Redis.GrantSHA256 != "" || m.Objects.GrantSHA256 != "" ||
+			m.ControlEvidence != nil || m.ControlEvidenceSource != nil || m.TeamObjects != nil) {
 		return nil, install.ErrInstall
 	}
 	scope, err := sourceMetadataScope(*m)

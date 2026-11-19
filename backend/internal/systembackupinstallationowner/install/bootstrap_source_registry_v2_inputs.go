@@ -20,6 +20,7 @@ import (
 // metadata scope prevent unknown/duplicate/aliased fields or guessed scope.
 // This DATA projection creates no service, Forward identity, task or callback.
 type bootstrapSourceMaterialsWire struct {
+	TeamObjects                                                                 json.RawMessage `json:",omitempty"`
 	Version, Revision                                                           string
 	InstallationID, ControllerOwner, DeploymentConfigSHA256, CaptureGrantSHA256 string
 	Operations                                                                  map[string]json.RawMessage
@@ -34,6 +35,9 @@ type bootstrapSourceMaterialsWire struct {
 	Discovery                                                                   *bootstrapSourceDiscoveryWire `json:",omitempty"`
 }
 type bootstrapSourceDiscoveryWire struct {
+	TeamAttachments                                       json.RawMessage `json:",omitempty"`
+	LonghornSources                                       json.RawMessage `json:",omitempty"`
+	PersistentMounts                                      json.RawMessage `json:",omitempty"`
 	PublicationPolicy                                     json.RawMessage `json:",omitempty"`
 	GrantFile, GrantSHA256                                string
 	Issuer                                                ed25519.PublicKey
@@ -119,7 +123,7 @@ func decodeBootstrapSourceCore(raw []byte) (bootstrapSourceCoreWire, error) {
 	if _, err := jsoncanonicalizer.Transform(raw); err != nil {
 		return out, ErrInstall
 	}
-	allowed := strings.Fields("database_workload minio_read_keepers provider_dependencies source_tls redis_read_keepers schema_version capture_scope installation_id controller_owner application_scope namespace namespace_uid trust_domain forward_grant recovery_grant key_directory profile_file capacity_file source_dsn_file source_user source_database source_server_uuid staging_directory seal_custody_max_bytes staging_claim staging_location worker_image worker_security control_url listen server_certificate server_key issuer_certificate issuer_certificate_sha256 issuer_key platform_writers workspace acquire_seconds hold_seconds runtime_sources formal_verifier publication_signers publisher_verifier capture_modules publication_target publication_worker")
+	allowed := strings.Fields("original_relay_enrollment database_workload minio_read_keepers provider_dependencies source_tls redis_read_keepers schema_version capture_scope installation_id controller_owner application_scope namespace namespace_uid trust_domain forward_grant recovery_grant key_directory profile_file capacity_file source_dsn_file source_user source_database source_server_uuid staging_directory seal_custody_max_bytes staging_claim staging_location worker_image worker_security control_url listen server_certificate server_key issuer_certificate issuer_certificate_sha256 issuer_key platform_writers workspace acquire_seconds hold_seconds runtime_sources formal_verifier publication_signers publisher_verifier capture_modules publication_target publication_worker")
 	known := map[string]bool{}
 	for _, name := range allowed {
 		known[name] = true
@@ -138,6 +142,10 @@ func decodeBootstrapSourceCore(raw []byte) (bootstrapSourceCoreWire, error) {
 // ValidateBootstrapSourceV2Inputs is DATA consistency only. Callers first read
 // these exact bytes through original signed pins. Success creates no terminal
 // or physical evidence; native privilege/TLS/EOF/census checks remain required.
+func BootstrapSourceReadMaterialsPath(capturePath string) string {
+	return capturePath + ".bootstrap-reader.json"
+}
+
 func ValidateBootstrapSourceV2Inputs(r BootstrapSourceRegistryV2Record, coreRaw, materialsRaw, profileRaw, forwardRaw []byte) error {
 	if validateBootstrapSourceV2(r) != nil || hash(coreRaw) != r.Source.Deployment.SHA256 || hash(materialsRaw) != r.Source.Materials.SHA256 || hash(profileRaw) != r.Source.ExecutionProfile.SHA256 || hash(forwardRaw) != r.Source.ForwardGrant.SHA256 {
 		return ErrInstall
@@ -151,8 +159,17 @@ func ValidateBootstrapSourceV2Inputs(r BootstrapSourceRegistryV2Record, coreRaw,
 	_, profileSHA, err := profile.CanonicalIdentity()
 	scope, se := BootstrapSourceMetadataScopeFromMaterials(materialsRaw)
 	g, d := r.Metadata, r.Source
-	if err != nil || se != nil || scope != g.ScopeSHA256 || cfg.Version != "system-backup-public-deployment.v1" || cfg.CaptureScope != "six-part" || cfg.InstallationID != r.Target.InstallationID || cfg.ControllerOwner != g.ControllerOwner || cfg.ApplicationScope != d.ApplicationScope || cfg.Namespace != r.Target.Namespace || cfg.NamespaceUID != r.Target.NamespaceUID || cfg.CaptureModules.Protocol != "original-six-part-capture-materials.v1" || cfg.CaptureModules.Path != d.Materials.File || cfg.ProfileFile != d.ExecutionProfile.File || cfg.ForwardGrant.Path != d.ForwardGrant.File || m.Version != "original-six-part-capture-materials.v1" || m.InstallationID != cfg.InstallationID || m.ControllerOwner != cfg.ControllerOwner || m.DeploymentConfigSHA256 != d.Deployment.SHA256 || m.CaptureGrantSHA256 != g.CaptureGrantSHA256 || profile.InstallationID != cfg.InstallationID {
+	if err != nil || se != nil || scope != g.ScopeSHA256 || cfg.Version != "system-backup-public-deployment.v1" || cfg.CaptureScope != "six-part" || cfg.InstallationID != r.Target.InstallationID || cfg.ControllerOwner != g.ControllerOwner || cfg.ApplicationScope != d.ApplicationScope || cfg.Namespace != r.Target.Namespace || cfg.NamespaceUID != r.Target.NamespaceUID || cfg.CaptureModules.Protocol != "original-six-part-capture-materials.v1" || cfg.ProfileFile != d.ExecutionProfile.File || cfg.ForwardGrant.Path != d.ForwardGrant.File || m.Version != "original-six-part-capture-materials.v1" || m.InstallationID != cfg.InstallationID || m.ControllerOwner != cfg.ControllerOwner || m.DeploymentConfigSHA256 != d.Deployment.SHA256 || m.CaptureGrantSHA256 != g.CaptureGrantSHA256 || profile.InstallationID != cfg.InstallationID {
 		return ErrInstall
+	}
+	if d.Materials.File != cfg.CaptureModules.Path {
+		// This fixed sibling is the controller read delegation. It cannot
+		// carry the worker's Redis, object, or control evidence authority.
+		if d.Materials.File != BootstrapSourceReadMaterialsPath(cfg.CaptureModules.Path) ||
+			m.Redis.GrantSHA256 != "" || m.Objects.GrantSHA256 != "" || len(m.ControlEvidence) != 0 ||
+			len(m.ControlEvidenceSource) != 0 || len(m.TeamObjects) != 0 {
+			return ErrInstall
+		}
 	}
 	p := m.Discovery
 	if p.GrantFile != d.MetadataGrant.File || p.GrantSHA256 != d.MetadataGrant.SHA256 || hash(p.Issuer) != r.MetadataIssuerSHA256 || p.ControllerDeployment != d.Controller.Deployment || p.ControllerDeploymentUID != d.Controller.DeploymentUID || p.ControllerServiceAccount != d.Controller.ServiceAccount || p.ControllerServiceAccountUID != d.Controller.ServiceAccountUID || m.Redis.Redis == nil || m.Objects.Objects == nil {
