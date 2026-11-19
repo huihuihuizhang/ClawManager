@@ -211,6 +211,17 @@ func (i *Installer) issueOriginalPublicationAuthorizationAtHead(ctx context.Cont
 	record := sec.InstallationSigningRecord{InstallationID: g.InstallationID, Revision: revision, NotBefore: now, Until: until}
 	result := OriginalPublicationRuntimeOwnerInputs{Version: "original-publication-runtime-owner-inputs.v1", PlanSHA256: i.planHash, EnrollmentDocumentSHA256: enrollment.DocumentSHA256}
 	probeUntil := until
+	probePurpose := func(n int, b owner.Binding, public ed25519.PublicKey) (time.Time, error) {
+		if vault.health(ctx, b.ProviderClusterID) != nil || originalPublicationCheckMetadata(ctx, vault, b, material.Histories[n], token) != nil {
+			return time.Time{}, ErrInstall
+		}
+		jwt, e := readBootstrapSourcePin(material.JWTFiles[b.Purpose], 16384)
+		if e != nil {
+			return time.Time{}, e
+		}
+		defer clear(jwt)
+		return i.originalPublicationProbe(ctx, vault, b, public, jwt)
+	}
 	for n, b := range material.Bindings {
 		if b.Purpose != []string{"acceptance_record", "capture_certificate", "catalog_record"}[n] || b.InstallationID != actor.InstallationID || b.Namespace != actor.Namespace || b.NamespaceUID != actor.NamespaceUID || b.PodName != actor.PodName || b.PodUID != actor.PodUID || b.ServiceAccountName != actor.ServiceAccountName || b.ServiceAccountUID != actor.ServiceAccountUID || b.Endpoint != doc.Endpoint || b.CASHA256 != doc.CASHA256 || material.Histories[n].Purpose != b.Purpose {
 			return zero, ErrInstall
@@ -223,15 +234,7 @@ func (i *Installer) issueOriginalPublicationAuthorizationAtHead(ctx context.Cont
 		if k.InstallationID != b.InstallationID || k.Purpose != b.Purpose || k.KeyID != b.KeyID || k.KeyVersion != b.KeyVersion || k.Revoked || now.Before(k.NotBefore) || until.After(k.NotAfter) {
 			return zero, ErrInstall
 		}
-		if vault.health(ctx, b.ProviderClusterID) != nil || originalPublicationCheckMetadata(ctx, vault, b, material.Histories[n], token) != nil {
-			return zero, ErrInstall
-		}
-		jwt, e := readBootstrapSourcePin(material.JWTFiles[b.Purpose], 16384)
-		if e != nil {
-			return zero, e
-		}
-		end, e := i.originalPublicationProbe(ctx, vault, b, k.PublicKey, jwt)
-		clear(jwt)
+		end, e := probePurpose(n, b, k.PublicKey)
 		if e != nil {
 			return zero, e
 		}
@@ -274,12 +277,15 @@ func (i *Installer) issueOriginalPublicationAuthorizationAtHead(ctx context.Cont
 		return zero, e
 	}
 	floor := now
-	recheck := func() error {
+	recheck := func(refreshProbe bool) error {
 		if request.recheck(i) != nil || op.authority(ctx, enrollment) != nil || in.Forward.CheckDeployment(ctx, runtimeDB) != nil {
 			return ErrInstall
 		}
 		current, t, e := readSnapshot()
-		if e != nil || current.cas != before.cas || t.Before(floor) || binding(current.record, request) != nil || !window(current.record, request, t) || !t.Before(until) || !t.Before(probeUntil) || !time.Now().Before(probeUntil) {
+		if e != nil || current.cas != before.cas || t.Before(floor) || binding(current.record, request) != nil || !window(current.record, request, t) || !t.Before(until) {
+			return ErrInstall
+		}
+		if !refreshProbe && (!t.Before(probeUntil) || !time.Now().Before(probeUntil)) {
 			return ErrInstall
 		}
 		actual, e := i.originalPublicationActor(ctx, in.ControllerDeployment, in.ControllerPodName)
@@ -320,6 +326,19 @@ func (i *Installer) issueOriginalPublicationAuthorizationAtHead(ctx context.Cont
 		if _, e := i.checkOriginalRuntimeSQLPeer(ctx, runtimeDB, g.DatabaseAccount); e != nil {
 			return ErrInstall
 		}
+		if refreshProbe {
+			// Initial publication can spend the Vault probe lease on
+			// authority, file or workload checks. Repeat each proof next to
+			// the authority sample that gates publication.
+			probeUntil = until
+			for n, b := range material.Bindings {
+				end, e := probePurpose(n, b, original.Keys[n].PublicKey)
+				if e != nil {
+					return e
+				}
+				probeUntil = minTime(probeUntil, end)
+			}
+		}
 		// Final SQL sample follows every slow actor/file read; its original CAS,
 		// source request and monotonic floor remain mandatory through output.
 		tail, after, e := readSnapshot()
@@ -329,7 +348,7 @@ func (i *Installer) issueOriginalPublicationAuthorizationAtHead(ctx context.Cont
 		floor = after
 		return nil
 	}
-	if recheck() != nil {
+	if recheck(initial) != nil {
 		return zero, ErrInstall
 	}
 	files := map[string][]byte{"runtime-signing.record.json": recordBytes, "runtime-signing.signature": recordSig, "runtime-signing.pin.json": pinBytes, "publisher-capture.grant.json": signedGrant, "runtime-owner-inputs.json": resultBytes}
@@ -342,10 +361,10 @@ func (i *Installer) issueOriginalPublicationAuthorizationAtHead(ctx context.Cont
 			return zero, ErrInstall
 		}
 	}
-	if _, e = sec.LoadInstallationSigningHistory(ctx, result.SigningRecord, result.SigningPin); e != nil || recheck() != nil {
+	if _, e = sec.LoadInstallationSigningHistory(ctx, result.SigningRecord, result.SigningPin); e != nil || !initial && recheck(false) != nil {
 		return zero, ErrInstall
 	}
-	if sec.CheckPublisherCaptureDeploymentWorkload(ctx, sec.PublisherCaptureAuthorityConfig{DB: runtimeDB, Kubernetes: i.kube, Deployment: deployment, Workload: sec.PublisherCaptureWorkload{Namespace: workload.Namespace, NamespaceUID: workload.NamespaceUID, PodName: workload.PodName, PodUID: workload.PodUID, ServiceAccountName: workload.ServiceAccountName, ServiceAccountUID: workload.ServiceAccountUID, PublisherOwner: workload.PublisherOwner, GrantSHA256: result.PublisherGrant.SHA256}, GrantMount: result.PublisherGrant}) != nil || recheck() != nil {
+	if sec.CheckPublisherCaptureDeploymentWorkload(ctx, sec.PublisherCaptureAuthorityConfig{DB: runtimeDB, Kubernetes: i.kube, Deployment: deployment, Workload: sec.PublisherCaptureWorkload{Namespace: workload.Namespace, NamespaceUID: workload.NamespaceUID, PodName: workload.PodName, PodUID: workload.PodUID, ServiceAccountName: workload.ServiceAccountName, ServiceAccountUID: workload.ServiceAccountUID, PublisherOwner: workload.PublisherOwner, GrantSHA256: result.PublisherGrant.SHA256}, GrantMount: result.PublisherGrant}) != nil || recheck(initial) != nil {
 		return zero, ErrInstall
 	}
 	return OriginalPublicationAuthorizationReceipt{Version: "original-publication-runtime-authorization-result.v1", RuntimeOwnerInputs: BootstrapSourceFilePin{File: filepath.Join(in.OutputDirectory, "runtime-owner-inputs.json"), SHA256: hash(resultBytes)}, SigningPinFile: BootstrapSourceFilePin{File: filepath.Join(in.OutputDirectory, "runtime-signing.pin.json"), SHA256: hash(pinBytes)}, SigningRecord: result.SigningRecord, SigningPin: result.SigningPin, PublisherGrant: result.PublisherGrant}, nil

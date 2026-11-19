@@ -370,12 +370,92 @@ func (i *Installer) originalNonceReference(namespaceUID, ledgerUID string) (sec.
 	identity := hash(c1wire(struct{ Version, Provider, Scope, Object string }{"original-owner-nonce-file-identity.v1", provider, scope, ledgerUID}))
 	return sec.BootstrapSecretRef{Purpose: "nonce_hmac", IdentityHash: identity, Version: "1"}, provider, scope
 }
+
+// RenewOriginalNonceMaterial reauthorizes expired, unchanged nonce custody
+// before first adoption. The original Secret, ledger and reference stay intact.
+func (i *Installer) RenewOriginalNonceMaterial(ctx context.Context, password []byte, enrollment EnrollmentPin, previous BootstrapSourceFilePin, o OriginalNonceMaterialOptions, issuerPrivate []byte) (OriginalNonceMaterialReceipt, error) {
+	var zero OriginalNonceMaterialReceipt
+	op, err := i.authenticate(ctx, password)
+	if err != nil || op.authority(ctx, enrollment) != nil || privateDirectory(o.OutputDirectory) != nil || filepath.Dir(previous.File) == o.OutputDirectory {
+		return zero, ErrInstall
+	}
+	now, err := i.originalNonceFirstIssueGuard(ctx, op, enrollment)
+	if err != nil || !now.Before(o.Until) || o.Until.Sub(now) > 24*time.Hour {
+		return zero, ErrInstall
+	}
+	source, err := i.readOriginalNonceMaterialAt(ctx, enrollment, previous, now, true)
+	if err != nil {
+		return zero, err
+	}
+	issuer, err := op.privateKey(issuerPrivate)
+	if err != nil {
+		return zero, err
+	}
+	defer clear(issuer)
+	renewal, err := canonical(struct {
+		Predecessor BootstrapSourceFilePin
+		Until       time.Time
+	}{previous, o.Until.UTC()})
+	if err != nil || writeOriginalNonceOutput(o.OutputDirectory, map[string][]byte{"nonce.renewal.json": renewal}) != nil {
+		return zero, ErrInstall
+	}
+	path := filepath.Join(o.OutputDirectory, "nonce.material.json")
+	var body []byte
+	_, err = os.Lstat(path)
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		renewed := source
+		renewed.NotBefore, renewed.Until = now.UTC(), o.Until.UTC()
+		raw, err := canonical(renewed)
+		if err != nil {
+			return zero, ErrInstall
+		}
+		body, err = canonical(signedOriginalNonceMaterial{raw, ed25519.Sign(issuer, append([]byte(originalNonceMaterialDomain), raw...))})
+		if err != nil {
+			return zero, ErrInstall
+		}
+		if _, err = i.originalNonceFirstIssueGuard(ctx, op, enrollment); err != nil || !time.Now().Before(renewed.Until) || writeOriginalNonceOutput(o.OutputDirectory, map[string][]byte{"nonce.material.json": body}) != nil {
+			return zero, ErrInstall
+		}
+	case err != nil:
+		return zero, ErrInstall
+	default:
+		body, err = ReadPrivateFile(path, 262144)
+		if err != nil {
+			return zero, ErrInstall
+		}
+	}
+	pin := BootstrapSourceFilePin{File: path, SHA256: hash(body)}
+	current, err := i.readOriginalNonceMaterial(ctx, enrollment, pin)
+	if err != nil || !current.Until.Equal(o.Until) || current.NotBefore.Before(source.Until) {
+		return zero, ErrInstall
+	}
+	expected := source
+	expected.NotBefore, expected.Until = current.NotBefore, current.Until
+	if current != expected {
+		return zero, ErrInstall
+	}
+	if _, err = i.originalNonceFirstIssueGuard(ctx, op, enrollment); err != nil {
+		return zero, err
+	}
+	receipt := originalNonceMaterialReceipt(current, pin)
+	receipt.State = "same-native-nonce-custody-renewed-mount-binding-required"
+	return receipt, nil
+}
+
 func (i *Installer) readOriginalNonceMaterial(ctx context.Context, enrollment EnrollmentPin, pin BootstrapSourceFilePin) (OriginalNonceMaterial, error) {
+	return i.readOriginalNonceMaterialAt(ctx, enrollment, pin, time.Now().UTC(), false)
+}
+
+func (i *Installer) readOriginalNonceMaterialAt(ctx context.Context, enrollment EnrollmentPin, pin BootstrapSourceFilePin, now time.Time, expired bool) (OriginalNonceMaterial, error) {
 	var zero OriginalNonceMaterial
 	raw, err := readBootstrapSourcePin(pin, 262144)
 	var signed signedOriginalNonceMaterial
 	var r OriginalNonceMaterial
-	if err != nil || decodeExact(raw, &signed) != nil || !ed25519.Verify(i.public, append([]byte(originalNonceMaterialDomain), signed.Record...), signed.Signature) || decodeExact(signed.Record, &r) != nil || r.Version != "original-owner-nonce-file-material.v1" || r.PlanSHA256 != i.planHash || r.Enrollment != enrollment || r.Namespace != i.plan.Target.Namespace || r.NamespaceUID != i.plan.Target.NamespaceUID || time.Now().Before(r.NotBefore) || !time.Now().Before(r.Until) {
+	if err != nil || decodeExact(raw, &signed) != nil || !ed25519.Verify(i.public, append([]byte(originalNonceMaterialDomain), signed.Record...), signed.Signature) || decodeExact(signed.Record, &r) != nil || r.Version != "original-owner-nonce-file-material.v1" || r.PlanSHA256 != i.planHash || r.Enrollment != enrollment || r.Namespace != i.plan.Target.Namespace || r.NamespaceUID != i.plan.Target.NamespaceUID {
+		return zero, ErrInstall
+	}
+	if now.Before(r.NotBefore) || !r.NotBefore.Before(r.Until) || r.Until.Sub(r.NotBefore) > 24*time.Hour || expired == now.Before(r.Until) {
 		return zero, ErrInstall
 	}
 	material, err := readBootstrapSourcePin(r.Material, 32)

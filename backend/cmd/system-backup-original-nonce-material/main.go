@@ -1,4 +1,4 @@
-// Original owner first nonce-file issue / same-intent recovery / current mount
+// Original owner nonce-file issue / same-intent recovery / renewal / current mount
 // binding. Outputs are actual producer facts, never caller authorization JSON.
 package main
 
@@ -19,7 +19,7 @@ import (
 func run(ctx context.Context, args []string, out io.Writer) int {
 	f := flag.NewFlagSet("system-backup-original-nonce-material", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
-	action := f.String("action", "", "issue, resume (same intent only), or bind (actual mount only)")
+	action := f.String("action", "", "issue, resume (same intent), renew (expired custody), or bind (actual mount)")
 	planFile := f.String("plan-file", "", "original installation plan")
 	planSHA := f.String("plan-sha256", "", "original plan hash")
 	publicFile := f.String("issuer-public-file", "", "original enrolled public key")
@@ -32,10 +32,10 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	privateFile := f.String("issuer-private-file", "", "original enrolled private key")
 	enrollmentFile := f.String("enrollment-pin-file", "", "actual original enrollment output")
 	enrollmentSHA := f.String("enrollment-pin-sha256", "", "original enrollment pin")
-	directory := f.String("output-directory", "", "private issue/bind output; resume uses SAME original directory")
-	untilText := f.String("until", "", "issue only: fixed RFC3339Nano expiry, at most24h, never renewed on resume")
-	sourceFile := f.String("source-file", "", "bind only: issued actual source file")
-	sourceSHA := f.String("source-sha256", "", "bind only: issued actual source hash")
+	directory := f.String("output-directory", "", "private output; resume uses the original issue directory")
+	untilText := f.String("until", "", "issue or renew expiry (RFC3339Nano, at most 24h)")
+	sourceFile := f.String("source-file", "", "bind or renew: issued actual source file")
+	sourceSHA := f.String("source-sha256", "", "bind or renew: issued actual source hash")
 	requestFile := f.String("request-files-file", "", "bind only: producer-selected request files DATA")
 	requestSHA := f.String("request-files-sha256", "", "bind only: actual request selection hash")
 	deployment := f.String("controller-deployment", "", "actual original controller")
@@ -50,17 +50,22 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			return 2
 		}
 	}
-	if *action != "issue" && *action != "resume" && *action != "bind" || *action != "issue" && *untilText != "" {
+	if *action != "issue" && *action != "resume" && *action != "bind" && *action != "renew" {
 		return 2
 	}
 	var until time.Time
 	var request install.RequestFiles
 	var err error
-	if *action == "issue" {
+	if *action == "issue" || *action == "renew" {
 		until, err = time.Parse(time.RFC3339Nano, *untilText)
 		if err != nil {
 			return 2
 		}
+	} else if *untilText != "" {
+		return 2
+	}
+	if *action == "renew" && (*sourceFile == "" || *sourceSHA == "" || *requestFile != "" || *requestSHA != "" || *deployment != "" || *pod != "" || *container != "" || *volume != "") {
+		return 2
 	}
 	if *action == "bind" {
 		for _, v := range []*string{sourceFile, sourceSHA, requestFile, requestSHA, deployment, pod, container, volume} {
@@ -124,6 +129,8 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		receipt, err = installer.PrepareOriginalNonceMaterial(active, password, pin, install.OriginalNonceMaterialOptions{OutputDirectory: *directory, Until: until}, private)
 	case "resume":
 		receipt, err = installer.ResumeOriginalNonceMaterial(active, password, pin, *directory, private)
+	case "renew":
+		receipt, err = installer.RenewOriginalNonceMaterial(active, password, pin, install.BootstrapSourceFilePin{File: *sourceFile, SHA256: *sourceSHA}, install.OriginalNonceMaterialOptions{OutputDirectory: *directory, Until: until}, private)
 	case "bind":
 		receipt, err = installer.BindOriginalNonceMaterial(active, password, pin, install.OriginalNonceMountOptions{Source: install.BootstrapSourceFilePin{File: *sourceFile, SHA256: *sourceSHA}, Request: request, ControllerDeployment: *deployment, ControllerPod: *pod, Container: *container, Volume: *volume, OutputDirectory: *directory}, private)
 	}

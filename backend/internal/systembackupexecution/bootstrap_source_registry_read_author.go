@@ -23,7 +23,17 @@ type OriginalBootstrapReadInputs struct {
 // ProduceOriginalBootstrapReadDefinition signs only the original controller's
 // bootstrap metadata delegation. The full capture material path stays free for
 // the independent worker mapping, grants, and ordinary runtime materializer.
-func ProduceOriginalBootstrapReadDefinition(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, password []byte, enrollment install.EnrollmentPin, key []byte, in OriginalBootstrapReadInputs) (_ install.BootstrapSourceFilePin, resultErr error) {
+func ProduceOriginalBootstrapReadDefinition(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, password []byte, enrollment install.EnrollmentPin, key []byte, in OriginalBootstrapReadInputs) (install.BootstrapSourceFilePin, error) {
+	return produceOriginalBootstrapReadDefinition(ctx, owner, runtimeDB, password, enrollment, key, in, false)
+}
+
+// ProduceOriginalBootstrapReadDefinitionForMinIOMetadata selects the original
+// pre-adoption metadata SQL owner for the same bounded delegation.
+func ProduceOriginalBootstrapReadDefinitionForMinIOMetadata(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, password []byte, enrollment install.EnrollmentPin, key []byte, in OriginalBootstrapReadInputs) (install.BootstrapSourceFilePin, error) {
+	return produceOriginalBootstrapReadDefinition(ctx, owner, runtimeDB, password, enrollment, key, in, true)
+}
+
+func produceOriginalBootstrapReadDefinition(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, password []byte, enrollment install.EnrollmentPin, key []byte, in OriginalBootstrapReadInputs, metadataOwner bool) (install.BootstrapSourceFilePin, error) {
 	var zero install.BootstrapSourceFilePin
 	if ctx == nil || owner == nil || runtimeDB == nil || len(key) != ed25519.PrivateKeySize || nativeInstallEmptyDirectory(in.OutputDirectory) != nil {
 		return zero, install.ErrInstall
@@ -120,11 +130,21 @@ func ProduceOriginalBootstrapReadDefinition(ctx context.Context, owner *install.
 		RedisScopeSHA256: redisScope, RedisCredentialSHA256: m.Redis.CredentialSHA256, ObjectScopeSHA256: objectScope, ObjectCredentialSHA256: m.Objects.CredentialSHA256,
 		NotBefore: g.NotBefore, Until: g.ExpiresAt,
 	}
-	signer, err := owner.PrepareSourceMaterialIssue(ctx, password, enrollment, intent, runtimeDB)
+	var signer *install.SourceMaterialIssuer
+	signerCtx := ctx
+	if metadataOwner {
+		var closeScope context.CancelFunc
+		signer, signerCtx, closeScope, err = owner.PrepareSourceMaterialIssueForMinIOMetadata(ctx, password, enrollment, intent, runtimeDB)
+		if err == nil {
+			defer closeScope()
+		}
+	} else {
+		signer, err = owner.PrepareSourceMaterialIssue(ctx, password, enrollment, intent, runtimeDB)
+	}
 	if err != nil {
 		return zero, err
 	}
-	signed, err := signer.SignControllerMetadata(ctx, install.ControllerSourceMetadataGrant{
+	signed, err := signer.SignControllerMetadata(signerCtx, install.ControllerSourceMetadataGrant{
 		Version: sourceMetadataGrantVersion, InstallationID: intent.InstallationID, Namespace: intent.Namespace, NamespaceUID: intent.NamespaceUID,
 		ConfigSHA256: intent.ConfigSHA256, DeploymentConfigSHA256: intent.DeploymentConfigSHA256, CaptureGrantSHA256: intent.CaptureGrantSHA256,
 		ControllerOwner: intent.ControllerOwner, ControllerDeployment: intent.ControllerDeployment, ControllerDeploymentUID: intent.ControllerDeploymentUID,
@@ -170,7 +190,7 @@ func ProduceOriginalBootstrapReadDefinition(ctx context.Context, owner *install.
 		}
 	}
 	raw, err := json.Marshal(d)
-	if err != nil || signer.Recheck(ctx) != nil || author.RecheckAuthority(ctx) != nil {
+	if err != nil || signer.Recheck(signerCtx) != nil || author.RecheckAuthority(ctx) != nil {
 		return zero, install.ErrInstall
 	}
 	for _, f := range []struct {
@@ -181,7 +201,7 @@ func ProduceOriginalBootstrapReadDefinition(ctx context.Context, owner *install.
 			return zero, err
 		}
 	}
-	if signer.Recheck(ctx) != nil || author.RecheckAuthority(ctx) != nil {
+	if signer.Recheck(signerCtx) != nil || author.RecheckAuthority(ctx) != nil {
 		return zero, install.ErrInstall
 	}
 	return install.BootstrapSourceFilePin{File: definition, SHA256: hash(raw)}, nil

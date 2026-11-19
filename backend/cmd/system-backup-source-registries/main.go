@@ -176,7 +176,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		required = append(required, "source-selection-file", "source-selection-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "output-directory")
 	case "prepare-mount-materials":
 		required = append(required, "source-selection-file", "source-selection-sha256", "mount-layouts-file", "mount-layouts-sha256", "output-directory")
-	case "prepare-v2-read":
+	case "prepare-v2-read", "prepare-v2-read-minio-metadata":
 		required = append(required, "definition-file", "definition-sha256", "issuer-private-file", "runtime-dsn-file")
 	case "issue-v2":
 		required = append(required, "definition-file", "definition-sha256", "consumption-file", "consumption-sha256", "request-files-file", "request-files-sha256", "bundle-file", "bundle-sha256", "issuer-private-file", "output-directory")
@@ -379,7 +379,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 1
 	}
 	defer clear(key)
-	if action == "prepare-v2-read" {
+	if action == "prepare-v2-read" || action == "prepare-v2-read-minio-metadata" {
 		var in execution.OriginalBootstrapReadInputs
 		if pinnedJSON(get("definition-file"), get("definition-sha256"), &in) != nil ||
 			in.IssuerPublic != (install.BootstrapSourceFilePin{File: get("issuer-public-file"), SHA256: get("issuer-public-sha256")}) {
@@ -390,7 +390,11 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			return 1
 		}
 		defer runtimeDB.Close()
-		receipt, err := execution.ProduceOriginalBootstrapReadDefinition(active, installer, runtimeDB, password, enrollment, key, in)
+		produce := execution.ProduceOriginalBootstrapReadDefinition
+		if action == "prepare-v2-read-minio-metadata" {
+			produce = execution.ProduceOriginalBootstrapReadDefinitionForMinIOMetadata
+		}
+		receipt, err := produce(active, installer, runtimeDB, password, enrollment, key, in)
 		if err != nil {
 			return 1
 		}

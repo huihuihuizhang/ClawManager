@@ -93,6 +93,21 @@ func (i *Installer) PrepareSourceMaterialIssue(ctx context.Context, password []b
 	return p, nil
 }
 
+// PrepareSourceMaterialIssueForMinIOMetadata uses the original metadata SQL
+// owner's authenticated profile for a pre-adoption source delegation.
+func (i *Installer) PrepareSourceMaterialIssueForMinIOMetadata(ctx context.Context, password []byte, enrollment EnrollmentPin, intent SourceMaterialIntent, runtimeDB *sql.DB) (*SourceMaterialIssuer, context.Context, context.CancelFunc, error) {
+	actual, closeScope, err := i.originalMetadataOwnerContext(ctx, runtimeDB, password, enrollment)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	signer, err := i.PrepareSourceMaterialIssue(actual, password, enrollment, intent, runtimeDB)
+	if err != nil {
+		closeScope()
+		return nil, nil, nil, err
+	}
+	return signer, actual, closeScope, nil
+}
+
 func (p *SourceMaterialIssuer) Recheck(ctx context.Context) error {
 	if p == nil || p.operator == nil || !p.operator.live(ctx) || p.operator.authority(ctx, p.enrollment) != nil {
 		return ErrInstall
