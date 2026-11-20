@@ -137,6 +137,10 @@ func (i *Installer) runOriginalFirstAdoptionProductionForSQLProfile(ctx context.
 	}
 	installed, e := i.PrepareRunAndInstallOriginalRuntimeC1(active, runtimeDB, password, enrollment, in.Provider, c1Raw, in.C1Invocation.SHA256, issuerPrivate)
 	if e != nil {
+		var phase originalC1PhaseFailure
+		if errors.As(e, &phase) {
+			return fail(phase.stage, e)
+		}
 		return fail("native_material_c1_once_runtime_install", e)
 	}
 	defer installed.Close()

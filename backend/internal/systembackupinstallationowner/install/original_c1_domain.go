@@ -7,12 +7,10 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"math"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"time"
 
 	bs "clawreef/internal/systembackupbootstrapsecurity"
@@ -32,6 +30,7 @@ type OriginalC1DomainInputs struct {
 	Request                 RequestFiles
 	Channel, CapacityReport BootstrapSourceFilePin
 	OutputDirectory         string
+	Recovery                *OriginalC1UnusedDomainRecoveryInputs `json:",omitempty"`
 }
 
 // OriginalC1Production is process-local original enrollment state. It is not
@@ -56,6 +55,7 @@ type OriginalC1Production struct {
 	failed         bool
 	backing        *ev.OriginalC1BackingStoreSource
 	backingBinding *OriginalC1BackingReceipt
+	recovery       *originalC1UnusedDomainRecovery
 }
 
 func (*OriginalC1Production) MarshalJSON() ([]byte, error) { return nil, ErrInstall }
@@ -90,6 +90,7 @@ type originalC1DomainSource struct {
 	Username, InstallerAccount string
 	Admission                  pd.UnconfiguredAdmission
 	NotBefore, Until           time.Time
+	Recovery                   *OriginalC1UnusedDomainRecoveryInputs `json:",omitempty"`
 }
 
 // BeginOriginalC1Production is the actual first-domain constructor. It performs
@@ -143,11 +144,8 @@ func (i *Installer) BeginOriginalC1Production(ctx context.Context, password []by
 		return nil, zero, ErrInstall
 	}
 	report.ObservedAt = report.ObservedAt.UTC()
-	var fields map[string]json.RawMessage
-	if json.Unmarshal(request.config.CanonicalJSON(), &fields) != nil {
-		return nil, zero, ErrInstall
-	}
-	capacity, err := strconv.ParseInt(string(fields["control_metadata_capacity_bytes"]), 10, 64)
+	initialization, err := request.config.DisabledInitializationPlan(g)
+	capacity := initialization.CapacityBytes
 	if err != nil || capacity < 1<<30 || capacity > 1<<40 {
 		return nil, zero, ErrInstall
 	}
@@ -169,7 +167,14 @@ func (i *Installer) BeginOriginalC1Production(ctx context.Context, password []by
 		return nil, zero, ErrInstall
 	}
 	scope := pd.Scope{ServerUUID: pd.ServerUUID(g.ServerUUID), Database: pd.Database(g.Database), Installation: pd.Installation(g.InstallationID)}
-	source := originalC1DomainSource{Version: originalC1DomainSourceVersion, PlanSHA256: i.planHash, Enrollment: enrollment, Request: in.Request, Channel: in.Channel, CapacityReport: in.CapacityReport, Scope: scope, ActorID: op.userID, Username: g.Username, InstallerAccount: i.plan.InstallerDatabaseAccount, Admission: admission, NotBefore: now, Until: until}
+	recovery, err := op.readOriginalC1UnusedDomainRecovery(in.Recovery, enrollment, scope, now)
+	if err != nil {
+		return nil, zero, err
+	}
+	if recovery != nil {
+		in.Recovery = &recovery.input
+	}
+	source := originalC1DomainSource{Version: originalC1DomainSourceVersion, PlanSHA256: i.planHash, Enrollment: enrollment, Request: in.Request, Channel: in.Channel, CapacityReport: in.CapacityReport, Scope: scope, ActorID: op.userID, Username: g.Username, InstallerAccount: i.plan.InstallerDatabaseAccount, Admission: admission, NotBefore: now, Until: until, Recovery: in.Recovery}
 	raw, err := canonical(source)
 	if err != nil {
 		return nil, zero, ErrInstall
@@ -184,12 +189,17 @@ func (i *Installer) BeginOriginalC1Production(ctx context.Context, password []by
 	if request.recheck(i) != nil || op.authority(ctx, enrollment) != nil || writeNewFiles(in.OutputDirectory, map[string][]byte{"c1-domain.source.json": raw, "c1-domain.source.signature": signature}) != nil {
 		return nil, zero, ErrInstall
 	}
-	p := &OriginalC1Production{ctx: ctx, operator: op, request: request, enrollment: enrollment, input: in, channel: channel, admission: admission, profile: bytes.Clone(raw), signature: bytes.Clone(signature), profileSHA: hash(raw), report: report, capacity: capacity, until: until}
+	p := &OriginalC1Production{ctx: ctx, operator: op, request: request, enrollment: enrollment, input: in, channel: channel, admission: admission, profile: bytes.Clone(raw), signature: bytes.Clone(signature), profileSHA: hash(raw), report: report, capacity: capacity, until: until, recovery: recovery}
 	p.origin = p
 	if p.recheckPrepared() != nil {
 		return nil, zero, ErrInstall
 	}
 	open := pd.DomainOpenRequest{Scope: scope, Operation: "provision", ExpectedEpoch: "0", ExpectedRowVersion: "0", DeploymentHash: pd.Hash(p.profileSHA)}
+	if recovery != nil {
+		open.Operation = "rotate"
+		open.ExpectedEpoch = pd.ZeroCounter(recovery.epoch)
+		open.ExpectedRowVersion = pd.ZeroCounter(recovery.epoch)
+	}
 	service, err := pd.NewDomainOpener(i.db, scope, &originalC1DomainEnvironment{source: p, request: open})
 	if err != nil {
 		return nil, zero, err
@@ -293,7 +303,9 @@ func (s *originalC1DomainSession) LockInstallation(ctx context.Context, tx pd.SQ
 	if rows.Err() != nil || rows.NextResultSet() || rows.Close() != nil {
 		return ErrInstall
 	}
-	rows, err = tx.QueryContext(ctx, "SELECT id,origin_installation_id,version,config_sha256,enabled,nonce_hmac_ref_version,nonce_hmac_identity_hash FROM system_backup_v2_configs FORCE INDEX(uk_sb_config_version) ORDER BY origin_installation_id,version FOR UPDATE")
+	// The repeatable-read config census needs a shared range lock, and the
+	// installation owner only has SELECT on the configuration table.
+	rows, err = tx.QueryContext(ctx, "SELECT id,origin_installation_id,version,config_sha256,enabled,nonce_hmac_ref_version,nonce_hmac_identity_hash FROM system_backup_v2_configs FORCE INDEX(uk_sb_config_version) ORDER BY origin_installation_id,version FOR SHARE")
 	if err != nil {
 		return ErrInstall
 	}
@@ -334,10 +346,17 @@ func (s *originalC1DomainSession) current(ctx context.Context, tx pd.ReadSQL) er
 }
 
 func (s *originalC1DomainSession) Authorize(ctx context.Context, tx pd.SQL, request pd.DomainOpenRequest, prior *pd.DomainRecord) (pd.DomainOpenAdmission, error) {
-	if request != s.request || prior != nil || s.current(ctx, tx) != nil {
+	if request != s.request || s.current(ctx, tx) != nil {
 		return pd.DomainOpenAdmission{}, ErrInstall
 	}
 	p := s.source
+	if p.recovery != nil {
+		if request.Operation != "rotate" || p.recovery.lockUnusedPrior(ctx, tx, prior) != nil {
+			return pd.DomainOpenAdmission{}, ErrInstall
+		}
+	} else if prior != nil || request.Operation != "provision" {
+		return pd.DomainOpenAdmission{}, ErrInstall
+	}
 	// ManagementAllowed is produced ONLY after the actual original native
 	// enrollment + live independent local-admin/first-head SQL checks above.
 	until := pd.Timestamp(p.until.UTC().Format("2006-01-02T15:04:05.000000Z"))
@@ -383,12 +402,27 @@ func (s *originalC1DomainSession) Audit(ctx context.Context, tx pd.SQL, request 
 	if request != s.request || !s.source.live(ctx) || !s.reserved || phase != "intent" && phase != "result" || phase == "intent" && s.intent || phase == "result" && (!s.intent || s.result) {
 		return ErrInstall
 	}
-	details, err := canonical(struct{ Version, Request, Installation string }{"original-enrolled-c1-domain-audit.v1", string(s.hash), string(request.Scope.Installation)})
+	action := "system_backup.c1_domain."
+	var previousDomain, previousSource, fencedGrant, acquireReceipt string
+	if s.source.recovery != nil {
+		action = "system_backup.c1_domain_recovery."
+		previousDomain = s.source.recovery.input.Domain.SHA256
+		previousSource = s.source.recovery.input.Source.SHA256
+		if orphan := s.source.recovery.orphan; orphan != nil {
+			fencedGrant = string(orphan.Next.GrantID)
+			acquireReceipt = s.source.recovery.input.Orphan.ReceiptSHA256
+		}
+	}
+	details, err := canonical(struct {
+		Version, Request, Installation string
+		PreviousDomain, PreviousSource string `json:",omitempty"`
+		FencedGrant, AcquireReceipt    string `json:",omitempty"`
+	}{"original-enrolled-c1-domain-audit.v1", string(s.hash), string(request.Scope.Installation), previousDomain, previousSource, fencedGrant, acquireReceipt})
 	if err != nil || len(details) > 4096 {
 		return ErrInstall
 	}
 	write, ok := tx.(*pd.Transaction)
-	if !ok || write.CAS(ctx, "INSERT INTO audit_logs (user_id,action,resource_type,details) VALUES (?,?,'system_backup',?)", s.source.operator.userID, "system_backup.c1_domain."+phase, string(details)) != nil {
+	if !ok || write.CAS(ctx, "INSERT INTO audit_logs (user_id,action,resource_type,details) VALUES (?,?,'system_backup',?)", s.source.operator.userID, action+phase, string(details)) != nil {
 		return ErrInstall
 	}
 	if phase == "intent" {
@@ -400,7 +434,11 @@ func (s *originalC1DomainSession) Audit(ctx context.Context, tx pd.SQL, request 
 }
 
 func (s *originalC1DomainSession) Recheck(ctx context.Context, tx pd.ReadSQL, request pd.DomainOpenRequest, domain pd.DomainRecord, now time.Time) error {
-	if request != s.request || !s.reserved || !s.intent || !s.result || !s.source.live(ctx) || !originalC1CapacityFresh(s.source.report, now) || !now.Before(s.source.until) || s.current(ctx, tx) != nil || domain.Scope != request.Scope || domain.State != "open" || domain.Epoch != "1" || domain.RowVersion != "1" || !reflect.DeepEqual(domain.Admission, pd.Admission{Unconfigured: &s.source.admission}) || domain.IssuerIdentityHash != pd.Hash(hash(s.source.operator.installer.public)) {
+	next := pd.Counter("1")
+	if s.source.recovery != nil {
+		next = s.source.recovery.next
+	}
+	if request != s.request || !s.reserved || !s.intent || !s.result || !s.source.live(ctx) || !originalC1CapacityFresh(s.source.report, now) || !now.Before(s.source.until) || s.current(ctx, tx) != nil || domain.Scope != request.Scope || domain.State != "open" || domain.Epoch != next || domain.RowVersion != next || !reflect.DeepEqual(domain.Admission, pd.Admission{Unconfigured: &s.source.admission}) || domain.IssuerIdentityHash != pd.Hash(hash(s.source.operator.installer.public)) {
 		return ErrInstall
 	}
 	var gate string

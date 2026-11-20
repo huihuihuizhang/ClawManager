@@ -202,20 +202,9 @@ func DecodeStoredRecord(row StoredRecord, scope Scope, out any) error {
 	if !bytes.Equal(digest, wantHash[:]) {
 		return ErrInvalid
 	}
-	tree, e := parseFrame(raw, s.limit)
+	next, e := decodeStoredBytes(raw, s.limit, scope, out)
 	if e != nil {
 		return e
-	}
-	jsonBytes, e := json.Marshal(tree)
-	if e != nil {
-		return ErrInvalid
-	}
-	next := reflect.New(reflect.ValueOf(out).Elem().Type())
-	if e = DecodeRecord(jsonBytes, next.Interface()); e != nil {
-		return e
-	}
-	if next.Elem().FieldByName("Scope").Interface().(Scope) != scope {
-		return ErrInvalid
 	}
 	expected, e := EncodeStoredRecord(next.Interface())
 	if e != nil {
@@ -232,6 +221,42 @@ func DecodeStoredRecord(row StoredRecord, scope Scope, out any) error {
 	}
 	reflect.ValueOf(out).Elem().Set(next.Elem())
 	return nil
+}
+
+// DecodeDomainRecordBytes validates a canonical copy of a historical domain.
+// Its caller must verify provenance. It supplies neither a live SQL row nor
+// the immutable projections checked by DecodeStoredRecord.
+func DecodeDomainRecordBytes(raw []byte, scope Scope) (DomainRecord, error) {
+	var out DomainRecord
+	next, err := decodeStoredBytes(raw, 16384, scope, &out)
+	if err != nil {
+		return out, err
+	}
+	domain := next.Interface().(*DomainRecord)
+	expected, err := EncodeStoredRecord(domain)
+	if err != nil || !bytes.Equal(raw, expected.Columns["record_bytes"].([]byte)) {
+		return out, ErrInvalid
+	}
+	return *domain, nil
+}
+
+func decodeStoredBytes(raw []byte, limit int, scope Scope, out any) (reflect.Value, error) {
+	tree, err := parseFrame(raw, limit)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	body, err := json.Marshal(tree)
+	if err != nil {
+		return reflect.Value{}, ErrInvalid
+	}
+	next := reflect.New(reflect.ValueOf(out).Elem().Type())
+	if err = DecodeRecord(body, next.Interface()); err != nil {
+		return reflect.Value{}, err
+	}
+	if next.Elem().FieldByName("Scope").Interface().(Scope) != scope {
+		return reflect.Value{}, ErrInvalid
+	}
+	return next, nil
 }
 
 func sameStoredValue(want, got any) bool {

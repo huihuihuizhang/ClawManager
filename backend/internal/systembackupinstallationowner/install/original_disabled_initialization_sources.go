@@ -154,12 +154,16 @@ func originalDisabledLockConfigPrefix(ctx context.Context, tx *sql.Tx, installat
 }
 
 func originalDisabledConfigPrefix(ctx context.Context, tx *sql.Tx, installation string, absent bool) error {
-	suffix := " FOR SHARE"
+	installationLock := " FOR SHARE"
 	if absent {
-		suffix = " FOR UPDATE"
+		installationLock = " FOR UPDATE"
 	}
-	for _, query := range []string{"SELECT origin_installation_id FROM system_backup_v2_installation_state ORDER BY origin_installation_id", "SELECT origin_installation_id FROM system_backup_v2_configs FORCE INDEX(uk_sb_config_version) ORDER BY origin_installation_id,version"} {
-		rows, e := tx.QueryContext(ctx, query+suffix)
+	queries := []string{
+		"SELECT origin_installation_id FROM system_backup_v2_installation_state ORDER BY origin_installation_id" + installationLock,
+		"SELECT origin_installation_id FROM system_backup_v2_configs FORCE INDEX(uk_sb_config_version) ORDER BY origin_installation_id,version FOR SHARE",
+	}
+	for _, query := range queries {
+		rows, e := tx.QueryContext(ctx, query)
 		if e != nil {
 			return ErrInstall
 		}

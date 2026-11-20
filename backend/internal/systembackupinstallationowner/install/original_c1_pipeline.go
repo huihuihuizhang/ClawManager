@@ -78,6 +78,14 @@ type OriginalC1SigningPipelineInputs struct {
 	OutputDirectory                                          string
 }
 
+type originalC1PhaseFailure struct {
+	stage string
+	cause error
+}
+
+func (e originalC1PhaseFailure) Error() string { return e.stage }
+func (e originalC1PhaseFailure) Unwrap() error { return e.cause }
+
 func c1random(prefix string) (string, error) {
 	raw := make([]byte, 16)
 	if _, err := rand.Read(raw); err != nil {
@@ -191,7 +199,7 @@ func (p *OriginalC1Production) produceOriginalC1Observed(ctx context.Context, ca
 	}
 	command, err := r.lifecycle.Execute(ctx, r.command, nil)
 	if err != nil || command.Handle == nil || command.Replayed {
-		return nil, errors.Join(ErrInstall, err)
+		return nil, originalC1PhaseFailure{"original_c1_acquire", errors.Join(ErrInstall, err)}
 	}
 	r.handle, r.commandReceipt = command.Handle, command.Receipt
 	r.calls = &originalC1ExecutionSwitch{raw: &originalC1ExecutionAuthority{r}}
@@ -205,16 +213,16 @@ func (p *OriginalC1Production) produceOriginalC1Observed(ctx context.Context, ca
 	}
 	r.probe, err = r.execution.BeginCall(ctx, r.handle, pd.CallRequest{Purpose: "probe", EvidenceID: evidenceID, RefIdentityHash: native.target.IdentityHash, RefVersion: native.target.RefVersion, PolicyHash: pd.Hash(native.policy), BudgetUntil: c1stamp(probeBudget)}, nil)
 	if err != nil {
-		return nil, err
+		return nil, originalC1PhaseFailure{"original_c1_probe_authority", err}
 	}
 	if err = native.observe(ctx, r.probe, runID); err != nil {
-		return nil, err
+		return nil, originalC1PhaseFailure{"original_c1_probe_observation", err}
 	}
 	r.until = native.until
 	r.observation = pd.ObservationRequest{ExpectedRunVersion: r.probe.View().Facts.Run.RowVersion, ObservedAt: c1stamp(native.started), ExpiresAt: c1stamp(native.until), AttestationHash: pd.Hash(native.attestation)}
 	observed, err := r.execution.BindObservation(ctx, r.handle, r.probe, r.observation)
 	if err != nil {
-		return nil, err
+		return nil, originalC1PhaseFailure{"original_c1_bind_observation", err}
 	}
 	identity := native.identity(string(evidenceID))
 	r.preparation = ev.SystemExecutionPreparationPolicy{Scope: p.domain.Scope, RunID: pd.ID(runID), InputHash: input, EvaluatorProfileHash: string(native.target.EvaluatorProfileHash), SubjectIdentityHash: string(native.subject), IssuerIdentityHash: string(p.domain.IssuerIdentityHash), Identity: identity, Content: native.contentPolicy(identity), Wrap: wrap.Transit, AuthenticationAudience: in.AuthenticationAudience, AuthenticationTokenFile: in.AuthenticationJWT.File}
@@ -230,7 +238,7 @@ func (p *OriginalC1Production) produceOriginalC1Observed(ctx context.Context, ca
 	r.prepared, err = preparer.Prepare(ctx, identity, c1bodySource(native.body), &encrypted)
 	preparer.Close()
 	if err != nil {
-		return nil, err
+		return nil, originalC1PhaseFailure{"original_c1_prepare_evidence", err}
 	}
 	r.ciphertext = bytes.Clone(encrypted.Bytes())
 	clear(encrypted.Bytes())

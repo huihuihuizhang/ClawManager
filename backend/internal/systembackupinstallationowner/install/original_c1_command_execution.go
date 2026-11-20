@@ -40,7 +40,9 @@ func (s *originalC1CommandSession) Authenticate(ctx context.Context, tx pd.SQL, 
 	if !reflect.DeepEqual(q, s.request) || s.auth(ctx, tx, d) != nil || q.ActorIdentityHash != s.run.native.subject || !reflect.DeepEqual(q.Target, s.run.native.target) || q.Next.SubjectIdentityHash != s.run.native.subject || q.Next.IssuerIdentityHash != d.IssuerIdentityHash {
 		return pd.CommandAdmission{}, ErrInstall
 	}
-	return pd.CommandAdmission{RequestHash: s.requestHash, IdentityHash: s.run.native.subject, Deadlines: []time.Time{s.run.until}, Management: true, HistoricalReceiptRead: true, ReceiptRetentionUntil: c1stamp(s.run.native.retention), AdditionalCost: "16384"}, nil
+	// The authenticated material may carry nanoseconds. Match the precision
+	// of the signed command lease and of the producer/MySQL guard clock.
+	return pd.CommandAdmission{RequestHash: s.requestHash, IdentityHash: s.run.native.subject, Deadlines: []time.Time{c1SQLTime(s.run.until)}, Management: true, HistoricalReceiptRead: true, ReceiptRetentionUntil: c1stamp(s.run.native.retention), AdditionalCost: "16384"}, nil
 }
 func (s *originalC1CommandSession) LockHosts(ctx context.Context, tx pd.SQL, q pd.CommandRequest) error {
 	if !reflect.DeepEqual(q, s.request) || s.run.local(ctx) != nil || !reflect.DeepEqual(q.Next.Host, s.run.native.host) {
@@ -185,8 +187,9 @@ func (s *originalC1ExecutionSession) Authenticate(ctx context.Context, tx pd.SQL
 	if !reflect.DeepEqual(b, s.binding) || s.run.acceptExecution(b) != nil || s.auth(ctx, tx, d) != nil {
 		return pd.ExecutionAdmission{}, ErrInstall
 	}
-	a := pd.ExecutionAdmission{RequestHash: s.requestHash, IdentityHash: s.run.native.subject, IdentityVersionHash: pd.Hash(s.run.native.identityVersion), IdentityExpiresAt: c1stamp(s.run.until), AdditionalCost: "16384"}
+	a := pd.ExecutionAdmission{RequestHash: s.requestHash, IdentityHash: s.run.native.subject, IdentityVersionHash: pd.Hash(s.run.native.identityVersion), IdentityExpiresAt: c1stamp(s.run.until), AdditionalCost: "0"}
 	if b.Kind == "bind_observation" {
+		a.AdditionalCost = "16384"
 		h := pd.Hash(s.run.native.attestation)
 		start, end := c1stamp(s.run.native.started), c1stamp(s.run.native.until)
 		a.AuthenticatedAttestationHash = &h

@@ -34,6 +34,7 @@ def run(argv):
     for name in ('request-files','channel','signing-receipt','wrap-receipt','materials-result','store','credentials','capacity-config','capacity-dsn','capacity-tls','six-definition','minio-definition','status-relay-definition','nonce-binding','catalog-checkpoint'):
         parser.add_argument('--'+name+'-file',type=Path,required=True)
     parser.add_argument('--evidence-ca-binding-file',type=Path)
+    parser.add_argument('--unused-domain-recovery-file',type=Path)
     parser.add_argument('--output-directory',type=Path,required=True)
     a=parser.parse_args(argv)
     request=decode(a.request_files_file)
@@ -57,6 +58,23 @@ def run(argv):
     need(set(capacity)=={'server_uuid','database','user','data_directory','tables'})
     need(capacity['user'].lower()!='root' and capacity['data_directory'].startswith('/') and set(tls)=={'ca_file','ca_sha256','server_name'} and tls['ca_sha256']==pin(tls['ca_file'])['SHA256'])
     need(isinstance(capacity['tables'],list) and len(set(capacity['tables']))==len(capacity['tables']) and {'audit_logs','system_backup_v2_configs','system_backup_v2_backups'}.issubset(capacity['tables']))
+    recovery = None
+    if a.unused_domain_recovery_file is not None:
+        recovery = decode(a.unused_domain_recovery_file)
+        anchors = {'Source', 'Signature', 'Domain'}
+        need(set(recovery) in (anchors, anchors | {'Orphan'}))
+        for name in anchors:
+            value = recovery[name]
+            need(set(value) == {'File', 'SHA256'} and pin(value['File']) == value)
+        if 'Orphan' in recovery:
+            orphan = recovery['Orphan']
+            digests = {'ReceiptSHA256', 'GrantSHA256', 'RunSHA256', 'TargetSHA256'}
+            need(set(orphan) == digests | {'Command'})
+            command = orphan['Command']
+            need(set(command) == {'File', 'SHA256'} and pin(command['File']) == command)
+            for name in digests:
+                value = orphan[name]
+                need(isinstance(value, str) and len(value) == 64 and bytes.fromhex(value).hex() == value)
     # O_EXCL and directory fsync retain the ORIGINAL request, not an overwrite.
     out=a.output_directory;need(out.is_absolute() and not out.exists());out.mkdir(mode=0o700)
     directories={}
@@ -68,6 +86,8 @@ def run(argv):
       'Channel':{'Store':pin(a.store_file),'Credentials':pin(a.credentials_file),'ControllerDeployment':live['Deployment'],'ControllerPod':live['Pod'],'OutputDirectory':directories['channel']},
       'Signing':{'SigningMaterial':sr['Material'],'WrapMaterial':wr['Material'],'STSJWT':{'File':'','SHA256':''},'AuthenticationJWT':{'File':'','SHA256':''},'AuthenticationAudience':'','ControllerDeployment':live['Deployment'],'ControllerPod':live['Pod'],'Capacity':capacity,'OutputDirectory':directories['signing']},
       'CapacityDSN':pin(a.capacity_dsn_file),'CapacityTLS':tls}
+    if recovery is not None:
+        value['Domain']['Recovery'] = recovery
     raw=json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
     target=out/'original-c1-pending-runtime.input.json'
     fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)

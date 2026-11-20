@@ -81,6 +81,20 @@ func (i *Installer) RunOriginalC1SigningProduction(ctx context.Context, password
 	if err != nil || op.authority(ctx, enrollment) != nil {
 		return nil, ErrInstall
 	}
+	// Authenticate the original publication and wrap materials before writing
+	// the producer domain. The signing phase checks both again before acquire.
+	if _, err = readOriginalPublicationSigningFiles(ctx, i.public, in.Signing.SigningMaterial); err != nil {
+		return nil, err
+	}
+	wrapRaw, err := readBootstrapSourcePin(in.Signing.WrapMaterial, 262144)
+	var wrap OriginalC1EvidenceMaterial
+	if err != nil || decodeExact(wrapRaw, &wrap) != nil {
+		return nil, ErrInstall
+	}
+	verifiedWrap, err := i.QueryOriginalC1EvidenceMaterial(ctx, password, enrollment, wrap.Source.OutputDirectory)
+	if err != nil || verifiedWrap.Material != in.Signing.WrapMaterial {
+		return nil, ErrInstall
+	}
 	capacityDB, err := i.openOriginalC1Capacity(in)
 	if err != nil {
 		return nil, err

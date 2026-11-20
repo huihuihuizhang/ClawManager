@@ -1,6 +1,7 @@
 """Ship SHA-pinned P2 C1 inputs between the enrolled master and MySQL node."""
 
 import argparse
+import ast
 import base64
 import binascii
 import hashlib
@@ -10,8 +11,10 @@ import os
 from collections import deque
 from pathlib import Path
 import re
+import shlex
 import stat
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -40,6 +43,13 @@ NAMESPACE = "clawmanager-sbk-validation-system"
 OWNER_POD = "sbk-d4f51b83b57e-controller-59445db996-s6hgn"
 OWNER_UID = "aa811725-f7cc-40bc-b64f-f7467ce4477b"
 OWNER_CID = "e9c58fa5478b"
+DETACHED_MATERIALS = frozenset({
+    "archive-evidence.material.json",
+    "c1-evidence.material.json",
+    "c1-s3.material.json",
+    "original-publication-signing.material.json",
+    "relay-pki.material.json",
+})
 
 
 def require(condition, stage):
@@ -106,6 +116,56 @@ def signed_record(value):
     return None
 
 
+def forward_execution_keys(provider):
+    """Resolve the native Forward grant's relative key references."""
+    core_pin, forward_pin = provider["Core"], provider["Forward"]
+    core_path, forward_path = (path_string(pin["File"]) for pin in (core_pin, forward_pin))
+    require(
+        all(
+            path is not None and within(path, INSTANCE_ROOTS) and path.resolve(strict=True) == path
+            for path in (core_path, forward_path)
+        ),
+        "forward_execution_input_scope",
+    )
+    core = json.loads(pinned_read(core_path, core_pin["SHA256"], 262144))
+    envelope = json.loads(pinned_read(forward_path, forward_pin["SHA256"], 65536))
+    grant = json.loads(base64.b64decode(envelope["payload_base64"], validate=True))
+    directory = path_string(core["key_directory"])
+    require(directory is not None and within(directory, INSTANCE_ROOTS), "forward_execution_key_scope")
+    require(grant["schema_version"] == "system-backup-execution-grant.v1", "forward_execution_grant_version")
+    for pin in grant["record_keys"] + grant.get("capture_keys", []):
+        ref = pin["ref"]
+        require(
+            re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.:-]*", ref) and ".." not in ref,
+            "forward_execution_key_name",
+        )
+        path = directory / ref
+        require(path.resolve(strict=True) == path, "forward_execution_key_path")
+        require(len(pinned_read(path, pin["sha256"], 32)) == 32, "forward_execution_key_size")
+        yield str(path)
+
+
+def longhorn_helper_input(argv, journal):
+    flag = "--longhorn-pre-cold-helper-file"
+    if flag not in argv:
+        return None
+    helper = path_string(argv[argv.index(flag) + 1])
+    digest = argv[argv.index("--longhorn-pre-cold-helper-sha256") + 1]
+    require(helper == journal / "longhorn-pre-cold-helper.py", "longhorn_helper_scope")
+    source = ast.parse(pinned_read(helper, digest, MAX_INPUT))
+    pins = {}
+    for statement in source.body:
+        if isinstance(statement, ast.Assign) and len(statement.targets) == 1:
+            target = statement.targets[0]
+            if isinstance(target, ast.Name) and target.id in ("INPUT_FILE", "INPUT_SHA256"):
+                require(target.id not in pins, "duplicate_longhorn_helper_pin")
+                pins[target.id] = ast.literal_eval(statement.value)
+    path = path_string(pins["INPUT_FILE"])
+    require(path == journal / "longhorn-helper-inputs.json", "longhorn_helper_input_scope")
+    pinned_read(path, pins["INPUT_SHA256"], MAX_INPUT)
+    return str(path)
+
+
 def input_scope(argv, journal, static):
     """Follow existing file locators only, keeping output directories empty."""
     require(journal.parent == BASE and journal.name.startswith("c1-direct-run-"), "journal_scope")
@@ -113,12 +173,31 @@ def input_scope(argv, journal, static):
     require(sha(Path(argv[0]).read_bytes()) == PRODUCTION_SHA, "original_c1_elf")
     static_sizes = {(entry["name"], entry["size"]): entry for entry in static}
     todo = deque(argv)
+    helper_input = longhorn_helper_input(argv, journal)
+    if helper_input is not None:
+        todo.append(helper_input)
     files = {}
     output_dirs = set()
+    retained_records = set()
     while todo:
         value = todo.popleft()
         if isinstance(value, dict):
             todo.extend(value.values())
+            if value.get("Version") == "original-first-adoption-production-inputs.v1":
+                todo.extend(forward_execution_keys(value["Provider"]))
+            if value.get("Version") == "original-c1-pending-runtime-invocation.v3":
+                recovery = value["Domain"].get("Recovery")
+                # Include only the signed lineage pins. Historical credential
+                # files named in the old sources have expired.
+                for _ in range(4):
+                    if recovery is None:
+                        break
+                    source = path_string(recovery["Source"]["File"])
+                    require(source is not None and within(source, INSTANCE_ROOTS), "recovery_source_scope")
+                    retained_records.update((source, path_string(recovery["Domain"]["File"])))
+                    todo.append(recovery)
+                    recovery = json.loads(pinned_read(source, recovery["Source"]["SHA256"], 262144)).get("Recovery")
+                require(recovery is None, "recovery_lineage_depth")
             record = signed_record(value)
             if record is not None:
                 todo.append(record)
@@ -144,7 +223,15 @@ def input_scope(argv, journal, static):
             continue
         raw = path.read_bytes()
         files[path] = {"SHA256": sha(raw), "Size": len(raw), "Static": False}
-        if path.suffix == ".json" and raw:
+        if path.name in DETACHED_MATERIALS:
+            signature = path.with_suffix(".signature")
+            signature_stat = signature.lstat()
+            require(
+                stat.S_ISREG(signature_stat.st_mode) and signature_stat.st_size == 64,
+                "original_material_detached_signature",
+            )
+            todo.append(str(signature))
+        if path.suffix == ".json" and raw and path not in retained_records:
             try:
                 todo.append(json.loads(raw))
             except (UnicodeError, ValueError):
@@ -367,7 +454,7 @@ def start_native(mirror, manifest, stdout, stderr, created):
 
 
 def transport_names(dispatch):
-    require(re.fullmatch(r"p2-c1-20[0-9]{6}-[0-9]{3}", dispatch), "native_dispatch_name")
+    require(re.fullmatch(r"p2-c1-20[0-9]{6}-[0-9]{3,4}", dispatch), "native_dispatch_name")
     return f"{dispatch}.ready", f"{dispatch}.status"
 
 
@@ -509,14 +596,175 @@ def send_and_wait(argv, journal, static, dispatch, until_ns, keys, recipient, ti
     raise TimeoutError("native_dispatch_result_unconfirmed")
 
 
+def longhorn_journal(dispatch):
+    transport_names(dispatch)
+    return BASE / ("c1-direct-run-" + dispatch.removeprefix("p2-c1-"))
+
+
+def write_handoff(path, data):
+    pending = path.with_suffix(".pending")
+    write_new(pending, data)
+    try:
+        os.link(pending, path)
+    finally:
+        pending.unlink()
+
+
+def request_longhorn_delivery(receipt, digest):
+    require(os.uname().nodename == "node1", "longhorn_request_node")
+    journal = receipt.parent.parent
+    dispatch = "p2-c1-" + journal.name.removeprefix("c1-direct-run-")
+    require(journal == longhorn_journal(dispatch), "longhorn_request_journal")
+    require(receipt == journal / "longhorn-journal/host-materials.receipt.json", "longhorn_receipt_scope")
+    pinned_read(receipt, digest, MAX_INPUT)
+    head = json.loads((journal / "head1/head1.result.json").read_bytes())
+    require(
+        head["Version"] == "original-c1-precold-head1-result.v1"
+        and head["Authority"]["HeadRevision"] == 1,
+        "longhorn_request_head1",
+    )
+    request = {"Dispatch": dispatch, "ReceiptSHA256": digest}
+    write_handoff(receipt.parent / "bridge-node-delivery.request.json", encode(request))
+    response = receipt.parent / "bridge-node-delivery.response.json"
+    deadline = time.monotonic() + 165
+    while not response.is_file() and time.monotonic() < deadline:
+        time.sleep(0.1)
+    require(response.is_file(), "longhorn_delivery_unconfirmed")
+    result = json.loads(response.read_bytes())
+    require(result["Request"] == request and result["ExitCode"] == 0, "longhorn_delivery_unconfirmed")
+    readback = result["Readback"]
+    require(readback.get("NativeLoadsReadBack") is True, "longhorn_delivery_readback")
+    print(json.dumps(readback))
+
+
+def relay_longhorn_delivery(dispatch, original_helper, helper_sha, wait_seconds):
+    require(os.uname().nodename == "k8s-master", "longhorn_relay_node")
+    journal = longhorn_journal(dispatch)
+    session = Path("/root/p2-c1-node1-session-" + dispatch.rsplit("-", 1)[1])
+    mirror = session / "mirror"
+    control = journal / "longhorn-journal"
+    remote_control = mirror / control.relative_to("/")
+    marker = remote_control / "bridge-node-delivery.request.json"
+    response = remote_control / "bridge-node-delivery.response.json"
+    require(original_helper.is_relative_to(BASE), "longhorn_original_helper_scope")
+    pinned_read(original_helper, helper_sha, MAX_INPUT)
+    key = Path("/root/.clawmanager-backup-install/observer-node-ssh")
+    known = Path("/root/.ssh/known_hosts")
+    pinned_read(key, "38cb64fca877d377d179e7addd2c0ded1af5c2d916099f5e00fa8ab63d90e0a5", 65536)
+    pinned_read(known, "e805bd19699721370590fcc6ae5c72d82bac508f0a253c1f06d757d731ca8b4f", 65536)
+    ssh = [
+        "/usr/bin/ssh", "-T", "-i", str(key), "-o", "IdentitiesOnly=yes",
+        "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes",
+        "-o", "UserKnownHostsFile=" + str(known), "-o", "ClearAllForwardings=yes",
+        "-o", "ConnectTimeout=8", "root@10.130.35.23",
+    ]
+
+    def read_remote(path, limit, stdout=subprocess.PIPE):
+        return subprocess.run(
+            ssh + [shlex.join(["head", "-c", str(limit + 1), str(path)])],
+            stdin=subprocess.DEVNULL, stdout=stdout, stderr=subprocess.PIPE, timeout=22,
+        )
+
+    deadline = time.monotonic() + wait_seconds
+    while time.monotonic() < deadline:
+        found = read_remote(marker, 4096)
+        if found.returncode == 0:
+            require(0 < len(found.stdout) <= 4096, "longhorn_request_length")
+            request = json.loads(found.stdout)
+            break
+        require(found.returncode == 1 and b"No such file" in found.stderr, "longhorn_request_read")
+        time.sleep(2)
+    else:
+        raise TimeoutError("longhorn_request_not_received")
+    require(
+        set(request) == {"Dispatch", "ReceiptSHA256"} and request["Dispatch"] == dispatch
+        and re.fullmatch(r"[0-9a-f]{64}", request["ReceiptSHA256"]),
+        "longhorn_request_identity",
+    )
+    head = read_remote(mirror / (journal / "head1/head1.result.json").relative_to("/"), MAX_INPUT)
+    require(head.returncode == 0 and len(head.stdout) <= MAX_INPUT, "longhorn_relay_head1_read")
+    authority = json.loads(head.stdout)
+    require(
+        authority["Version"] == "original-c1-precold-head1-result.v1"
+        and authority["Authority"]["HeadRevision"] == 1,
+        "longhorn_relay_head1",
+    )
+    control.mkdir(mode=0o700)
+    write_new(control / "bridge-node-delivery.request.json", encode(request))
+    receipt = control / "host-materials.receipt.json"
+    result = {"Request": request, "ExitCode": 1}
+    try:
+        copied = read_remote(mirror / receipt.relative_to("/"), MAX_INPUT)
+        require(copied.returncode == 0 and len(copied.stdout) <= MAX_INPUT, "longhorn_host_receipt_read")
+        require(sha(copied.stdout) == request["ReceiptSHA256"], "longhorn_host_receipt_digest")
+        value = json.loads(copied.stdout)
+        pairs = value["NodeBundles"]
+        require(
+            value["Status"] == "materialized_uninstalled_no_native_source_proof"
+            and set(pairs) == {"k8s-master", "node1"},
+            "longhorn_host_receipt_roster",
+        )
+        bundles = journal / "longhorn/host-bundles"
+        bundles.parent.mkdir(mode=0o700)
+        bundles.mkdir(mode=0o700)
+        for pin in pairs.values():
+            path = path_string(pin["File"])
+            require(path is not None and path.parent == bundles, "longhorn_bundle_scope")
+            with path.open("xb") as file:
+                copied_bundle = read_remote(mirror / path.relative_to("/"), 256 << 20, stdout=file)
+                file.flush()
+                os.fsync(file.fileno())
+            require(copied_bundle.returncode == 0 and 0 < path.stat().st_size <= 256 << 20, "longhorn_bundle_read")
+            with path.open("rb") as file:
+                require(hashlib.file_digest(file, "sha256").hexdigest() == pin["SHA256"], "longhorn_bundle_digest")
+        write_new(receipt, copied.stdout)
+        run = subprocess.run(
+            ["/usr/bin/python3.12", "-B", str(original_helper), "--host-receipt", str(receipt),
+             "--host-receipt-sha256", request["ReceiptSHA256"]],
+            stdin=subprocess.DEVNULL, capture_output=True, timeout=130,
+        )
+        write_new(control / "original-delivery.stdout.private", run.stdout)
+        write_new(control / "original-delivery.stderr.private", run.stderr)
+        if run.returncode == 0:
+            result = {"Request": request, "ExitCode": 0, "Readback": json.loads(run.stdout)}
+    finally:
+        write_new(control / "bridge-node-delivery.response.json", encode(result))
+        remote_writer = (
+            "import os,sys; from pathlib import Path; os.umask(0o077); p=Path(sys.argv[1]); "
+            "t=p.with_suffix('.pending'); f=t.open('xb'); f.write(sys.stdin.buffer.read(32769)); "
+            "f.flush(); os.fsync(f.fileno()); f.close(); os.link(t,p); t.unlink()"
+        )
+        subprocess.run(
+            ssh + [shlex.join(["/usr/bin/python3.12", "-B", "-c", remote_writer, str(response)])],
+            input=encode(result), capture_output=True, timeout=15, check=True,
+        )
+    require(result["ExitCode"] == 0, "longhorn_original_delivery_unconfirmed")
+    print(json.dumps({"Dispatch": dispatch, "NativeLoadsReadBack": True}))
+
+
 def main():
+    os.umask(0o077)
     parser = argparse.ArgumentParser()
+    if len(sys.argv) > 1 and sys.argv[1] == "--host-receipt":
+        parser.add_argument("--host-receipt", type=Path, required=True)
+        parser.add_argument("--host-receipt-sha256", required=True)
+        args = parser.parse_args()
+        request_longhorn_delivery(args.host_receipt, args.host_receipt_sha256)
+        return
     subcommands = parser.add_subparsers(dest="action", required=True)
     inspect = subcommands.add_parser("inspect")
     inspect.add_argument("--sent", type=Path, required=True)
     inspect.add_argument("--static-receipt", type=Path, required=True)
+    relay = subcommands.add_parser("relay-longhorn")
+    relay.add_argument("--dispatch", required=True)
+    relay.add_argument("--original-helper", type=Path, required=True)
+    relay.add_argument("--original-helper-sha256", required=True)
+    relay.add_argument("--wait-seconds", type=int, required=True)
     args = parser.parse_args()
-    os.umask(0o077)
+    if args.action == "relay-longhorn":
+        require(0 < args.wait_seconds <= 750, "longhorn_relay_wait")
+        relay_longhorn_delivery(args.dispatch, args.original_helper, args.original_helper_sha256, args.wait_seconds)
+        return
     if args.action == "inspect":
         argv = json.loads(args.sent.read_bytes())["Argv"]
         static = json.loads(pinned_read(args.static_receipt, STATIC_STAGE_SHA, MAX_INPUT))

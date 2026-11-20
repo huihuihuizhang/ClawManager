@@ -148,8 +148,11 @@ func (s *originalC1SQLStage) refs(ctx context.Context, tx pd.ReadSQL, request, p
 	}
 	return pd.ReferenceApproval{RequestHash: request, PolicyHash: policy, VersionHash: pd.Hash(s.run.native.referenceHash), DependencyExpiresAt: c1stamp(s.run.until)}, nil
 }
+func c1SQLTime(t time.Time) time.Time {
+	return t.UTC().Truncate(time.Microsecond)
+}
 func c1stamp(t time.Time) pd.Timestamp {
-	return pd.Timestamp(t.UTC().Format("2006-01-02T15:04:05.000000Z"))
+	return pd.Timestamp(c1SQLTime(t).Format("2006-01-02T15:04:05.000000Z"))
 }
 func c1bodySource(raw []byte) ev.Source {
 	owned := bytes.Clone(raw)
