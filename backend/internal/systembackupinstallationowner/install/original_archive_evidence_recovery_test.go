@@ -3,10 +3,41 @@ package install
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	a "clawreef/internal/systembackupkekadapter"
 )
+
+func TestOriginalArchiveRenewalDirectory(t *testing.T) {
+	base := filepath.Join(t.TempDir(), "archive-evidence-recovery")
+	first := strings.Repeat("1", 64)
+	second := strings.Repeat("2", 64)
+	legacy := base + "-renewal"
+	long := base
+	for len(filepath.Base(long+"-renewal")) <= 255 {
+		long += "-renewal"
+	}
+	compact := base + "-renewal-" + first
+	for _, tc := range []struct {
+		name, previous, digest, want string
+	}{
+		{"first legacy", base, first, legacy},
+		{"existing legacy", legacy, first, legacy + "-renewal"},
+		{"component limit", long, first, compact},
+		{"compact successor", compact, second, base + "-renewal-" + second},
+		{"wrong anchor", filepath.Join(filepath.Dir(base), "other-archive-recovery"), first, ""},
+		{"unexpected suffix", base + "-alternate", first, ""},
+		{"unqualified digest", base, "invalid", ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, ok := originalArchiveRenewalDirectory(base, tc.previous, tc.digest)
+			if got != tc.want || ok != (tc.want != "") {
+				t.Fatalf("directory = %q, %t; want %q", got, ok, tc.want)
+			}
+		})
+	}
+}
 
 func TestRecoverOriginalArchiveIntentPreservesBaseline(t *testing.T) {
 	dir := filepath.Clean(t.TempDir())

@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/flowcontrol"
 )
 
 // Both views share the exact authenticated transport. The resource view is
@@ -64,6 +65,16 @@ func ReadPrivateFile(path string, limit int64) ([]byte, error) {
 // an operator identity from kubeconfig fields or SQL credentials alone.
 // Authentication and permission checks happen on every Installer action.
 func OpenConnections(p Plan, kubeconfigFile, kubeconfigSHA, dsnFile, databaseCAFile string) (*sql.DB, kubernetes.Interface, error) {
+	return openConnections(p, kubeconfigFile, kubeconfigSHA, dsnFile, databaseCAFile, false)
+}
+
+// OpenOriginalC1Connections gives the original C1 commands a shared, bounded
+// request budget for their repeated enrollment, actor and permission checks.
+func OpenOriginalC1Connections(p Plan, kubeconfigFile, kubeconfigSHA, dsnFile, databaseCAFile string) (*sql.DB, kubernetes.Interface, error) {
+	return openConnections(p, kubeconfigFile, kubeconfigSHA, dsnFile, databaseCAFile, true)
+}
+
+func openConnections(p Plan, kubeconfigFile, kubeconfigSHA, dsnFile, databaseCAFile string, originalC1 bool) (*sql.DB, kubernetes.Interface, error) {
 	if !validPlan(p) || !digestPattern.MatchString(kubeconfigSHA) {
 		return nil, nil, ErrInstall
 	}
@@ -135,6 +146,9 @@ func OpenConnections(p Plan, kubeconfigFile, kubeconfigSHA, dsnFile, databaseCAF
 		}
 	}
 	cfg.Timeout = 10 * time.Second
+	if originalC1 {
+		cfg.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(20, 10)
+	}
 	httpClient, e := rest.HTTPClientFor(cfg)
 	if e != nil {
 		return nil, nil, ErrInstall

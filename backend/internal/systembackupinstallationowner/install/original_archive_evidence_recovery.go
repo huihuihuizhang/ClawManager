@@ -81,9 +81,8 @@ func (i *Installer) checkArchiveRenewal(recovery OriginalArchiveEvidenceRecovery
 	}
 	dir := filepath.Dir(previous.Material.File)
 	base := filepath.Dir(recovery.Intent.File) + "-recovery"
-	suffix, anchored := strings.CutPrefix(dir, base)
-	if !anchored || strings.ReplaceAll(suffix, "-renewal", "") != "" || privateDirectory(dir) != nil ||
-		expected.Source.OutputDirectory != dir+"-renewal" ||
+	next, ok := originalArchiveRenewalDirectory(base, dir, previous.Material.SHA256)
+	if !ok || privateDirectory(dir) != nil || expected.Source.OutputDirectory != next ||
 		previous.Material.File != filepath.Join(dir, "archive-evidence.material.json") ||
 		previous.Signature.File != filepath.Join(dir, "archive-evidence.material.signature") {
 		return ErrInstall
@@ -104,6 +103,30 @@ func (i *Installer) checkArchiveRenewal(recovery OriginalArchiveEvidenceRecovery
 		return ErrInstall
 	}
 	return nil
+}
+
+// Retain the legacy directory sequence until the next component would exceed
+// the Linux filesystem limit. The compact branch stays under the same original
+// recovery anchor, and each successor is named by its verified predecessor.
+func originalArchiveRenewalDirectory(base, previous, previousSHA string) (string, bool) {
+	const renewal = "-renewal"
+	suffix, anchored := strings.CutPrefix(previous, base)
+	if !anchored || !digestPattern.MatchString(previousSHA) {
+		return "", false
+	}
+	if strings.ReplaceAll(suffix, renewal, "") == "" {
+		next := previous + renewal
+		if len(filepath.Base(next)) <= 255 {
+			return next, true
+		}
+	} else {
+		digest, compact := strings.CutPrefix(suffix, renewal+"-")
+		if !compact || !digestPattern.MatchString(digest) {
+			return "", false
+		}
+	}
+	next := base + renewal + "-" + previousSHA
+	return next, len(filepath.Base(next)) <= 255
 }
 
 // A retained signature identifies the original material for recovery. Live

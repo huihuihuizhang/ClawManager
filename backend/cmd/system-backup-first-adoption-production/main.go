@@ -111,7 +111,11 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if e != nil {
 		return 1
 	}
-	db, kube, e := install.OpenConnections(plan, get("kubeconfig-file"), get("kubeconfig-sha256"), get("dsn-file"), get("database-ca-file"))
+	openConnections := install.OpenConnections
+	if *action == "recover-archive-materials" || *action == "run-minio-metadata" {
+		openConnections = install.OpenOriginalC1Connections
+	}
+	db, kube, e := openConnections(plan, get("kubeconfig-file"), get("kubeconfig-sha256"), get("dsn-file"), get("database-ca-file"))
 	if e != nil {
 		return 1
 	}

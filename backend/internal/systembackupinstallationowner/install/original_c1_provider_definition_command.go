@@ -56,7 +56,7 @@ func RunOriginalC1ProviderDefinitions(ctx context.Context, args []string, out io
 	if e != nil || decodeExact(inraw, &in) != nil {
 		return 1
 	}
-	db, kube, e := OpenConnections(plan, get("kubeconfig-file"), get("kubeconfig-sha256"), get("dsn-file"), get("database-ca-file"))
+	db, kube, e := OpenOriginalC1Connections(plan, get("kubeconfig-file"), get("kubeconfig-sha256"), get("dsn-file"), get("database-ca-file"))
 	if e != nil {
 		return 1
 	}
