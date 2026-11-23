@@ -181,7 +181,11 @@ try {
   if (expected.forbidden_hermes_history) {
     step = 'hermes_history_denied';
     const { instance_id, session_id } = expected.forbidden_hermes_history;
-    const forbidden = await get(`/instances/${instance_id}/hermes-desktop/api/sessions/${encodeURIComponent(session_id)}/messages`);
+    const desktopPath = `/instances/${instance_id}/hermes-desktop`;
+    const bootstrap = await get(`${desktopPath}/bootstrap`);
+    requireThat(bootstrap.status() === 403);
+    receipt.hermes_bootstrap_denied_status = bootstrap.status();
+    const forbidden = await get(`${desktopPath}/api/sessions/${encodeURIComponent(session_id)}/messages`);
     requireThat([401, 403].includes(forbidden.status()));
     receipt.hermes_history_denied_status = forbidden.status();
   }
