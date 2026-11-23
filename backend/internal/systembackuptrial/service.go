@@ -398,34 +398,75 @@ func (s *Service) restoreSettings() []string {
 }
 
 func (s *Service) readiness(ctx context.Context) Readiness {
+	return Readiness{Missing: s.backupReadiness(ctx), RestoreMissing: s.restoreReadiness(ctx)}
+}
+
+func (s *Service) backupReadiness(ctx context.Context) []string {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	var out Readiness
+	var missing []string
 	source, database, err := s.database("SOURCE")
 	if err != nil {
-		out.Missing = append(out.Missing, "source_credential")
+		missing = append(missing, "source_credential")
 	} else {
 		defer source.Close()
 		if err := domain.CheckTrialSource(ctx, source, database, s.value("SOURCE_UUID")); err != nil {
-			out.Missing = append(out.Missing, "source_"+category(err))
+			missing = append(missing, "source_"+category(err))
 		}
 	}
 	key, err := s.key()
 	if err != nil {
-		out.Missing = append(out.Missing, "encryption_key")
+		missing = append(missing, "encryption_key")
 	}
 	defer clear(key)
 	store, err := s.storage()
 	if err != nil {
-		out.Missing = append(out.Missing, "storage_mounts")
+		missing = append(missing, "storage_mounts")
 	} else {
 		defer store.close()
 		if len(key) == 32 && store.probe(ctx, key) != nil {
-			out.Missing = append(out.Missing, "storage_write_readback")
+			missing = append(missing, "storage_write_readback")
 		}
 	}
-	out.RestoreMissing = s.restoreSettings()
-	return out
+	return missing
+}
+
+func (s *Service) restoreReadiness(ctx context.Context) []string {
+	if missing := s.restoreSettings(); len(missing) != 0 {
+		return missing
+	}
+	writer, database, err := s.database("RESTORE")
+	if err != nil {
+		return []string{"restore_credential"}
+	}
+	defer writer.Close()
+	reader, readDatabase, err := s.database("RESTORE_READ")
+	if err != nil {
+		return []string{"restore_read_credential"}
+	}
+	defer reader.Close()
+	if database != readDatabase {
+		return []string{"restore_database_mismatch"}
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+	target := domain.DrillTarget{Database: database, ServerUUID: s.value("RESTORE_UUID"), CheckIsolation: func(ctx context.Context) error {
+		return ctx.Err()
+	}}
+	var missing []string
+	writerAccount, err := domain.CheckTrialTargetAccount(ctx, writer, target, false)
+	if err != nil {
+		missing = append(missing, "restore_writer_"+category(err))
+	}
+	readerAccount, err := domain.CheckTrialTargetAccount(ctx, reader, target, true)
+	if err != nil {
+		missing = append(missing, "restore_reader_"+category(err))
+	}
+	if writerAccount != "" && writerAccount == readerAccount {
+		missing = append(missing, "restore_accounts_shared")
+	}
+	return missing
 }
 
 func category(err error) string {

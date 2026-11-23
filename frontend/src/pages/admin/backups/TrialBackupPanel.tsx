@@ -30,7 +30,7 @@ export default function TrialBackupPanel() {
   useEffect(() => {
     const controller = new AbortController();
     api.get<Readiness>(route + '/readiness', { signal: controller.signal })
-      .then(({ data }) => setReady(data))
+      .then(({ data }) => { if (!controller.signal.aborted) setReady(data); })
       .catch(() => { if (!controller.signal.aborted) setError(true); });
     return () => controller.abort();
   }, [revision]);
@@ -54,6 +54,11 @@ export default function TrialBackupPanel() {
     return () => { controller.abort(); window.clearTimeout(timer); };
   }, [revision]);
 
+  function refreshReadiness() {
+    setReady(undefined);
+    setRevision((value) => value + 1);
+  }
+
   async function start(restore: boolean) {
     setBusy(true);
     setError(false);
@@ -66,7 +71,7 @@ export default function TrialBackupPanel() {
       setError(true);
     } finally {
       setBusy(false);
-      setRevision((value) => value + 1);
+      refreshReadiness();
     }
   }
 
@@ -82,7 +87,17 @@ export default function TrialBackupPanel() {
     restore_credential: '目标写入凭据', restore_read_credential: '目标只读凭据',
     restore_placement: '隔离目标的存储与命名空间', restore_database_name: '隔离库名称',
     restore_artifact_mount: '试行产物只读挂载',
-  } : {};
+    restore_database_mismatch: '写入和只读凭据指向不同的库', restore_accounts_shared: '写入和只读必须使用独立账号',
+    restore_writer_database: '无法使用写入凭据连接目标库', restore_writer_isolation: '写入连接的目标库身份不匹配',
+    restore_reader_database: '无法使用只读凭据连接或检查目标库', restore_reader_isolation: '只读连接身份或 SELECT 授权不符合要求',
+  } : {
+    restore_database_mismatch: 'Writer and reader credentials must point to the same target database',
+    restore_accounts_shared: 'Writer and reader must use separate accounts',
+    restore_writer_database: 'Cannot connect to the target database with the writer credentials',
+    restore_writer_isolation: 'The writer connection returned a different target identity',
+    restore_reader_database: 'Cannot connect to or inspect the target database with the reader credentials',
+    restore_reader_isolation: 'The reader identity or SELECT grants failed validation',
+  };
   const label = (code: string) => labels[code] ?? code.replaceAll('_', ' ');
   const button = 'rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium disabled:opacity-40';
   return <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="trial-backup-title">
@@ -94,13 +109,15 @@ export default function TrialBackupPanel() {
       <button type="button" className={button} disabled={!ready || !!ready.missing?.length || running || busy} onClick={() => void start(false)}>
         {zh ? '创建试行备份' : 'Create trial backup'}
       </button>
-      <button type="button" className={button} onClick={() => { setError(false); setRevision((value) => value + 1); }}>
+      <button type="button" className={button} onClick={() => { setError(false); refreshReadiness(); }}>
         {zh ? '检查试行就绪状态' : 'Check trial readiness'}
       </button>
     </div>
     {error && <p role="alert" className="text-sm text-red-700">{zh ? '试行请求失败，请检查就绪状态后重试。' : 'Trial request failed. Check readiness and try again.'}</p>}
     {!!ready?.missing?.length && <p className="text-sm text-amber-900">{zh ? '备份缺项 · ' : 'Backup requires · '}{ready.missing.map(label).join(' · ')}</p>}
-    {!!ready?.restore_missing?.length && <p className="text-sm text-amber-900">{zh ? '恢复缺项 · ' : 'Restore requires · '}{ready.restore_missing.map(label).join(' · ')}</p>}
+    {ready && (ready.restore_missing?.length
+      ? <p className="text-sm text-amber-900">{zh ? '恢复缺项 · ' : 'Restore requires · '}{ready.restore_missing.map(label).join(' · ')}</p>
+      : <p className="text-sm text-emerald-700">{zh ? '目标库身份和只读授权已校验' : 'Target database identity and read-only grants verified'}</p>)}
     <div className="flex flex-wrap items-end gap-2">
       <label className="flex min-w-0 flex-col gap-1 text-sm text-slate-700">
         {zh ? '试行备份 ID' : 'Trial backup ID'}

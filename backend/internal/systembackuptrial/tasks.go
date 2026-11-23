@@ -38,8 +38,8 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 		c.JSON(http.StatusOK, gin.H{"task": task})
 	})
 	admin.POST("/backups", func(c *gin.Context) {
-		if ready := s.readiness(c.Request.Context()); len(ready.Missing) != 0 {
-			c.JSON(http.StatusServiceUnavailable, ready)
+		if missing := s.backupReadiness(c.Request.Context()); len(missing) != 0 {
+			c.JSON(http.StatusServiceUnavailable, Readiness{Missing: missing})
 			return
 		}
 		s.start(c, "", s.backup)
@@ -50,7 +50,7 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 			c.JSON(http.StatusBadRequest, gin.H{"code": "invalid_backup_id"})
 			return
 		}
-		if missing := s.restoreSettings(); len(missing) != 0 {
+		if missing := s.restoreReadiness(c.Request.Context()); len(missing) != 0 {
 			c.JSON(http.StatusServiceUnavailable, Readiness{RestoreMissing: missing})
 			return
 		}

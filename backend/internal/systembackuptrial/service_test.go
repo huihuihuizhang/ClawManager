@@ -85,8 +85,8 @@ func TestTrialRestoreAdmissionWithOnlyTargetConfiguration(t *testing.T) {
 	}
 	for setting, contents := range map[string]string{
 		"KEY_FILE":              strings.Repeat("ab", 32),
-		"RESTORE_DSN_FILE":      "writer:test@tcp(127.0.0.1:3306)/cm_drill_trial_fixture",
-		"RESTORE_READ_DSN_FILE": "reader:test@tcp(127.0.0.1:3306)/cm_drill_trial_fixture",
+		"RESTORE_DSN_FILE":      "writer:test@tcp(127.0.0.1:1)/cm_drill_trial_fixture",
+		"RESTORE_READ_DSN_FILE": "reader:test@tcp(127.0.0.1:1)/cm_drill_trial_fixture",
 	} {
 		name := filepath.Join(root, setting)
 		if err := os.WriteFile(name, []byte(contents), 0600); err != nil {
@@ -96,8 +96,11 @@ func TestTrialRestoreAdmissionWithOnlyTargetConfiguration(t *testing.T) {
 	}
 	service := New(func(name string) string { return settings[strings.TrimPrefix(name, "SYSTEM_BACKUP_TRIAL_")] })
 	ready := service.readiness(context.Background())
-	if len(ready.Missing) == 0 || len(ready.RestoreMissing) != 0 {
-		t.Fatalf("expected restore-only readiness, got %+v", ready)
+	if got := strings.Join(ready.RestoreMissing, ","); len(ready.Missing) == 0 || got != "restore_writer_database,restore_reader_database" {
+		t.Fatalf("expected both unreachable target credentials to be reported, got %+v", ready)
+	}
+	if got := service.restoreSettings(); len(got) != 0 {
+		t.Fatalf("expected valid restore-only settings, got %v", got)
 	}
 	task := Task{ID: newID(), BackupID: newID()}
 	if err := service.restore(context.Background(), &task); !errors.Is(err, os.ErrNotExist) || task.Stage != "readback" {
@@ -287,6 +290,9 @@ func TestTrialMySQLRoundTrip(t *testing.T) {
 		if target == "second" {
 			t.Setenv("SYSTEM_BACKUP_TRIAL_RESTORE_DSN_FILE", os.Getenv("TRIAL_TEST_REPLAY_DSN_FILE"))
 			t.Setenv("SYSTEM_BACKUP_TRIAL_RESTORE_READ_DSN_FILE", os.Getenv("TRIAL_TEST_REPLAY_READ_DSN_FILE"))
+		}
+		if missing := service.restoreReadiness(ctx); len(missing) != 0 {
+			t.Fatalf("%s target readiness: %v", target, missing)
 		}
 		restore := Task{ID: newID(), BackupID: backup.ID}
 		if err := service.restore(ctx, &restore); err != nil {

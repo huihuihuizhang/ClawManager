@@ -102,15 +102,30 @@ func CheckTrialSource(ctx context.Context, db *sql.DB, database, uuid string) er
 }
 
 func CheckTrialTargetReader(ctx context.Context, db *sql.DB, target DrillTarget) error {
+	_, err := CheckTrialTargetAccount(ctx, db, target, true)
+	return err
+}
+
+// CheckTrialTargetAccount inspects the live identity without changing the target.
+func CheckTrialTargetAccount(ctx context.Context, db *sql.DB, target DrillTarget, readOnly bool) (string, error) {
 	conn, err := db.Conn(ctx)
 	if err != nil {
-		return ErrDatabase
+		return "", ErrDatabase
 	}
 	defer conn.Close()
 	if err := target.check(ctx, conn); err != nil {
-		return err
+		return "", err
 	}
-	return checkSelectOnly(ctx, conn, target.Database)
+	if readOnly {
+		if err := checkSelectOnly(ctx, conn, target.Database); err != nil {
+			return "", err
+		}
+	}
+	var account string
+	if err := conn.QueryRowContext(ctx, "SELECT CURRENT_USER()").Scan(&account); err != nil || account == "" {
+		return "", ErrDatabase
+	}
+	return account, nil
 }
 
 func CaptureTrial(ctx context.Context, db *sql.DB, limits Limits, database, uuid string) (Snapshot, error) {
