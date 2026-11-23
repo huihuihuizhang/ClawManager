@@ -59,7 +59,7 @@
 
 平台先在当前端 namespace 建立 `spec.suspend: true` 的准备 Job，注解 `clawmanager.io/trial-environment-revision` 使用同一个 `revision`。登记其实际名称和 UID。Job 使用独立服务账号及受限的准备权限，在完成所需的 SQL 授权、Secret 或存储配置并验证后退出。保留该 Job 供应用检查结果。为应用服务账号绑定当前 namespace 的 `batch` `jobs` 权限，`resourceNames` 指定该名称，`verbs` 使用 `get` 和 `patch`。
 
-管理员点击「准备试行环境」后，应用仅解除该 Job 的暂停，页面轮询任务状态。Job 完成后，备份或恢复继续使用原有的实时就绪检查。重复点击会读取同一任务状态。Job 失败且需要替换时，平台更新配置版本及新任务 UID。只需展示配置或沿用已人工配置的流程时，可以省略 `prepare_job`。Secret 内容保留在部署授权的文件挂载中。
+管理员点击「准备试行环境」后，应用仅解除该 Job 的暂停，页面轮询任务状态。若 Job 已完成而当前端的密钥或数据库凭据尚未出现在挂载目录，页面会继续复检，最长等待两分钟，待实时就绪检查通过后启用备份或恢复。重复点击会读取同一任务状态。Job 失败且需要替换时，平台更新配置版本及新任务 UID。只需展示配置或沿用已人工配置的流程时，可以省略 `prepare_job`。Secret 内容保留在部署授权的文件挂载中。
 
 ### 运行仓库自带的准备任务
 
@@ -81,6 +81,16 @@ python scripts/system-backup-trial-register.py --config approved.json --side tar
 两端登记在同一集群时，源端资源会包含一条跨 namespace 授权，目标准备服务账号只可读取源端 `key_secret`。先完成源侧准备，再从目标管理员页面启动目标侧准备。目标侧将同一份备份密钥写入自己的独立 Secret，后续复跑使用已保存的目标密钥。另一集群的目标通过平台已有密钥渠道预填对应 `key` 字段。任务检测到已登记密钥消失或变化时会要求平台复核。
 
 目标任务将镜像的固定迁移目录应用到登记的 MySQL UUID 和库名。将该镜像中 `system-backup-migrate -catalog-only` 输出的 `sha256` 填入 `migration_catalog_sha256`。配置 `runtime_secret` 时，同时准备运行核验表。试行 API 使用目标账号和密钥的挂载，恢复入口使用导入卷上的原备份 ID。页面任务通过后，按既定流程转移密文与回执。
+
+### 浏览器验收准备、备份和恢复
+
+使用 `node e2e/backup-trial-live-click.mjs --help` 查看登录和隔离参数。`BACKUP_TRIAL_PREPARE_PROFILE` 指向平台登记生成的当前端 `environment.json`。脚本先核对页面读取的源、目标、版本和 Job UID。在 Job 暂停时点击一次准备，随后等待准备和当前端实时就绪检查通过。验收输出记录 Job UID 及是否实际点击准备。
+
+1. 在源 namespace 设置 `BACKUP_TRIAL_CAPTURE_ONLY=1`，提供源端 `BACKUP_TRIAL_PREPARE_PROFILE`，保存脚本输出为源端 JSON 回执。
+2. 经现场批准的渠道把同一备份 ID 的密文和回执导入目标只读挂载。
+3. 在目标 namespace 设置 `BACKUP_TRIAL_REPLAY_ID`，提供目标端 `BACKUP_TRIAL_PREPARE_PROFILE` 和指向源端 JSON 回执的 `BACKUP_TRIAL_SOURCE_RECEIPT`。脚本提交恢复前，会比对备份 ID、用户和实例等行数，以及产物包含的对话或文件摘要。恢复完成后再对账一次。
+
+验收要求源端先下线时，在下线前从目标页面完成准备，等目标密钥及凭据挂载就绪，并完成密文与回执转移。源端下线后运行目标恢复脚本，它会核对已完成的目标 Job 并直接进入产物预检。
 
 ## 数据范围
 

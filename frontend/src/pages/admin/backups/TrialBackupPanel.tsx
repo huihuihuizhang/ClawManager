@@ -21,6 +21,15 @@ type RestorePreflight = Pick<Task, 'readback_verified' | 'counts' | 'hermes_hist
   missing?: string;
 };
 
+const mountReadinessCodes = new Set(['source_credential', 'restore_credential', 'restore_read_credential', 'encryption_key']);
+
+function waitingForProjectedMaterials(ready?: Readiness) {
+  const environment = ready?.environment;
+  if (environment?.state !== 'prepared' || !environment.profile) return false;
+  const missing = environment.profile.side === 'source' ? ready?.missing : ready?.restore_missing;
+  return missing?.some((item) => mountReadinessCodes.has(item)) ?? false;
+}
+
 export default function TrialBackupPanel() {
   const { locale } = useI18n();
   const zh = locale.startsWith('zh');
@@ -35,6 +44,7 @@ export default function TrialBackupPanel() {
   const [revision, setRevision] = useState(0);
   const running = task?.status === 'running';
   const preparationRunning = ready?.environment?.state === 'running';
+  const materialsPending = waitingForProjectedMaterials(ready);
   const restoreBlocked = !ready || !!ready.restore_missing?.length || running || busy || checkingBackup || preparing;
   const matchingPreflight = preflight?.backup_id === backupID ? preflight : undefined;
 
@@ -47,22 +57,24 @@ export default function TrialBackupPanel() {
   }, [revision]);
 
   useEffect(() => {
-    if (!preparationRunning) return;
+    if (!preparationRunning && !materialsPending) return;
     const controller = new AbortController();
+    // A completed Job can precede kubelet's next projected Secret refresh.
+    const materialDeadline = materialsPending ? Date.now() + 120_000 : undefined;
     let timer = window.setTimeout(poll, 2500);
     async function poll() {
       try {
         const { data } = await api.get<Readiness>(route + '/readiness', { signal: controller.signal });
         if (controller.signal.aborted) return;
         setReady(data);
-        if (data.environment?.state !== 'running') return;
+        if (data.environment?.state !== 'running' && !waitingForProjectedMaterials(data)) return;
       } catch {
         if (controller.signal.aborted) return;
       }
-      timer = window.setTimeout(poll, 2500);
+      if (!materialDeadline || Date.now() < materialDeadline) timer = window.setTimeout(poll, 2500);
     }
     return () => { controller.abort(); window.clearTimeout(timer); };
-  }, [preparationRunning]);
+  }, [preparationRunning, materialsPending]);
 
   useEffect(() => {
     const controller = new AbortController();
