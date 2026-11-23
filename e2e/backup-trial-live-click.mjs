@@ -138,8 +138,17 @@ try {
   }
 
   if (!captureOnly) {
-    step = 'restore_or_reconcile';
     const id = replay || receipt.backup.backup_id;
+    step = 'restore_preflight';
+    const [checked] = await Promise.all([
+      page.waitForResponse(response => observe(response, origin.origin, 'POST', trialPath + '/backups/' + id + '/preflight'), { timeout }),
+      panel.getByRole('button', { name: /^(检查此备份|Check this backup)$/ }).click({ timeout }),
+    ]);
+    requireThat(checked.ok());
+    const preflight = await checked.json();
+    requireThat(preflight.backup_id === id && preflight.readback_verified === true && !preflight.missing);
+    await panel.getByText(/^(产物读回和恢复内容预检通过|Artifact readback and restore content checks passed)$/).waitFor({ timeout });
+    step = 'restore_or_reconcile';
     receipt.restore = {};
     await execute(page,
       panel.getByRole('button', { name: /^(恢复到隔离环境|Restore to isolated target)$/ }),
@@ -164,3 +173,4 @@ try {
   await browser?.close();
   console.log(JSON.stringify(receipt));
 }
+

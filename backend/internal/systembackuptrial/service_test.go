@@ -44,16 +44,21 @@ func TestTrialAdminAdmissionWithoutFormalConfiguration(t *testing.T) {
 	New(func(string) string { return "" }).Register(r.Group("/api/v1"), trialTestUsers{})
 	for _, tc := range []struct {
 		name string
+		path string
 		user int
 		want int
 	}{
-		{"anonymous", 0, http.StatusUnauthorized},
-		{"ordinary user", 2, http.StatusForbidden},
-		{"inactive admin", 3, http.StatusForbidden},
-		{"admin and missing trial material", 1, http.StatusServiceUnavailable},
+		{"anonymous", "/backups", 0, http.StatusUnauthorized},
+		{"ordinary user", "/backups", 2, http.StatusForbidden},
+		{"inactive admin", "/backups", 3, http.StatusForbidden},
+		{"admin and missing trial material", "/backups", 1, http.StatusServiceUnavailable},
+		{"anonymous preview", "/backups/" + strings.Repeat("a", 32) + "/preflight", 0, http.StatusUnauthorized},
+		{"ordinary user preview", "/backups/" + strings.Repeat("a", 32) + "/preflight", 2, http.StatusForbidden},
+		{"invalid backup ID", "/backups/not-a-backup/preflight", 1, http.StatusBadRequest},
+		{"admin preview without target", "/backups/" + strings.Repeat("a", 32) + "/preflight", 1, http.StatusOK},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/system-backup/trial/backups", nil)
+			req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/system-backup/trial"+tc.path, nil)
 			if tc.user != 0 {
 				token, err := utils.GenerateToken(utils.TokenClaims{UserID: tc.user, TokenType: "access"}, secret, time.Minute)
 				if err != nil {
@@ -68,6 +73,9 @@ func TestTrialAdminAdmissionWithoutFormalConfiguration(t *testing.T) {
 			}
 			if tc.want == http.StatusServiceUnavailable && !strings.Contains(rec.Body.String(), "source_credential") {
 				t.Fatal("trial readiness did not report independently missing source credential")
+			}
+			if tc.want == http.StatusOK && (rec.Header().Get("Cache-Control") != "no-store" || !strings.Contains(rec.Body.String(), "restore_isolation")) {
+				t.Fatal("preflight should report missing target isolation without caching the result")
 			}
 		})
 	}

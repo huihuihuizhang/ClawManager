@@ -92,6 +92,33 @@ func TestTrialTransfersSealedContentAndLegacyArtifacts(t *testing.T) {
 			if err := target.WriteFile(id+".receipt", raw, 0400); err != nil {
 				t.Fatal(err)
 			}
+			keyFile := filepath.Join(t.TempDir(), "trial-key")
+			if err := os.WriteFile(keyFile, []byte(strings.Repeat("21", 32)), 0600); err != nil {
+				t.Fatal(err)
+			}
+			settings := map[string]string{
+				"RESTORE_ISOLATED": "true", "RESTORE_UUID": "isolated-target", "KEY_FILE": keyFile, "READ_DIR": target.Name(),
+			}
+			service := New(func(name string) string { return settings[strings.TrimPrefix(name, "SYSTEM_BACKUP_TRIAL_")] })
+			preview := service.checkRestoreArtifact(ctx, id)
+			wantMissing := map[string]string{
+				"hermes": "hermes_history", "combined": "hermes_history", "workspace": "workspace_files",
+				"misbound_history": "restore_artifact_readback", "misbound_workspace": "restore_artifact_readback",
+			}[variant]
+			wantReadback := !strings.HasPrefix(variant, "misbound_")
+			if preview.BackupID != id || preview.Missing != wantMissing || preview.Readback != wantReadback {
+				t.Fatalf("unexpected artifact preflight: %+v", preview)
+			}
+			if variant == "legacy" {
+				settings["RESTORE_UUID"] = m.SourceUUID
+				if same := service.checkRestoreArtifact(ctx, id); same.Missing != "restore_isolation" || same.Readback {
+					t.Fatalf("source database admitted as target: %+v", same)
+				}
+				settings["RESTORE_UUID"] = "isolated-target"
+				if missing := service.checkRestoreArtifact(ctx, newID()); missing.Missing != "restore_artifact_missing" {
+					t.Fatalf("missing artifact not reported: %+v", missing)
+				}
+			}
 			store := storage{reader: target}
 			imported, err := store.metadata(id)
 			if err != nil {
@@ -154,7 +181,7 @@ func TestTrialHermesAdapterUsesPrivateSocketAndChecksReceipt(t *testing.T) {
 		}
 		result := history.historyReceipt
 		switch r.URL.Path {
-		case "/restore/1/7":
+		case "/restore/1/7", "/preflight/1/7":
 		case "/verify/1/7":
 			result.Messages = 0
 		default:
@@ -171,6 +198,9 @@ func TestTrialHermesAdapterUsesPrivateSocketAndChecksReceipt(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := target.run(ctx, "restore", history, []byte(historyFixture)); err != nil {
+		t.Fatal(err)
+	}
+	if err := target.run(ctx, "preflight", history, []byte(historyFixture)); err != nil {
 		t.Fatal(err)
 	}
 	if err := target.run(ctx, "verify", history, []byte(historyFixture)); !errors.Is(err, errHistory) {

@@ -181,7 +181,7 @@ def readback(session_db, candidate, sessions):
     return receipt(sessions)
 
 
-def restore(session_db, workspace, sessions):
+def restore(session_db, workspace, sessions, *, publish=True):
     check_state_files(workspace, empty=True)
     with tempfile.TemporaryDirectory(prefix=".trial-history-", dir=workspace) as temporary:
         candidate = Path(temporary) / "state.db"
@@ -204,7 +204,8 @@ def restore(session_db, workspace, sessions):
             os.fsync(content.fileno())
         # The staging directory and target share a filesystem. Link publishes
         # the completed database atomically and rejects a concurrent creator.
-        os.link(candidate, workspace / "state.db")
+        destination = workspace / "state.db" if publish else Path(temporary) / "publication-probe"
+        os.link(candidate, destination)
     return verified
 
 
@@ -215,10 +216,10 @@ def apply_history(session_db, workspace, operation, raw, user_id, instance_id):
     sessions = verify_payload(payload, user_id, instance_id)
     if payload.get("transcript_sha256") != receipt(sessions)["transcript_sha256"]:
         raise HistoryError("history transcript digest differs")
-    if operation == "verify":
+    if operation == "verify" or (operation == "preflight" and os.path.lexists(workspace / "state.db")):
         check_state_files(workspace, empty=False)
         return readback(session_db, workspace / "state.db", sessions)
-    return restore(session_db, workspace, sessions)
+    return restore(session_db, workspace, sessions, publish=operation != "preflight")
 
 
 class HistoryRequest(BaseHTTPRequestHandler):
@@ -241,7 +242,7 @@ class HistoryRequest(BaseHTTPRequestHandler):
             self.reply(404, {"error": "unknown history route"})
 
     def do_POST(self):
-        route = re.fullmatch(r"/(restore|verify)/([1-9][0-9]{0,18})/([1-9][0-9]{0,18})", self.path)
+        route = re.fullmatch(r"/(restore|verify|preflight)/([1-9][0-9]{0,18})/([1-9][0-9]{0,18})", self.path)
         length = self.headers.get_all("Content-Length")
         root = self.server.workspace_root
         if (route is None or not length or len(length) != 1 or not re.fullmatch(r"[0-9]{1,8}", length[0]) or

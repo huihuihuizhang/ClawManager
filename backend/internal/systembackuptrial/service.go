@@ -56,9 +56,10 @@ type Readiness struct {
 }
 
 type Service struct {
-	env  func(string) string
-	mu   sync.Mutex
-	task *Task
+	env      func(string) string
+	mu       sync.Mutex
+	task     *Task
+	checking bool
 }
 
 func New(env func(string) string) *Service { return &Service{env: env} }

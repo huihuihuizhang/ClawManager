@@ -7,7 +7,6 @@ import (
 	"io"
 	"maps"
 	"net/http"
-	"os"
 	"time"
 
 	"clawreef/internal/middleware"
@@ -44,6 +43,7 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 		}
 		s.start(c, "", s.backup)
 	})
+	admin.POST("/backups/:id/preflight", s.handleRestorePreflight)
 	admin.POST("/backups/:id/restore", func(c *gin.Context) {
 		id := c.Param("id")
 		if !taskID.MatchString(id) {
@@ -60,7 +60,7 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 
 func (s *Service) start(c *gin.Context, backupID string, run func(context.Context, *Task) error) {
 	s.mu.Lock()
-	if s.task != nil && s.task.Status == "running" {
+	if s.checking || (s.task != nil && s.task.Status == "running") {
 		s.mu.Unlock()
 		c.JSON(http.StatusConflict, gin.H{"code": "trial_task_running"})
 		return
@@ -212,60 +212,26 @@ func (s *Service) restore(ctx context.Context, task *Task) error {
 	if len(s.restoreSettings()) != 0 {
 		return errConfig
 	}
-	key, err := s.key()
-	if err != nil {
-		return err
-	}
-	defer clear(key)
-	readerRoot, err := s.readerRoot()
-	if err != nil {
-		return err
-	}
-	defer readerRoot.Close()
-	store := storage{reader: readerRoot}
 	task.Stage = "readback"
 	s.publish(*task)
-	a, err := store.metadata(task.BackupID)
-	if err != nil {
-		return err
-	}
-	bundle, err := store.snapshot(ctx, task.BackupID, a, key)
+	bundle, err := s.readRestoreArtifact(ctx, task.BackupID)
 	if err != nil {
 		return err
 	}
 	defer clear(bundle.hermes)
 	defer clear(bundle.workspace)
 	source, m := bundle.snapshot, bundle.manifest
-	var worker historyTarget
-	if m.Hermes != nil {
-		worker, err = s.historyTarget()
-		if err != nil {
-			return err
-		}
-		probe, cancel := context.WithTimeout(ctx, 10*time.Second)
-		err = worker.ready(probe)
-		cancel()
-		if err != nil {
-			return err
-		}
-	}
-	var workspaceMount *os.Root
-	if m.Workspace != nil {
-		workspaceMount, err = s.openWorkspaceTarget()
-		if err != nil {
-			return err
-		}
-		defer workspaceMount.Close()
-		if err := checkWorkspaceDestination(ctx, workspaceMount, *m.Workspace, bundle.workspace); err != nil {
-			return err
-		}
-	}
-	task.Counts, task.Readback = m.Counts, true
-	task.Stage = "restore"
-	s.publish(*task)
 	if s.value("RESTORE_UUID") == m.SourceUUID {
 		return domain.ErrIsolation
 	}
+	targets, err := s.restoreContentTargets(ctx, bundle)
+	if err != nil {
+		return err
+	}
+	defer targets.close()
+	task.Counts, task.Readback = m.Counts, true
+	task.Stage = "restore"
+	s.publish(*task)
 	db, database, err := s.database("RESTORE")
 	if err != nil {
 		return err
@@ -309,8 +275,8 @@ func (s *Service) restore(ctx context.Context, task *Task) error {
 	if m.Hermes != nil {
 		task.Stage = "restore_hermes_history"
 		s.publish(*task)
-		if err := worker.run(ctx, "restore", *m.Hermes, bundle.hermes); err != nil {
-			if err := worker.run(ctx, "verify", *m.Hermes, bundle.hermes); err != nil {
+		if err := targets.history.run(ctx, "restore", *m.Hermes, bundle.hermes); err != nil {
+			if err := targets.history.run(ctx, "verify", *m.Hermes, bundle.hermes); err != nil {
 				return err
 			}
 		}
@@ -319,7 +285,7 @@ func (s *Service) restore(ctx context.Context, task *Task) error {
 	if m.Workspace != nil {
 		task.Stage = "restore_workspace_files"
 		s.publish(*task)
-		if err := restoreWorkspaceFiles(ctx, workspaceMount, *m.Workspace, bundle.workspace); err != nil {
+		if err := restoreWorkspaceFiles(ctx, targets.workspace, *m.Workspace, bundle.workspace); err != nil {
 			return err
 		}
 		task.Workspace = &m.Workspace.workspaceFileReceipt

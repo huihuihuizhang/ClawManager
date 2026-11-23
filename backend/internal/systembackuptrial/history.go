@@ -147,7 +147,7 @@ func (t historyTarget) ready(ctx context.Context) error {
 // matching workspace mount and can use the Python environment from the Hermes
 // image. The request never leaves the Pod over the network.
 func (t historyTarget) run(ctx context.Context, mode string, history historyManifest, payload []byte) error {
-	if mode != "restore" && mode != "verify" {
+	if mode != "restore" && mode != "verify" && mode != "preflight" {
 		return errHistory
 	}
 	path := "/" + mode + "/" + strconv.Itoa(history.UserID) + "/" + strconv.Itoa(history.InstanceID)

@@ -15,6 +15,10 @@ type Task = {
   workspace_files?: { entries: number; file_bytes: number; archive_sha256: string };
 };
 type Readiness = { missing: string[] | null; restore_missing: string[] | null };
+type RestorePreflight = Pick<Task, 'readback_verified' | 'counts' | 'hermes_history' | 'workspace_files'> & {
+  backup_id: string;
+  missing?: string;
+};
 
 export default function TrialBackupPanel() {
   const { locale } = useI18n();
@@ -24,8 +28,12 @@ export default function TrialBackupPanel() {
   const [backupID, setBackupID] = useState('');
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [preflight, setPreflight] = useState<RestorePreflight>();
+  const [checkingBackup, setCheckingBackup] = useState(false);
   const [revision, setRevision] = useState(0);
   const running = task?.status === 'running';
+  const restoreBlocked = !ready || !!ready.restore_missing?.length || running || busy || checkingBackup;
+  const matchingPreflight = preflight?.backup_id === backupID ? preflight : undefined;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -56,7 +64,22 @@ export default function TrialBackupPanel() {
 
   function refreshReadiness() {
     setReady(undefined);
+    setPreflight(undefined);
     setRevision((value) => value + 1);
+  }
+
+  async function checkBackup() {
+    setCheckingBackup(true);
+    setError(false);
+    setPreflight(undefined);
+    try {
+      const { data } = await api.post<RestorePreflight>(route + '/backups/' + backupID + '/preflight');
+      setPreflight(data);
+    } catch {
+      setError(true);
+    } finally {
+      setCheckingBackup(false);
+    }
   }
 
   async function start(restore: boolean) {
@@ -87,6 +110,9 @@ export default function TrialBackupPanel() {
     restore_credential: '目标写入凭据', restore_read_credential: '目标只读凭据',
     restore_placement: '隔离目标的存储与命名空间', restore_database_name: '隔离库名称',
     restore_artifact_mount: '试行产物只读挂载',
+    restore_artifact_configuration: '请检查导入目录和试行加密密钥',
+    restore_artifact_missing: '找不到这份备份的密文或回执',
+    restore_artifact_readback: '这份备份的完整性或解密校验失败',
     restore_artifact_writable: '导入卷可写，请重新以只读方式挂载',
     restore_target_schema: '目标库缺少用户、配额或实例所需的表结构，请检查迁移',
     restore_target_database: '无法检查目标库的表结构',
@@ -94,6 +120,11 @@ export default function TrialBackupPanel() {
     restore_writer_database: '无法使用写入凭据连接目标库', restore_writer_isolation: '写入连接的目标库身份不匹配',
     restore_reader_database: '无法使用只读凭据连接或检查目标库', restore_reader_isolation: '只读连接身份或 SELECT 授权不符合要求',
   } : {
+    hermes_history: 'The target Hermes workspace failed its check',
+    workspace_files: 'The target workspace files failed their check',
+    restore_artifact_configuration: 'Check the import directory and trial encryption key',
+    restore_artifact_missing: 'The backup ciphertext or receipt is missing',
+    restore_artifact_readback: 'The backup integrity or decryption check failed',
     restore_artifact_writable: 'Mount the trial import volume as read-only',
     restore_target_schema: 'The target lacks the required user, quota, or instance schema. Check its migrations.',
     restore_target_database: 'Cannot inspect the target database schema',
@@ -112,10 +143,10 @@ export default function TrialBackupPanel() {
       ? '范围包括用户、配额、实例规格和启动所需配置。恢复到预先配置的隔离目标，实例初始为停止状态。'
       : 'Includes users, quotas, instance specifications and startup configuration. Instances are restored stopped to the configured isolated target.'}</p>
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" className={button} disabled={!ready || !!ready.missing?.length || running || busy} onClick={() => void start(false)}>
+      <button type="button" className={button} disabled={!ready || !!ready.missing?.length || running || busy || checkingBackup} onClick={() => void start(false)}>
         {zh ? '创建试行备份' : 'Create trial backup'}
       </button>
-      <button type="button" className={button} onClick={() => { setError(false); refreshReadiness(); }}>
+      <button type="button" className={button} disabled={checkingBackup} onClick={() => { setError(false); refreshReadiness(); }}>
         {zh ? '检查试行就绪状态' : 'Check trial readiness'}
       </button>
     </div>
@@ -127,12 +158,32 @@ export default function TrialBackupPanel() {
     <div className="flex flex-wrap items-end gap-2">
       <label className="flex min-w-0 flex-col gap-1 text-sm text-slate-700">
         {zh ? '试行备份 ID' : 'Trial backup ID'}
-        <input value={backupID} maxLength={32} onChange={(event) => setBackupID(event.target.value.trim())}
+        <input value={backupID} maxLength={32} disabled={checkingBackup} onChange={(event) => {
+          setBackupID(event.target.value.trim());
+          setPreflight(undefined);
+        }}
           className="w-72 max-w-full rounded-lg border border-slate-200 px-3 py-2 font-mono" />
       </label>
-      <button type="button" className={button} disabled={!ready || !!ready.restore_missing?.length || running || busy || !/^[0-9a-f]{32}$/.test(backupID)}
+      <button type="button" className={button} disabled={restoreBlocked || !/^[0-9a-f]{32}$/.test(backupID)} onClick={() => void checkBackup()}>
+        {checkingBackup ? (zh ? '正在检查备份…' : 'Checking backup…') : (zh ? '检查此备份' : 'Check this backup')}
+      </button>
+      <button type="button" className={button} disabled={restoreBlocked || !matchingPreflight?.readback_verified || !!matchingPreflight.missing}
         onClick={() => void start(true)}>{zh ? '恢复到隔离环境' : 'Restore to isolated target'}</button>
     </div>
+    {matchingPreflight && <div aria-live="polite" className="space-y-1 text-sm text-slate-700">
+      <p className={matchingPreflight.missing ? 'text-amber-900' : 'text-emerald-700'}>{matchingPreflight.missing
+        ? label(matchingPreflight.missing)
+        : (zh ? '产物读回和恢复内容预检通过' : 'Artifact readback and restore content checks passed')}</p>
+      {matchingPreflight.counts && <p>{zh
+        ? `${matchingPreflight.counts.users ?? 0} 个用户 · ${matchingPreflight.counts.instances ?? 0} 个实例`
+        : `${matchingPreflight.counts.users ?? 0} users · ${matchingPreflight.counts.instances ?? 0} instances`}</p>}
+      {matchingPreflight.hermes_history && <p>{zh
+        ? `${matchingPreflight.hermes_history.messages} 条 Hermes 消息`
+        : `${matchingPreflight.hermes_history.messages} Hermes messages`}</p>}
+      {matchingPreflight.workspace_files && <p>{zh
+        ? `${matchingPreflight.workspace_files.entries} 项工作区内容`
+        : `${matchingPreflight.workspace_files.entries} workspace entries`}</p>}
+    </div>}
     {task && <div role="status" className="space-y-2 text-sm text-slate-700">
       <p>{zh ? '任务' : 'Task'} <code>{task.id}</code> · {label(task.status)} · {label(task.stage)}{task.error && ` · ${label(task.error)}`}</p>
       {task.backup_id && <p>{zh ? '试行产物' : 'Trial artifact'} <code>{task.backup_id}</code></p>}
@@ -148,3 +199,4 @@ export default function TrialBackupPanel() {
     </div>}
   </section>;
 }
+
