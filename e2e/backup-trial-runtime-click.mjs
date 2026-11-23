@@ -231,7 +231,10 @@ try {
       step = 'hermes_history_readback';
       const history = expected.hermes_history;
       await page.reload({ waitUntil: 'domcontentloaded', timeout });
-      const frame = page.frameLocator('iframe[title*="Hermes Desktop Web"]');
+      await page.getByRole('button', { name: /^(Enter fullscreen|进入全屏|全画面表示|전체 화면으로 전환|Vollbild öffnen)$/i }).click({ timeout });
+      const frame = page.frameLocator('iframe[title*="Hermes Desktop Web"]:visible');
+      const openSidebar = frame.getByRole('button', { name: 'Show sidebar', exact: true });
+      if (await openSidebar.isVisible()) await openSidebar.click({ timeout });
       await frame.getByText(history.title, { exact: true }).first().click({ timeout });
       for (const message of history.messages) {
         await frame.getByText(message.content, { exact: true }).first().waitFor({ timeout });
