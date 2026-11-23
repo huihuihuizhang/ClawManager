@@ -26,6 +26,10 @@ func (s *Service) handleRestorePreflight(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"code": "invalid_backup_id"})
 		return
 	}
+	if missing := s.environment(c.Request.Context(), false).missing("target"); missing != "" {
+		c.JSON(http.StatusOK, restorePreflight{BackupID: id, Missing: missing})
+		return
+	}
 	s.mu.Lock()
 	if s.checking || (s.task != nil && s.task.Status == "running") {
 		s.mu.Unlock()

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../../../contexts/I18nContext';
 import api from '../../../services/api';
+import TrialEnvironment, { type TrialEnvironmentStatus } from './TrialEnvironment';
 
 const route = '/admin/system-backup/trial';
 type Task = {
@@ -14,7 +15,7 @@ type Task = {
   hermes_history?: { sessions: number; messages: number; transcript_sha256: string };
   workspace_files?: { entries: number; file_bytes: number; archive_sha256: string };
 };
-type Readiness = { missing: string[] | null; restore_missing: string[] | null };
+type Readiness = { missing: string[] | null; restore_missing: string[] | null; environment?: TrialEnvironmentStatus };
 type RestorePreflight = Pick<Task, 'readback_verified' | 'counts' | 'hermes_history' | 'workspace_files'> & {
   backup_id: string;
   missing?: string;
@@ -30,9 +31,11 @@ export default function TrialBackupPanel() {
   const [busy, setBusy] = useState(false);
   const [preflight, setPreflight] = useState<RestorePreflight>();
   const [checkingBackup, setCheckingBackup] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const [revision, setRevision] = useState(0);
   const running = task?.status === 'running';
-  const restoreBlocked = !ready || !!ready.restore_missing?.length || running || busy || checkingBackup;
+  const preparationRunning = ready?.environment?.state === 'running';
+  const restoreBlocked = !ready || !!ready.restore_missing?.length || running || busy || checkingBackup || preparing;
   const matchingPreflight = preflight?.backup_id === backupID ? preflight : undefined;
 
   useEffect(() => {
@@ -42,6 +45,24 @@ export default function TrialBackupPanel() {
       .catch(() => { if (!controller.signal.aborted) setError(true); });
     return () => controller.abort();
   }, [revision]);
+
+  useEffect(() => {
+    if (!preparationRunning) return;
+    const controller = new AbortController();
+    let timer = window.setTimeout(poll, 2500);
+    async function poll() {
+      try {
+        const { data } = await api.get<Readiness>(route + '/readiness', { signal: controller.signal });
+        if (controller.signal.aborted) return;
+        setReady(data);
+        if (data.environment?.state !== 'running') return;
+      } catch {
+        if (controller.signal.aborted) return;
+      }
+      timer = window.setTimeout(poll, 2500);
+    }
+    return () => { controller.abort(); window.clearTimeout(timer); };
+  }, [preparationRunning]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -66,6 +87,23 @@ export default function TrialBackupPanel() {
     setReady(undefined);
     setPreflight(undefined);
     setRevision((value) => value + 1);
+  }
+
+  async function prepareEnvironment() {
+    setPreparing(true);
+    setError(false);
+    try {
+      const { data } = await api.post<TrialEnvironmentStatus>(route + '/environment/prepare');
+      if (data.state === 'prepared') {
+        refreshReadiness();
+      } else {
+        setReady((current) => current && { ...current, environment: data });
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setPreparing(false);
+    }
   }
 
   async function checkBackup() {
@@ -114,6 +152,9 @@ export default function TrialBackupPanel() {
     restore_artifact_missing: '找不到这份备份的密文或回执',
     restore_artifact_readback: '这份备份的完整性或解密校验失败',
     restore_artifact_writable: '导入卷可写，请重新以只读方式挂载',
+    trial_environment_source: '请在已登记的源环境创建备份',
+    trial_environment_target: '请在已登记的隔离目标恢复',
+    trial_environment_preparation: '试行环境准备尚未通过',
     restore_target_schema: '目标库缺少用户、配额或实例所需的表结构，请检查迁移',
     restore_target_database: '无法检查目标库的表结构',
     restore_database_mismatch: '写入和只读凭据指向不同的库', restore_accounts_shared: '写入和只读必须使用独立账号',
@@ -126,6 +167,9 @@ export default function TrialBackupPanel() {
     restore_artifact_missing: 'The backup ciphertext or receipt is missing',
     restore_artifact_readback: 'The backup integrity or decryption check failed',
     restore_artifact_writable: 'Mount the trial import volume as read-only',
+    trial_environment_source: 'Create backups in the registered source environment',
+    trial_environment_target: 'Restore only in the registered target environment',
+    trial_environment_preparation: 'Trial environment preparation is pending',
     restore_target_schema: 'The target lacks the required user, quota, or instance schema. Check its migrations.',
     restore_target_database: 'Cannot inspect the target database schema',
     restore_database_mismatch: 'Writer and reader credentials must point to the same target database',
@@ -142,11 +186,13 @@ export default function TrialBackupPanel() {
     <p className="text-sm text-slate-600">{zh
       ? '范围包括用户、配额、实例规格和启动所需配置。恢复到预先配置的隔离目标，实例初始为停止状态。'
       : 'Includes users, quotas, instance specifications and startup configuration. Instances are restored stopped to the configured isolated target.'}</p>
+    {ready?.environment && <TrialEnvironment environment={ready.environment} disabled={running || busy || checkingBackup}
+      preparing={preparing} onPrepare={() => void prepareEnvironment()} />}
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" className={button} disabled={!ready || !!ready.missing?.length || running || busy || checkingBackup} onClick={() => void start(false)}>
+      <button type="button" className={button} disabled={!ready || !!ready.missing?.length || running || busy || checkingBackup || preparing} onClick={() => void start(false)}>
         {zh ? '创建试行备份' : 'Create trial backup'}
       </button>
-      <button type="button" className={button} disabled={checkingBackup} onClick={() => { setError(false); refreshReadiness(); }}>
+      <button type="button" className={button} disabled={checkingBackup || preparing} onClick={() => { setError(false); refreshReadiness(); }}>
         {zh ? '检查试行就绪状态' : 'Check trial readiness'}
       </button>
     </div>

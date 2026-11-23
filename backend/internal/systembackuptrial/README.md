@@ -16,8 +16,50 @@
 | `RESTORE_UUID` | 隔离 MySQL 的 `@@server_uuid`。它必须与加密产物所记载的源服务器身份不同。 |
 | `RESTORE_NAMESPACE` / `RESTORE_STORAGE_CLASS` | 演练环境专用的 `cm-drill-*` 命名空间和目标 StorageClass。 |
 | `RESTORE_ISOLATED` | 操作员完成网络和身份隔离后设为 `true`。应用验证 MySQL 身份与库名，网络隔离由部署维护。 |
+| `ENVIRONMENT_PROFILE_FILE` | 可选。只读挂载由平台登记的试行环境 JSON，记录部署位置、镜像摘要、PVC、服务账号和 Secret 名称。 |
 
 源 MySQL 用户单独授予下列六张表的表级 SELECT。就绪检查拒绝角色、库级通配授权和写权限。部署时请将试行流量固定在一个启用了试行配置的 API 副本。任务运行状态属于该进程，已校验的备份产物和收据存在专用卷上，进程重启后仍可凭备份 ID 恢复。
+
+## 从页面准备已登记的试行环境
+
+源与目标各自挂载平台登记的配置，`side` 分别设为 `source` 和 `target`。在同一集群登记两个不同 namespace。下面示例为目标端，镜像填入该端实际可拉取的摘要。目标端的 namespace 和实例存储类需与 `RESTORE_NAMESPACE` 和 `RESTORE_STORAGE_CLASS` 一致。管理员可以从试行页下载该 JSON，并查看当前端使用的引用。
+
+```json
+{
+  "revision": "trial-v1",
+  "side": "target",
+  "source": {
+    "cluster": "site-a",
+    "namespace": "cm-drill-source",
+    "image": "registry.example/clawmanager@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "service_account": "trial-source-api",
+    "artifact_claim": "trial-export",
+    "key_secret": "trial-key",
+    "source_read_secret": "trial-source-reader"
+  },
+  "target": {
+    "cluster": "site-a",
+    "namespace": "cm-drill-target",
+    "image": "registry.example/clawmanager@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "service_account": "trial-target-api",
+    "artifact_claim": "trial-import",
+    "workspace_claim": "trial-target-workspace",
+    "instance_storage_class": "isolated",
+    "key_secret": "trial-key",
+    "restore_write_secret": "trial-target-writer",
+    "restore_read_secret": "trial-target-reader",
+    "runtime_secret": "trial-target-runtime"
+  },
+  "prepare_job": {
+    "name": "prepare-trial-v1",
+    "uid": "11111111-2222-4333-8444-555555555555"
+  }
+}
+```
+
+平台先在当前端 namespace 建立 `spec.suspend: true` 的准备 Job，注解 `clawmanager.io/trial-environment-revision` 使用同一个 `revision`。登记其实际名称和 UID。Job 使用独立服务账号及受限的准备权限，在完成所需的 SQL 授权、Secret 或存储配置并验证后退出。保留该 Job 供应用检查结果。为应用服务账号绑定当前 namespace 的 `batch` `jobs` 权限，`resourceNames` 指定该名称，`verbs` 使用 `get` 和 `patch`。
+
+管理员点击「准备试行环境」后，应用仅解除该 Job 的暂停，页面轮询任务状态。Job 完成后，备份或恢复继续使用原有的实时就绪检查。重复点击会读取同一任务状态。Job 失败且需要替换时，平台更新配置版本及新任务 UID。只需展示配置或沿用已人工配置的流程时，可以省略 `prepare_job`。Secret 内容保留在部署授权的文件挂载中。
 
 ## 数据范围
 

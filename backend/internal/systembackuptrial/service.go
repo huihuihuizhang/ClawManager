@@ -51,15 +51,17 @@ type Task struct {
 }
 
 type Readiness struct {
-	Missing        []string `json:"missing"`
-	RestoreMissing []string `json:"restore_missing"`
+	Missing        []string                `json:"missing"`
+	RestoreMissing []string                `json:"restore_missing"`
+	Environment    *trialEnvironmentStatus `json:"environment,omitempty"`
 }
 
 type Service struct {
-	env      func(string) string
-	mu       sync.Mutex
-	task     *Task
-	checking bool
+	env             func(string) string
+	environmentJobs func(string) (environmentJobs, error)
+	mu              sync.Mutex
+	task            *Task
+	checking        bool
 }
 
 func New(env func(string) string) *Service { return &Service{env: env} }
@@ -407,7 +409,19 @@ func (s *Service) restoreSettings() []string {
 }
 
 func (s *Service) readiness(ctx context.Context) Readiness {
-	return Readiness{Missing: s.backupReadiness(ctx), RestoreMissing: s.restoreReadiness(ctx)}
+	environment := s.environment(ctx, false)
+	result := Readiness{Environment: &environment}
+	if missing := environment.missing("source"); missing != "" {
+		result.Missing = []string{missing}
+	} else {
+		result.Missing = s.backupReadiness(ctx)
+	}
+	if missing := environment.missing("target"); missing != "" {
+		result.RestoreMissing = []string{missing}
+	} else {
+		result.RestoreMissing = s.restoreReadiness(ctx)
+	}
+	return result
 }
 
 func (s *Service) backupReadiness(ctx context.Context) []string {

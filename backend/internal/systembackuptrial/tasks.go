@@ -36,7 +36,12 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 		s.mu.Unlock()
 		c.JSON(http.StatusOK, gin.H{"task": task})
 	})
+	admin.POST("/environment/prepare", s.handlePrepareEnvironment)
 	admin.POST("/backups", func(c *gin.Context) {
+		if missing := s.environment(c.Request.Context(), false).missing("source"); missing != "" {
+			c.JSON(http.StatusServiceUnavailable, Readiness{Missing: []string{missing}})
+			return
+		}
 		if missing := s.backupReadiness(c.Request.Context()); len(missing) != 0 {
 			c.JSON(http.StatusServiceUnavailable, Readiness{Missing: missing})
 			return
@@ -48,6 +53,10 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 		id := c.Param("id")
 		if !taskID.MatchString(id) {
 			c.JSON(http.StatusBadRequest, gin.H{"code": "invalid_backup_id"})
+			return
+		}
+		if missing := s.environment(c.Request.Context(), false).missing("target"); missing != "" {
+			c.JSON(http.StatusServiceUnavailable, Readiness{RestoreMissing: []string{missing}})
 			return
 		}
 		if missing := s.restoreReadiness(c.Request.Context()); len(missing) != 0 {
