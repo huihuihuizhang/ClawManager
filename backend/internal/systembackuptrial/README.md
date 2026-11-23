@@ -63,15 +63,24 @@
 
 ### 运行仓库自带的准备任务
 
-应用镜像内置 `/usr/local/bin/system-backup-trial-prepare`。平台可按端渲染 `deployments/k8s/system-backup-trial-prepare.yaml.template`，使用同一版本的内网镜像摘要。准备 Job 单独挂载 SQL 授权凭据。源 DSN 指向已授权的源库，允许给专用账号授予六张表的 `SELECT`。目标 DSN 指向预创建的 `cm_drill_trial_*` 库，允许执行固定目标迁移与授予该库的 DML 和 SELECT。两个 DSN 均需允许创建指定账号和核对账号归属。远程 DSN 使用 `tls=true`，`MYSQL_CA_CONFIGMAP` 提供受信任的 `ca-bundle.crt`。API 只使用准备任务写入的有限权限账号。
+应用镜像内置 `/usr/local/bin/system-backup-trial-prepare`。平台以 `deployments/k8s/system-backup-trial-registration.example.json` 为样例填写两端已批准的引用、MySQL UUID、内网镜像摘要和迁移目录摘要。配置文件用于登记资源名。准备 Job 单独挂载 SQL 授权凭据。源 DSN 指向已授权的源库，允许给专用账号授予六张表的 `SELECT`。目标 DSN 指向预创建的 `cm_drill_trial_*` 库，允许执行固定目标迁移与授予该库的 DML 和 SELECT。两个 DSN 均需允许创建指定账号和核对账号归属。远程 DSN 使用 `tls=true`，`ca_configmap` 提供受信任的 `ca-bundle.crt`。API 只使用准备任务写入的有限权限账号。
 
-平台为已登记的引用一次性创建隔离 namespace、已绑定的 PVC 和空的 `Opaque` Secret。每个输出 Secret 标注 `clawmanager.io/trial-material-namespace`，值为所在的 namespace。重跑保留原 Secret 对象及数据。模板参数 `LOCAL_OUTPUT_SECRET_NAMES_JSON` 和 `LOCAL_PVC_NAMES_JSON` 填入已登记名称的 JSON 数组。Job 写出的 Secret 使用 `dsn` 或 `key` 字段。应用通过普通 Secret 卷挂载这些字段，允许准备完成前字段为空，使用完整卷目录以接收更新。
+在仓库根目录用 Python 3 生成各端资源。Windows 安装了 Python Launcher 时可使用 `py -3`。以下示例使用目标端，源端使用 `--side source`。`placeholders` 的输出用于首次创建，后续登记沿用这些 Secret。`render` 会检查所有占位符并生成暂停的 Job、最小权限 Role 和绑定。平台部署这些资源后，从 Kubernetes 读取实际 Job JSON，再用 `profile` 生成 API 和 Job 共用的 ConfigMap。该步骤核对 Job UID、镜像、摘要和挂载。重跑渲染会使用同一份登记配置。替换失败的 Job 时，更新该端的任务版本和名称，生成并部署新的 Job，再用 `profile` 绑定新 Job 的 UID。
 
-源端将归档卷同时挂载到可写路径和只读路径，设置 `ARCHIVE_WRITE_MOUNT_READ_ONLY=false`，如登记了源工作区则设 `WORKSPACE_MOUNT_READ_ONLY=true`。目标设置 `ARCHIVE_WRITE_MOUNT_READ_ONLY=true`、`WORKSPACE_MOUNT_READ_ONLY=false`，以及经平台验证的目标隔离参数。当前端未登记工作区时，从模板省去 `workspace` 的卷和挂载项。为 `PREPARE_UID`、`PREPARE_GID` 和 `TRIAL_VOLUME_GID` 填入该端部署批准的非 root 身份及卷组。任务核对 PVC 状态及已登记的存储类，并实际检验归档读回、目标只读导入和所登记工作区的访问方式。
+```sh
+python scripts/system-backup-trial-register.py --config approved.json --side target placeholders > target-secrets.json
+python scripts/system-backup-trial-register.py --config approved.json --side target render > target-prepare.yaml
+kubectl --context approved-context -n cm-drill-target get job prepare-trial-v1 -o json > target-job.json
+python scripts/system-backup-trial-register.py --config approved.json --side target profile --job target-job.json > target-profile.json
+```
 
-同一集群下，在源 namespace 为目标准备任务的服务账号绑定一个 Role。规则限定为 `apiGroups: [""]`、`resources: ["secrets"]`、`resourceNames` 仅含源端 `key_secret`、`verbs: ["get"]`。先完成源侧准备，再从目标管理员页面启动目标侧准备。目标侧将同一份备份密钥写入自己的独立 Secret，后续复跑使用已保存的目标密钥。另一集群的目标通过平台已有密钥渠道预填对应 `key` 字段。任务检测到已登记密钥消失或变化时会要求平台复核。
+平台一次性创建隔离 namespace、PVC 和登记工具生成的空 `Opaque` Secret。每个输出 Secret 标注 `clawmanager.io/trial-material-namespace`，值为所在的 namespace。重跑保留原 Secret 对象及数据。Job 写出的 Secret 使用 `dsn` 或 `key` 字段。应用通过普通 Secret 卷挂载这些字段，允许准备完成前字段为空，使用完整卷目录以接收更新。
 
-目标任务将镜像的固定迁移目录应用到登记的 MySQL UUID 和库名。`MIGRATION_CATALOG_SHA256` 可从该镜像的 `system-backup-migrate -catalog-only` 取得。配置 `runtime_secret` 时，同时准备运行核验表。只需挂载目标账号和密钥给试行 API，恢复入口依旧使用导入卷上的原备份 ID。页面任务通过后，仍按原流程转移密文与回执。
+登记工具为源归档卷生成一个可写挂载和一个只读挂载，源工作区以只读方式挂载。目标归档卷只读，目标工作区可写。工作区卷随该端的登记项生成。`run_as_user`、`run_as_group` 和 `volume_group` 使用该端批准的非 root 身份及卷组。任务核对 PVC 状态及已登记的存储类，并实际检验归档读回、目标只读导入和所登记工作区的访问方式。
+
+两端登记在同一集群时，源端资源会包含一条跨 namespace 授权，目标准备服务账号只可读取源端 `key_secret`。先完成源侧准备，再从目标管理员页面启动目标侧准备。目标侧将同一份备份密钥写入自己的独立 Secret，后续复跑使用已保存的目标密钥。另一集群的目标通过平台已有密钥渠道预填对应 `key` 字段。任务检测到已登记密钥消失或变化时会要求平台复核。
+
+目标任务将镜像的固定迁移目录应用到登记的 MySQL UUID 和库名。将该镜像中 `system-backup-migrate -catalog-only` 输出的 `sha256` 填入 `migration_catalog_sha256`。配置 `runtime_secret` 时，同时准备运行核验表。试行 API 使用目标账号和密钥的挂载，恢复入口使用导入卷上的原备份 ID。页面任务通过后，按既定流程转移密文与回执。
 
 ## 数据范围
 
