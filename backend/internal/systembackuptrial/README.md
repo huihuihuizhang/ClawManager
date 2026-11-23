@@ -61,6 +61,18 @@
 
 管理员点击「准备试行环境」后，应用仅解除该 Job 的暂停，页面轮询任务状态。Job 完成后，备份或恢复继续使用原有的实时就绪检查。重复点击会读取同一任务状态。Job 失败且需要替换时，平台更新配置版本及新任务 UID。只需展示配置或沿用已人工配置的流程时，可以省略 `prepare_job`。Secret 内容保留在部署授权的文件挂载中。
 
+### 运行仓库自带的准备任务
+
+应用镜像内置 `/usr/local/bin/system-backup-trial-prepare`。平台可按端渲染 `deployments/k8s/system-backup-trial-prepare.yaml.template`，使用同一版本的内网镜像摘要。准备 Job 单独挂载 SQL 授权凭据。源 DSN 指向已授权的源库，允许给专用账号授予六张表的 `SELECT`。目标 DSN 指向预创建的 `cm_drill_trial_*` 库，允许执行固定目标迁移与授予该库的 DML 和 SELECT。两个 DSN 均需允许创建指定账号和核对账号归属。远程 DSN 使用 `tls=true`，`MYSQL_CA_CONFIGMAP` 提供受信任的 `ca-bundle.crt`。API 只使用准备任务写入的有限权限账号。
+
+平台为已登记的引用一次性创建隔离 namespace、已绑定的 PVC 和空的 `Opaque` Secret。每个输出 Secret 标注 `clawmanager.io/trial-material-namespace`，值为所在的 namespace。重跑保留原 Secret 对象及数据。模板参数 `LOCAL_OUTPUT_SECRET_NAMES_JSON` 和 `LOCAL_PVC_NAMES_JSON` 填入已登记名称的 JSON 数组。Job 写出的 Secret 使用 `dsn` 或 `key` 字段。应用通过普通 Secret 卷挂载这些字段，允许准备完成前字段为空，使用完整卷目录以接收更新。
+
+源端将归档卷同时挂载到可写路径和只读路径，设置 `ARCHIVE_WRITE_MOUNT_READ_ONLY=false`，如登记了源工作区则设 `WORKSPACE_MOUNT_READ_ONLY=true`。目标设置 `ARCHIVE_WRITE_MOUNT_READ_ONLY=true`、`WORKSPACE_MOUNT_READ_ONLY=false`，以及经平台验证的目标隔离参数。当前端未登记工作区时，从模板省去 `workspace` 的卷和挂载项。为 `PREPARE_UID`、`PREPARE_GID` 和 `TRIAL_VOLUME_GID` 填入该端部署批准的非 root 身份及卷组。任务核对 PVC 状态及已登记的存储类，并实际检验归档读回、目标只读导入和所登记工作区的访问方式。
+
+同一集群下，在源 namespace 为目标准备任务的服务账号绑定一个 Role。规则限定为 `apiGroups: [""]`、`resources: ["secrets"]`、`resourceNames` 仅含源端 `key_secret`、`verbs: ["get"]`。先完成源侧准备，再从目标管理员页面启动目标侧准备。目标侧将同一份备份密钥写入自己的独立 Secret，后续复跑使用已保存的目标密钥。另一集群的目标通过平台已有密钥渠道预填对应 `key` 字段。任务检测到已登记密钥消失或变化时会要求平台复核。
+
+目标任务将镜像的固定迁移目录应用到登记的 MySQL UUID 和库名。`MIGRATION_CATALOG_SHA256` 可从该镜像的 `system-backup-migrate -catalog-only` 取得。配置 `runtime_secret` 时，同时准备运行核验表。只需挂载目标账号和密钥给试行 API，恢复入口依旧使用导入卷上的原备份 ID。页面任务通过后，仍按原流程转移密文与回执。
+
 ## 数据范围
 
 - `users` 和 `user_quotas` 保留身份、角色、账号状态、登录凭据哈希和配额。

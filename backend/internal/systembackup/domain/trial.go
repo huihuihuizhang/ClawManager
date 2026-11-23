@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"database/sql"
+	"maps"
+	"slices"
 	"strings"
 )
 
@@ -22,6 +24,9 @@ var trialPredicates = map[string]string{
 	"instance_desired_state":       " WHERE desired_config_revision_id IS NOT NULL",
 	"instance_config_revisions":    " WHERE EXISTS (SELECT 1 FROM instance_desired_state d WHERE d.desired_config_revision_id = instance_config_revisions.id AND d.instance_id = instance_config_revisions.instance_id)",
 }
+
+// TrialSourceTables is the table-level grant scope accepted by trial capture.
+func TrialSourceTables() []string { return slices.Sorted(maps.Keys(trialColumns)) }
 
 func trialSourceSession(ctx context.Context, conn *sql.Conn, database, uuid string) error {
 	var actual, server, role string

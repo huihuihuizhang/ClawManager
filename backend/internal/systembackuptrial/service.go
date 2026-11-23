@@ -91,28 +91,43 @@ func readSetting(file string, limit int64) ([]byte, error) {
 }
 
 func (s *Service) database(credential string) (*sql.DB, string, error) {
-	raw, err := readSetting(s.value(credential+"_DSN_FILE"), 8192)
+	cfg, err := s.databaseConfig(credential)
 	if err != nil {
 		return nil, "", err
+	}
+	db, err := openTrialMySQL(cfg)
+	if err != nil {
+		return nil, "", err
+	}
+	if credential != "RUNTIME" {
+		db.SetMaxOpenConns(2)
+	}
+	return db, cfg.DBName, nil
+}
+
+func (s *Service) databaseConfig(credential string) (*mysql.Config, error) {
+	raw, err := readSetting(s.value(credential+"_DSN_FILE"), 8192)
+	if err != nil {
+		return nil, err
 	}
 	defer clear(raw)
 	cfg, err := mysql.ParseDSN(string(bytes.TrimSpace(raw)))
 	if err != nil || cfg.DBName == "" || cfg.User == "" || cfg.Passwd == "" {
-		return nil, "", errConfig
+		return nil, errConfig
 	}
 	// Use verified TLS on remote TCP. Local development can use loopback
 	// and a Unix socket with filesystem permissions.
 	if cfg.Net == "tcp" {
 		host, _, addrErr := net.SplitHostPort(cfg.Addr)
 		if addrErr != nil {
-			return nil, "", errConfig
+			return nil, errConfig
 		}
 		local := net.ParseIP(host).IsLoopback()
 		if !local && cfg.TLSConfig != "true" {
-			return nil, "", errConfig
+			return nil, errConfig
 		}
 	} else if cfg.Net != "unix" {
-		return nil, "", errConfig
+		return nil, errConfig
 	}
 	cfg.MultiStatements = false
 	cfg.AllowAllFiles = false
@@ -124,15 +139,15 @@ func (s *Service) database(credential string) (*sql.DB, string, error) {
 	cfg.Timeout = 5 * time.Second
 	cfg.ReadTimeout = 30 * time.Second
 	cfg.WriteTimeout = 30 * time.Second
+	return cfg, nil
+}
+
+func openTrialMySQL(cfg *mysql.Config) (*sql.DB, error) {
 	connector, err := mysql.NewConnector(cfg)
 	if err != nil {
-		return nil, "", errConfig
+		return nil, errConfig
 	}
-	db := sql.OpenDB(connector)
-	if credential != "RUNTIME" {
-		db.SetMaxOpenConns(2)
-	}
-	return db, cfg.DBName, nil
+	return sql.OpenDB(connector), nil
 }
 
 func (s *Service) key() ([]byte, error) {
