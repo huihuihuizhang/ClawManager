@@ -195,8 +195,12 @@ def restore(session_db, workspace, sessions):
                 raise HistoryError("restored history still requires the WAL")
         verified = readback(session_db, candidate, sessions)
         check_state_files(workspace, empty=True)
+        owner = workspace.stat()
         os.chmod(candidate, 0o600)
         with candidate.open("r+b") as content:
+            current = os.fstat(content.fileno())
+            if (current.st_uid, current.st_gid) != (owner.st_uid, owner.st_gid):
+                os.fchown(content.fileno(), owner.st_uid, owner.st_gid)
             os.fsync(content.fileno())
         # The staging directory and target share a filesystem. Link publishes
         # the completed database atomically and rejects a concurrent creator.

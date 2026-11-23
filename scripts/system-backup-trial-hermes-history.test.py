@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import socket
 import sqlite3
@@ -107,6 +108,16 @@ class TrialHermesHistoryTest(unittest.TestCase):
         with self.assertRaises(history.HistoryError):
             history.restore(SQLiteFixture, target, self.capture()["sessions"])
         self.assertEqual(existing.read_bytes(), b"existing")
+
+    @unittest.skipUnless(hasattr(os, "geteuid") and os.geteuid() == 0, "requires root on Linux")
+    def test_publishes_state_for_the_destination_workspace_owner(self):
+        target = self.workspace("workspace-owner")
+        os.chown(target, 200013, 200014)
+
+        history.restore(SQLiteFixture, target, self.capture()["sessions"])
+
+        state = (target / "state.db").stat()
+        self.assertEqual((state.st_uid, state.st_gid, state.st_mode & 0o777), (200013, 200014, 0o600))
 
     def test_mismatched_readback_is_not_published(self):
         class BrokenImport(SQLiteFixture):
