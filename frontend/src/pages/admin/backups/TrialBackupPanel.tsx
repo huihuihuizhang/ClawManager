@@ -11,6 +11,8 @@ type Task = {
   error?: string;
   readback_verified: boolean;
   counts?: Record<string, number>;
+  hermes_history?: { sessions: number; messages: number; transcript_sha256: string };
+  workspace_files?: { entries: number; file_bytes: number; archive_sha256: string };
 };
 type Readiness = { missing: string[] | null; restore_missing: string[] | null };
 
@@ -71,12 +73,15 @@ export default function TrialBackupPanel() {
   const labels: Record<string, string> = zh ? {
     prepare: '准备', capture: '采集', encrypt: '加密写入', readback: '独立读回',
     restore: '写入隔离库', verify: '恢复对账', done: '已完成',
+    restore_hermes_history: '恢复 Hermes 对话', hermes_history: 'Hermes 对话无法校验或恢复',
+    restore_workspace_files: '恢复工作区文件', workspace_files: '工作区文件无法校验或恢复',
     running: '运行中', succeeded: '成功', failed: '失败',
     source_credential: '试行源库凭据', source_isolation: '源库身份或只读授权',
     source_schema: '源库表结构', encryption_key: '试行加密密钥', storage_mounts: '专用存储挂载',
     storage_write_readback: '存储写入或独立读回', restore_isolation: '目标隔离与 MySQL 身份',
     restore_credential: '目标写入凭据', restore_read_credential: '目标只读凭据',
     restore_placement: '隔离目标的存储与命名空间', restore_database_name: '隔离库名称',
+    restore_artifact_mount: '试行产物只读挂载',
   } : {};
   const label = (code: string) => labels[code] ?? code.replaceAll('_', ' ');
   const button = 'rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium disabled:opacity-40';
@@ -102,13 +107,19 @@ export default function TrialBackupPanel() {
         <input value={backupID} maxLength={32} onChange={(event) => setBackupID(event.target.value.trim())}
           className="w-72 max-w-full rounded-lg border border-slate-200 px-3 py-2 font-mono" />
       </label>
-      <button type="button" className={button} disabled={!ready || !!ready.restore_missing?.length || !!ready.missing?.some((item) => !item.startsWith('source_')) || running || busy || !/^[0-9a-f]{32}$/.test(backupID)}
+      <button type="button" className={button} disabled={!ready || !!ready.restore_missing?.length || running || busy || !/^[0-9a-f]{32}$/.test(backupID)}
         onClick={() => void start(true)}>{zh ? '恢复到隔离环境' : 'Restore to isolated target'}</button>
     </div>
     {task && <div role="status" className="space-y-2 text-sm text-slate-700">
       <p>{zh ? '任务' : 'Task'} <code>{task.id}</code> · {label(task.status)} · {label(task.stage)}{task.error && ` · ${label(task.error)}`}</p>
       {task.backup_id && <p>{zh ? '试行产物' : 'Trial artifact'} <code>{task.backup_id}</code></p>}
       {task.readback_verified && <p className="text-emerald-700">{zh ? '独立读回校验通过' : 'Independent readback verified'}</p>}
+      {task.hermes_history && <p>{zh
+        ? `Hermes 对话 · ${task.hermes_history.sessions} 个会话 · ${task.hermes_history.messages} 条消息`
+        : `Hermes history · ${task.hermes_history.sessions} sessions · ${task.hermes_history.messages} messages`}</p>}
+      {task.workspace_files && <p>{zh
+        ? `工作区文件 · ${task.workspace_files.entries} 项 · ${task.workspace_files.file_bytes.toLocaleString()} 字节`
+        : `Workspace files · ${task.workspace_files.entries} entries · ${task.workspace_files.file_bytes.toLocaleString()} bytes`}</p>}
       {task.counts && <dl className="flex flex-wrap gap-x-5 gap-y-1">{Object.entries(task.counts).map(([table, count]) =>
         <div className="flex gap-2" key={table}><dt>{table}</dt><dd>{count}</dd></div>)}</dl>}
     </div>}

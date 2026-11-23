@@ -4,6 +4,10 @@ Set BACKUP_TRIAL_ORIGIN, BACKUP_TRIAL_ISOLATED_TARGET=confirmed, BACKUP_TRIAL_BA
 BACKUP_TRIAL_NAMESPACE, BACKUP_TRIAL_USER, BACKUP_TRIAL_PASSWORD, and BACKUP_TRIAL_EXPECTED_FILE.
 Expected JSON keys: user_id, instances, forbidden_ids, and start_ids.
 Each instances entry has id, type, runtime_type, instance_mode and optional runtime_variant.
+Optional hermes_history has instance_id, session_id, title and an ordered messages array
+with role and content. Optional forbidden_hermes_history has instance_id and session_id.
+Optional workspace_files entries have instance_id, path, size and sha256.
+Optional forbidden_workspace_file has instance_id and path.
 Set start_ids to [] for a login and visibility check with no mutations.
 Optional BACKUP_TRIAL_TIMEOUT_MS, PLAYWRIGHT_CHANNEL and PLAYWRIGHT_EXECUTABLE_PATH.
 No automatic start retries. Runtime status is an application observation. Verify the Ready Pod and
@@ -14,10 +18,15 @@ if (process.argv.includes('--help')) {
 }
 
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const id = value => Number.isSafeInteger(value) && value > 0;
 const code = value => typeof value === 'string' && /^[a-z][a-z0-9_-]{0,31}$/.test(value);
+const sessionID = value => typeof value === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(value);
+const workspacePath = value => typeof value === 'string' && value.length <= 1024 &&
+  !/[\\:\x00-\x1f]/.test(value) && value.split('/').every(part => part && part !== '.' && part !== '..');
+const workspaceDownload = file => `/instances/${file.instance_id}/workspace/download?${new URLSearchParams({ path: file.path })}`;
 const receipt = { outcome: 'preflight', samples: [] };
 let browser;
 let step = 'preflight';
@@ -44,6 +53,28 @@ function validateInventory(input) {
   for (const value of input.start_ids) {
     requireThat(owned.has(value) && !samples.has(value));
     samples.add(value);
+  }
+  if (input.hermes_history) {
+    const history = input.hermes_history;
+    const instance = input.instances.find(row => row.id === history.instance_id);
+    requireThat(samples.has(history.instance_id) && instance?.type === 'hermes' && instance.instance_mode === 'lite' &&
+      sessionID(history.session_id) && typeof history.title === 'string' && history.title.trim().length > 0 &&
+      Array.isArray(history.messages) && history.messages.length > 0 && history.messages.length <= 500 &&
+      history.messages.every(message => code(message.role) && typeof message.content === 'string' && message.content.trim().length > 0));
+  }
+  if (input.forbidden_hermes_history) {
+    const history = input.forbidden_hermes_history;
+    requireThat(forbidden.has(history.instance_id) && sessionID(history.session_id));
+  }
+  if (input.workspace_files !== undefined) {
+    requireThat(Array.isArray(input.workspace_files) && input.workspace_files.length <= 20 &&
+      input.workspace_files.every(file => samples.has(file.instance_id) && workspacePath(file.path) &&
+        Number.isSafeInteger(file.size) && file.size >= 0 && file.size <= 32 * 1024 * 1024 &&
+        /^[0-9a-f]{64}$/.test(file.sha256)));
+  }
+  if (input.forbidden_workspace_file) {
+    const file = input.forbidden_workspace_file;
+    requireThat(forbidden.has(file.instance_id) && workspacePath(file.path));
   }
 }
 
@@ -147,6 +178,19 @@ try {
   receipt.owner_id = who.id;
   receipt.visible_ids = [...actual.keys()].sort((a, b) => a - b);
   receipt.forbidden_ids = expected.forbidden_ids;
+  if (expected.forbidden_hermes_history) {
+    step = 'hermes_history_denied';
+    const { instance_id, session_id } = expected.forbidden_hermes_history;
+    const forbidden = await get(`/instances/${instance_id}/hermes-desktop/api/sessions/${encodeURIComponent(session_id)}/messages`);
+    requireThat([401, 403].includes(forbidden.status()));
+    receipt.hermes_history_denied_status = forbidden.status();
+  }
+  if (expected.forbidden_workspace_file) {
+    step = 'workspace_file_denied';
+    const forbidden = await get(workspaceDownload(expected.forbidden_workspace_file));
+    requireThat(forbidden.status() === 403);
+    receipt.workspace_file_denied_status = forbidden.status();
+  }
 
   for (const sample of expected.start_ids) {
     step = 'sample_start';
@@ -178,6 +222,39 @@ try {
         break;
       }
       await delay(Math.min(2000, remaining));
+    }
+    if (expected.hermes_history?.instance_id === sample) {
+      step = 'hermes_history_readback';
+      const history = expected.hermes_history;
+      await page.reload({ waitUntil: 'domcontentloaded', timeout });
+      const frame = page.frameLocator('iframe[title*="Hermes Desktop Web"]');
+      await frame.getByText(history.title, { exact: true }).first().click({ timeout });
+      for (const message of history.messages) {
+        await frame.getByText(message.content, { exact: true }).first().waitFor({ timeout });
+      }
+      const sameHistory = await page.evaluate(async ({ path, messages }) => {
+        const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store' });
+        if (!response.ok) return false;
+        const actual = (await response.json()).messages;
+        return Array.isArray(actual) && actual.length === messages.length &&
+          actual.every((message, i) => message.role === messages[i].role && message.content === messages[i].content);
+      }, {
+        path: `/api/v1/instances/${sample}/hermes-desktop/api/sessions/${encodeURIComponent(history.session_id)}/messages?limit=500&order=oldest`,
+        messages: history.messages,
+      });
+      requireThat(sameHistory);
+      evidence.hermes_history_messages = history.messages.length;
+    }
+    const files = expected.workspace_files?.filter(file => file.instance_id === sample) ?? [];
+    if (files.length) {
+      step = 'workspace_file_readback';
+      for (const file of files) {
+        const response = await get(workspaceDownload(file));
+        requireThat(response.ok() && response.headers()['content-length'] === String(file.size));
+        const downloaded = await response.body();
+        requireThat(downloaded.length === file.size && createHash('sha256').update(downloaded).digest('hex') === file.sha256);
+      }
+      evidence.workspace_files_verified = files.length;
     }
   }
   receipt.outcome = 'verified';

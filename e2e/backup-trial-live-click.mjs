@@ -3,6 +3,9 @@ const help = `Run one trial backup followed by one isolated restore from the adm
 Set BACKUP_TRIAL_ORIGIN and BACKUP_TRIAL_ISOLATED_TARGET=confirmed.
 Authenticate with BACKUP_TRIAL_STORAGE_STATE or BACKUP_TRIAL_USER and BACKUP_TRIAL_PASSWORD.
 Optional BACKUP_TRIAL_REPLAY_ID restores an existing artifact without creating another.
+Optional BACKUP_TRIAL_CAPTURE_ONLY=1 creates an artifact without restoring it.
+Optional BACKUP_TRIAL_HERMES_HISTORY=required verifies the Hermes history receipt.
+Optional BACKUP_TRIAL_WORKSPACE_FILES=required verifies the workspace file receipt.
 Optional BACKUP_TRIAL_TIMEOUT_MS, PLAYWRIGHT_CHANNEL and PLAYWRIGHT_EXECUTABLE_PATH.
 No automatic retries. Only task IDs, public status and aggregate row counts are reported.`;
 if (process.argv.includes('--help')) {
@@ -30,7 +33,7 @@ function observe(response, origin, method, path) {
   return url.origin === origin && url.pathname === path && response.request().method() === method;
 }
 
-async function execute(page, control, path, origin, timeout, result) {
+async function execute(page, control, path, origin, timeout, result, required) {
   const pending = page.waitForResponse(response => observe(response, origin, 'POST', path), { timeout });
   const [accepted] = await Promise.all([pending, control.click({ timeout })]);
   requireThat(accepted.status() === 202);
@@ -52,6 +55,18 @@ async function execute(page, control, path, origin, timeout, result) {
     requireThat(tables.has(table) && Number.isSafeInteger(count) && count >= 0);
   }
   Object.assign(result, { backup_id: task.backup_id, readback_verified: true, counts: task.counts });
+  if (required.history || task.hermes_history) {
+    const history = task.hermes_history;
+    requireThat(Number.isSafeInteger(history?.sessions) && history.sessions > 0 &&
+      Number.isSafeInteger(history.messages) && history.messages >= 0 && /^[0-9a-f]{64}$/.test(history.transcript_sha256));
+    result.hermes_history = { sessions: history.sessions, messages: history.messages, transcript_sha256: history.transcript_sha256 };
+  }
+  if (required.files || task.workspace_files) {
+    const files = task.workspace_files;
+    requireThat(Number.isSafeInteger(files?.entries) && files.entries > 0 &&
+      Number.isSafeInteger(files.file_bytes) && files.file_bytes >= 0 && /^[0-9a-f]{64}$/.test(files.archive_sha256));
+    result.workspace_files = { entries: files.entries, file_bytes: files.file_bytes, archive_sha256: files.archive_sha256 };
+  }
 }
 
 try {
@@ -64,7 +79,13 @@ try {
   const password = process.env.BACKUP_TRIAL_PASSWORD;
   requireThat(storageState || (user && password));
   const replay = process.env.BACKUP_TRIAL_REPLAY_ID;
+  const captureOnly = process.env.BACKUP_TRIAL_CAPTURE_ONLY === '1';
+  const required = {
+    history: process.env.BACKUP_TRIAL_HERMES_HISTORY === 'required',
+    files: process.env.BACKUP_TRIAL_WORKSPACE_FILES === 'required',
+  };
   requireThat(!replay || idPattern.test(replay));
+  requireThat(!captureOnly || !replay);
   const timeout = Number(process.env.BACKUP_TRIAL_TIMEOUT_MS || 120000);
   requireThat(Number.isSafeInteger(timeout) && timeout >= 1000 && timeout <= 600000);
 
@@ -98,7 +119,7 @@ try {
   const checks = await ready.json();
   requireThat((checks.missing === null || Array.isArray(checks.missing)) &&
     (checks.restore_missing === null || Array.isArray(checks.restore_missing)));
-  requireThat(!checks.restore_missing?.length && (replay || !checks.missing?.length));
+  requireThat((captureOnly || !checks.restore_missing?.length) && (replay || !checks.missing?.length));
   const panel = page.getByRole('region', { name: /^(备份（试行版）|Backup \(trial\))$/ });
   const input = panel.getByLabel(/^(试行备份 ID|Trial backup ID)$/);
   const success = panel.getByRole('status').getByText(/· (成功 · 已完成|succeeded · done)$/);
@@ -107,7 +128,7 @@ try {
     receipt.backup = {};
     await execute(page,
       panel.getByRole('button', { name: /^(创建试行备份|Create trial backup)$/ }),
-      trialPath + '/backups', origin.origin, timeout, receipt.backup);
+      trialPath + '/backups', origin.origin, timeout, receipt.backup, required);
     requireThat(receipt.backup.task_id === receipt.backup.backup_id);
     await panel.getByText(/^(独立读回校验通过|Independent readback verified)$/).waitFor({ timeout });
     await success.waitFor({ timeout });
@@ -116,21 +137,25 @@ try {
     await input.fill(replay, { timeout });
   }
 
-  step = 'restore_or_reconcile';
-  const id = replay || receipt.backup.backup_id;
-  receipt.restore = {};
-  await execute(page,
-    panel.getByRole('button', { name: /^(恢复到隔离环境|Restore to isolated target)$/ }),
-    trialPath + '/backups/' + id + '/restore', origin.origin, timeout, receipt.restore);
-  requireThat(receipt.restore.backup_id === id && receipt.restore.task_id !== id);
-  if (receipt.backup) {
-    for (const [table, count] of Object.entries(receipt.backup.counts)) {
-      requireThat(receipt.restore.counts[table] === count);
+  if (!captureOnly) {
+    step = 'restore_or_reconcile';
+    const id = replay || receipt.backup.backup_id;
+    receipt.restore = {};
+    await execute(page,
+      panel.getByRole('button', { name: /^(恢复到隔离环境|Restore to isolated target)$/ }),
+      trialPath + '/backups/' + id + '/restore', origin.origin, timeout, receipt.restore, required);
+    requireThat(receipt.restore.backup_id === id && receipt.restore.task_id !== id);
+    if (receipt.backup) {
+      for (const [table, count] of Object.entries(receipt.backup.counts)) {
+        requireThat(receipt.restore.counts[table] === count);
+      }
+      requireThat(JSON.stringify(receipt.backup.hermes_history) === JSON.stringify(receipt.restore.hermes_history));
+      requireThat(JSON.stringify(receipt.backup.workspace_files) === JSON.stringify(receipt.restore.workspace_files));
     }
+    await panel.getByRole('status').getByText(receipt.restore.task_id, { exact: true }).waitFor({ timeout });
+    await success.waitFor({ timeout });
+    await panel.getByText(/^(独立读回校验通过|Independent readback verified)$/).waitFor({ timeout });
   }
-  await panel.getByRole('status').getByText(receipt.restore.task_id, { exact: true }).waitFor({ timeout });
-  await success.waitFor({ timeout });
-  await panel.getByText(/^(独立读回校验通过|Independent readback verified)$/).waitFor({ timeout });
   receipt.outcome = 'verified';
 } catch {
   receipt.outcome = step;

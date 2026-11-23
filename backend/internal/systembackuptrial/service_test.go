@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -69,6 +70,42 @@ func TestTrialAdminAdmissionWithoutFormalConfiguration(t *testing.T) {
 				t.Fatal("trial readiness did not report independently missing source credential")
 			}
 		})
+	}
+}
+
+func TestTrialRestoreAdmissionWithOnlyTargetConfiguration(t *testing.T) {
+	root := t.TempDir()
+	reader := filepath.Join(root, "imported")
+	if err := os.Mkdir(reader, 0700); err != nil {
+		t.Fatal(err)
+	}
+	settings := map[string]string{
+		"READ_DIR": reader, "RESTORE_ISOLATED": "true", "RESTORE_UUID": "target-uuid",
+		"RESTORE_NAMESPACE": "cm-drill-fixture", "RESTORE_STORAGE_CLASS": "target-class",
+	}
+	for setting, contents := range map[string]string{
+		"KEY_FILE":              strings.Repeat("ab", 32),
+		"RESTORE_DSN_FILE":      "writer:test@tcp(127.0.0.1:3306)/cm_drill_trial_fixture",
+		"RESTORE_READ_DSN_FILE": "reader:test@tcp(127.0.0.1:3306)/cm_drill_trial_fixture",
+	} {
+		name := filepath.Join(root, setting)
+		if err := os.WriteFile(name, []byte(contents), 0600); err != nil {
+			t.Fatal(err)
+		}
+		settings[setting] = name
+	}
+	service := New(func(name string) string { return settings[strings.TrimPrefix(name, "SYSTEM_BACKUP_TRIAL_")] })
+	ready := service.readiness(context.Background())
+	if len(ready.Missing) == 0 || len(ready.RestoreMissing) != 0 {
+		t.Fatalf("expected restore-only readiness, got %+v", ready)
+	}
+	task := Task{ID: newID(), BackupID: newID()}
+	if err := service.restore(context.Background(), &task); !errors.Is(err, os.ErrNotExist) || task.Stage != "readback" {
+		t.Fatalf("expected independent artifact lookup on the target, got stage=%q err=%v", task.Stage, err)
+	}
+	delete(settings, "READ_DIR")
+	if got := service.restoreSettings(); len(got) != 1 || got[0] != "restore_artifact_mount" {
+		t.Fatalf("missing target artifact mount did not block restore: %v", got)
 	}
 }
 
@@ -204,7 +241,8 @@ func TestTrialStorageReopensAndChecksCiphertextAndRejectsWritableReadPath(t *tes
 
 // TestTrialMySQLRoundTrip is opt-in. Its DSNs must point to a disposable source
 // with the six trial tables and two fresh, disposable target schemas on a second
-// MySQL server. It also runs on Windows without a read-only bind mount.
+// MySQL server. The artifact is copied to a separate directory before either
+// restore. It also runs on Windows without a read-only bind mount.
 func TestTrialMySQLRoundTrip(t *testing.T) {
 	if os.Getenv("CLAWMANAGER_TRIAL_MYSQL_TEST") != "1" {
 		t.Skip("requires disposable MySQL source and targets")
@@ -230,6 +268,21 @@ func TestTrialMySQLRoundTrip(t *testing.T) {
 		t.Fatalf("unexpected verified sample counts: %v", backup.Counts)
 	}
 	t.Logf("backup %s encrypted and independently read back, counts=%v", backup.ID, backup.Counts)
+	imported := t.TempDir()
+	for _, suffix := range []string{".trial", ".receipt"} {
+		name := backup.ID + suffix
+		artifact, err := os.ReadFile(filepath.Join(service.value("READ_DIR"), name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(imported, name), artifact, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("SYSTEM_BACKUP_TRIAL_READ_DIR", imported)
+	t.Setenv("SYSTEM_BACKUP_TRIAL_WRITE_DIR", "")
+	t.Setenv("SYSTEM_BACKUP_TRIAL_SOURCE_DSN_FILE", "")
+	t.Setenv("SYSTEM_BACKUP_TRIAL_SOURCE_UUID", "")
 	for _, target := range []string{"first", "second"} {
 		if target == "second" {
 			t.Setenv("SYSTEM_BACKUP_TRIAL_RESTORE_DSN_FILE", os.Getenv("TRIAL_TEST_REPLAY_DSN_FILE"))

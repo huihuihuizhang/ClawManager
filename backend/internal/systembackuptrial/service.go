@@ -31,6 +31,7 @@ import (
 )
 
 const maxEncoded = 64 << 20
+const maxTrialPlaintext = maxEncoded + maxHermesHistory + maxWorkspaceArchive + 4096
 
 var limits = domain.Limits{MaxRows: 100000, MaxBytes: maxEncoded}
 var taskID = regexp.MustCompile(`^[0-9a-f]{32}$`)
@@ -38,13 +39,15 @@ var errConfig = errors.New("trial configuration unavailable")
 var errReadback = errors.New("trial readback mismatch")
 
 type Task struct {
-	ID       string         `json:"id"`
-	BackupID string         `json:"backup_id,omitempty"`
-	Status   string         `json:"status"`
-	Stage    string         `json:"stage"`
-	Error    string         `json:"error,omitempty"`
-	Readback bool           `json:"readback_verified"`
-	Counts   map[string]int `json:"counts,omitempty"`
+	ID        string                `json:"id"`
+	BackupID  string                `json:"backup_id,omitempty"`
+	Status    string                `json:"status"`
+	Stage     string                `json:"stage"`
+	Error     string                `json:"error,omitempty"`
+	Readback  bool                  `json:"readback_verified"`
+	Counts    map[string]int        `json:"counts,omitempty"`
+	Hermes    *historyReceipt       `json:"hermes_history,omitempty"`
+	Workspace *workspaceFileReceipt `json:"workspace_files,omitempty"`
 }
 
 type Readiness struct {
@@ -145,6 +148,18 @@ func (s *Service) key() ([]byte, error) {
 
 type storage struct{ writer, reader *os.Root }
 
+func (s *Service) readerRoot() (*os.Root, error) {
+	path := s.value("READ_DIR")
+	if !filepath.IsAbs(path) {
+		return nil, errConfig
+	}
+	reader, err := os.OpenRoot(path)
+	if err != nil {
+		return nil, errConfig
+	}
+	return reader, nil
+}
+
 func (s *Service) storage() (storage, error) {
 	w, r := s.value("WRITE_DIR"), s.value("READ_DIR")
 	if !filepath.IsAbs(w) || !filepath.IsAbs(r) || filepath.Clean(w) == filepath.Clean(r) {
@@ -154,7 +169,7 @@ func (s *Service) storage() (storage, error) {
 	if err != nil {
 		return storage{}, errConfig
 	}
-	reader, err := os.OpenRoot(r)
+	reader, err := s.readerRoot()
 	if err != nil {
 		writer.Close()
 		return storage{}, errConfig
@@ -225,7 +240,7 @@ func (s storage) probe(ctx context.Context, master []byte) (err error) {
 }
 
 func (s storage) open(ctx context.Context, receipt staging.Receipt, key []byte, b staging.Binding, dst io.Writer, limit int64) error {
-	if receipt.Name != b.Path || receipt.Size < 1 || receipt.Size > maxEncoded+(1<<20) {
+	if receipt.Name != b.Path || receipt.Size < 1 || receipt.Size > limit+(1<<20) {
 		return errReadback
 	}
 	f, err := staging.OpenFile(ctx, s.reader, receipt)
@@ -241,9 +256,11 @@ type artifact struct {
 }
 
 type manifest struct {
-	SourceUUID string         `json:"source_uuid"`
-	SHA256     string         `json:"snapshot_sha256"`
-	Counts     map[string]int `json:"counts"`
+	SourceUUID string             `json:"source_uuid"`
+	SHA256     string             `json:"snapshot_sha256"`
+	Counts     map[string]int     `json:"counts"`
+	Hermes     *historyManifest   `json:"hermes_history,omitempty"`
+	Workspace  *workspaceManifest `json:"workspace_files,omitempty"`
 }
 
 func (s storage) metadata(id string) (artifact, error) {
@@ -264,33 +281,100 @@ func (s storage) metadata(id string) (artifact, error) {
 	return out, json.Unmarshal(raw, &out)
 }
 
-func (s storage) snapshot(ctx context.Context, id string, a artifact, master []byte) (domain.Snapshot, manifest, error) {
+type restoredArtifact struct {
+	snapshot  domain.Snapshot
+	manifest  manifest
+	hermes    []byte
+	workspace []byte
+}
+
+func readArtifactSection(r io.Reader, length, limit int) ([]byte, error) {
+	if length <= 0 || length > limit {
+		return nil, errReadback
+	}
+	data := make([]byte, length)
+	if _, err := io.ReadFull(r, data); err != nil {
+		clear(data)
+		return nil, errReadback
+	}
+	return data, nil
+}
+
+func (s storage) snapshot(ctx context.Context, id string, a artifact, master []byte) (restoredArtifact, error) {
 	key := taskKey(master, id)
 	defer clear(key)
 	var plain bytes.Buffer
 	defer func() { clear(plain.Bytes()) }()
-	if err := s.open(ctx, a.Receipt, key, binding(id), &plain, maxEncoded); err != nil {
-		return domain.Snapshot{}, manifest{}, err
+	if err := s.open(ctx, a.Receipt, key, binding(id), &plain, maxTrialPlaintext); err != nil {
+		return restoredArtifact{}, err
 	}
-	reader := bufio.NewReader(&plain)
+	reader := bufio.NewReader(bytes.NewReader(plain.Bytes()))
 	line, err := reader.ReadSlice('\n')
 	var m manifest
 	if err != nil || json.Unmarshal(line, &m) != nil || m.SourceUUID == "" {
-		return domain.Snapshot{}, manifest{}, errReadback
+		return restoredArtifact{}, errReadback
+	}
+	var history, files []byte
+	verified := false
+	defer func() {
+		if !verified {
+			clear(history)
+			clear(files)
+		}
+	}()
+	if m.Hermes != nil {
+		history, err = readArtifactSection(reader, m.Hermes.Bytes, maxHermesHistory)
+		if err != nil {
+			return restoredArtifact{}, err
+		}
+	}
+	if m.Workspace != nil {
+		files, err = readArtifactSection(reader, m.Workspace.ArchiveBytes, maxWorkspaceArchive)
+		if err != nil {
+			return restoredArtifact{}, err
+		}
 	}
 	snapshot, err := domain.Decode(reader, limits)
 	if err != nil {
-		return domain.Snapshot{}, manifest{}, err
+		return restoredArtifact{}, err
 	}
 	digest, err := domain.Digest(snapshot)
 	if err != nil || digest != m.SHA256 || !maps.Equal(counts(snapshot), m.Counts) {
-		return domain.Snapshot{}, manifest{}, errReadback
+		return restoredArtifact{}, errReadback
 	}
-	return snapshot, m, domain.ValidateTrial(snapshot)
+	if err := domain.ValidateTrial(snapshot); err != nil {
+		return restoredArtifact{}, err
+	}
+	if m.Hermes != nil {
+		actual, err := describeHistory(history, snapshot)
+		if err != nil || actual != *m.Hermes {
+			return restoredArtifact{}, errReadback
+		}
+	}
+	if m.Workspace != nil {
+		actual, err := describeWorkspaceFiles(files)
+		scope := selectedRuntime(snapshot, m.Workspace.workspaceSelection)
+		if err != nil || actual != m.Workspace.workspaceFileReceipt || scope == "" || scope != m.Workspace.Runtime {
+			return restoredArtifact{}, errReadback
+		}
+	}
+	verified = true
+	return restoredArtifact{snapshot: snapshot, manifest: m, hermes: history, workspace: files}, nil
 }
 
 func (s *Service) restoreSettings() []string {
 	var missing []string
+	key, err := s.key()
+	if err != nil {
+		missing = append(missing, "encryption_key")
+	}
+	clear(key)
+	reader, err := s.readerRoot()
+	if err != nil {
+		missing = append(missing, "restore_artifact_mount")
+	} else {
+		reader.Close()
+	}
 	if s.value("RESTORE_ISOLATED") != "true" ||
 		s.value("RESTORE_UUID") == "" || s.value("RESTORE_UUID") == s.value("SOURCE_UUID") {
 		missing = append(missing, "restore_isolation")
@@ -346,6 +430,10 @@ func (s *Service) readiness(ctx context.Context) Readiness {
 
 func category(err error) string {
 	switch {
+	case errors.Is(err, errWorkspaceFiles):
+		return "workspace_files"
+	case errors.Is(err, errHistory):
+		return "hermes_history"
 	case errors.Is(err, domain.ErrSchema):
 		return "schema"
 	case errors.Is(err, domain.ErrIsolation):

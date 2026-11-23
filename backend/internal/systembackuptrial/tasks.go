@@ -3,9 +3,11 @@ package systembackuptrial
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"maps"
 	"net/http"
+	"os"
 	"time"
 
 	"clawreef/internal/middleware"
@@ -127,6 +129,25 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 		return err
 	}
 	m := manifest{SourceUUID: uuid, SHA256: digest, Counts: counts(snapshot)}
+	var history []byte
+	if file := s.value("HERMES_HISTORY_FILE"); file != "" {
+		history, err = readSetting(file, maxHermesHistory)
+		if err != nil {
+			return errHistory
+		}
+		defer clear(history)
+		descriptor, err := describeHistory(history, snapshot)
+		if err != nil {
+			return err
+		}
+		m.Hermes = &descriptor
+	}
+	files, descriptor, err := s.captureWorkspaceFiles(ctx, snapshot)
+	if err != nil {
+		return err
+	}
+	defer clear(files)
+	m.Workspace = descriptor
 	task.Stage = "encrypt"
 	s.publish(*task)
 	b := binding(task.ID)
@@ -135,6 +156,16 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 	receipt, err := staging.SealFile(ctx, store.writer, b.Path, derived, b, func(w io.Writer) error {
 		if err := json.NewEncoder(w).Encode(m); err != nil {
 			return err
+		}
+		if len(history) != 0 {
+			if _, err := w.Write(history); err != nil {
+				return err
+			}
+		}
+		if len(files) != 0 {
+			if _, err := w.Write(files); err != nil {
+				return err
+			}
 		}
 		return domain.Encode(w, snapshot)
 	})
@@ -150,11 +181,15 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 	task.Stage = "readback"
 	s.publish(*task)
 	a := artifact{Receipt: receipt}
-	_, verified, err := store.snapshot(ctx, task.ID, a, key)
+	verified, err := store.snapshot(ctx, task.ID, a, key)
 	if err != nil {
 		return err
 	}
-	if verified.SHA256 != m.SHA256 || verified.SourceUUID != uuid {
+	defer clear(verified.hermes)
+	defer clear(verified.workspace)
+	if verified.manifest.SHA256 != m.SHA256 || verified.manifest.SourceUUID != uuid ||
+		(m.Hermes != nil && (verified.manifest.Hermes == nil || *verified.manifest.Hermes != *m.Hermes)) ||
+		(m.Workspace != nil && (verified.manifest.Workspace == nil || *verified.manifest.Workspace != *m.Workspace)) {
 		return errReadback
 	}
 	if _, err := staging.WriteUnpublishedFile(ctx, store.writer, task.ID+".receipt", func(w io.Writer) error {
@@ -164,34 +199,71 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 	}
 	complete = true
 	task.BackupID, task.Counts, task.Readback = task.ID, m.Counts, true
+	if m.Hermes != nil {
+		task.Hermes = &m.Hermes.historyReceipt
+	}
+	if m.Workspace != nil {
+		task.Workspace = &m.Workspace.workspaceFileReceipt
+	}
 	return nil
 }
 
 func (s *Service) restore(ctx context.Context, task *Task) error {
+	if len(s.restoreSettings()) != 0 {
+		return errConfig
+	}
 	key, err := s.key()
 	if err != nil {
 		return err
 	}
 	defer clear(key)
-	store, err := s.storage()
+	readerRoot, err := s.readerRoot()
 	if err != nil {
 		return err
 	}
-	defer store.close()
+	defer readerRoot.Close()
+	store := storage{reader: readerRoot}
 	task.Stage = "readback"
 	s.publish(*task)
 	a, err := store.metadata(task.BackupID)
 	if err != nil {
 		return err
 	}
-	source, m, err := store.snapshot(ctx, task.BackupID, a, key)
+	bundle, err := store.snapshot(ctx, task.BackupID, a, key)
 	if err != nil {
 		return err
+	}
+	defer clear(bundle.hermes)
+	defer clear(bundle.workspace)
+	source, m := bundle.snapshot, bundle.manifest
+	var worker historyTarget
+	if m.Hermes != nil {
+		worker, err = s.historyTarget()
+		if err != nil {
+			return err
+		}
+		probe, cancel := context.WithTimeout(ctx, 10*time.Second)
+		err = worker.ready(probe)
+		cancel()
+		if err != nil {
+			return err
+		}
+	}
+	var workspaceMount *os.Root
+	if m.Workspace != nil {
+		workspaceMount, err = s.openWorkspaceTarget()
+		if err != nil {
+			return err
+		}
+		defer workspaceMount.Close()
+		if err := checkWorkspaceDestination(ctx, workspaceMount, *m.Workspace, bundle.workspace); err != nil {
+			return err
+		}
 	}
 	task.Counts, task.Readback = m.Counts, true
 	task.Stage = "restore"
 	s.publish(*task)
-	if len(s.restoreSettings()) != 0 || s.value("RESTORE_UUID") == m.SourceUUID {
+	if s.value("RESTORE_UUID") == m.SourceUUID {
 		return domain.ErrIsolation
 	}
 	db, database, err := s.database("RESTORE")
@@ -216,15 +288,41 @@ func (s *Service) restore(ctx context.Context, task *Task) error {
 	if err := domain.CheckTrialTargetReader(ctx, reader, target); err != nil {
 		return err
 	}
-	plan, err := domain.RestoreTrial(ctx, db, target, source, domain.Placement{
+	placement := domain.Placement{
 		Namespace:    s.value("RESTORE_NAMESPACE"),
 		StorageClass: s.value("RESTORE_STORAGE_CLASS"),
-	})
-	if err != nil {
-		return err
 	}
+	plan, err := domain.RestoreTrial(ctx, db, target, source, placement)
 	db.Close()
 	task.Stage = "verify"
 	s.publish(*task)
-	return domain.VerifyDrill(ctx, reader, target, plan)
+	if err == nil {
+		err = domain.VerifyDrill(ctx, reader, target, plan)
+	} else if (m.Hermes != nil || m.Workspace != nil) && errors.Is(err, domain.ErrNotEmpty) {
+		// A previous attempt may have committed SQL before importing user content.
+		// Resume only when the target still exactly matches the sealed SQL.
+		err = domain.VerifyRestoredTrial(ctx, reader, target, source, placement)
+	}
+	if err != nil {
+		return err
+	}
+	if m.Hermes != nil {
+		task.Stage = "restore_hermes_history"
+		s.publish(*task)
+		if err := worker.run(ctx, "restore", *m.Hermes, bundle.hermes); err != nil {
+			if err := worker.run(ctx, "verify", *m.Hermes, bundle.hermes); err != nil {
+				return err
+			}
+		}
+		task.Hermes = &m.Hermes.historyReceipt
+	}
+	if m.Workspace != nil {
+		task.Stage = "restore_workspace_files"
+		s.publish(*task)
+		if err := restoreWorkspaceFiles(ctx, workspaceMount, *m.Workspace, bundle.workspace); err != nil {
+			return err
+		}
+		task.Workspace = &m.Workspace.workspaceFileReceipt
+	}
+	return nil
 }

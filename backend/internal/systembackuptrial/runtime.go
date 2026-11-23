@@ -3,7 +3,6 @@ package systembackuptrial
 import (
 	"context"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -54,13 +53,9 @@ func (s *Service) InitializeRuntime(ctx context.Context, cfg *config.Config, bac
 	if err != nil {
 		return nil, err
 	}
-	readerPath := s.value("READ_DIR")
-	if !filepath.IsAbs(readerPath) {
-		return nil, errConfig
-	}
-	readerRoot, err := os.OpenRoot(readerPath)
+	readerRoot, err := s.readerRoot()
 	if err != nil {
-		return nil, errConfig
+		return nil, err
 	}
 	defer readerRoot.Close()
 	store := storage{reader: readerRoot}
@@ -73,10 +68,13 @@ func (s *Service) InitializeRuntime(ctx context.Context, cfg *config.Config, bac
 	if err != nil {
 		return nil, errReadback
 	}
-	snapshot, m, err := store.snapshot(ctx, backupID, a, key)
+	bundle, err := store.snapshot(ctx, backupID, a, key)
 	if err != nil {
 		return nil, err
 	}
+	defer clear(bundle.hermes)
+	defer clear(bundle.workspace)
+	snapshot, m := bundle.snapshot, bundle.manifest
 	uuid := s.value("RESTORE_UUID")
 	if uuid == "" || uuid == m.SourceUUID {
 		return nil, domain.ErrIsolation
@@ -94,6 +92,28 @@ func (s *Service) InitializeRuntime(ctx context.Context, cfg *config.Config, bac
 	}}
 	if err := domain.VerifyRestoredTrial(ctx, reader, target, snapshot, placement); err != nil {
 		return nil, err
+	}
+	if m.Hermes != nil {
+		history, err := s.historyTarget()
+		if err != nil || filepath.Clean(history.root) != filepath.Clean(cfg.Runtime.WorkspaceRoot) {
+			return nil, errHistory
+		}
+		if err := history.run(ctx, "verify", *m.Hermes, bundle.hermes); err != nil {
+			return nil, err
+		}
+	}
+	if m.Workspace != nil {
+		if s.value("WORKSPACE_FILES_TARGET_ROOT") != filepath.Clean(cfg.Runtime.WorkspaceRoot) {
+			return nil, errWorkspaceFiles
+		}
+		mount, err := s.openWorkspaceTarget()
+		if err != nil {
+			return nil, err
+		}
+		defer mount.Close()
+		if err := verifyWorkspaceFiles(ctx, mount, *m.Workspace, bundle.workspace); err != nil {
+			return nil, err
+		}
 	}
 	pool, runtimeDatabase, err := s.database("RUNTIME")
 	if err != nil {

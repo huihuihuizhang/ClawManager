@@ -33,6 +33,28 @@
 
 备份成功后记录页面上的备份 ID。从页面提交该 ID 进行恢复，检查任务完成及行数。恢复任务重新读回密文并验证摘要，写入后以目标 SELECT 身份核对 ID、归属、配置与行数。复跑时配置另一个新空库，使用同一备份 ID。
 
+跨集群恢复时，从集群 1 的已读回试行产物中取同一备份 ID 的 `<id>.trial` 和 `<id>.receipt`，保留文件名，通过现场批准的渠道导入集群 2 的专用卷。文件全部导入后再挂载为集群 2 的 `READ_DIR`。试行密钥通过目标部署的 Secret 单独下发，目标恢复和独立读回 DSN 使用集群 2 自己的凭据。目标 API 仅需产物只读挂载及恢复配置，即可用原备份 ID 提交恢复。目标会以回执中的密文长度与摘要校验文件，再核对加密绑定、快照摘要和源 MySQL UUID。
+
+## Hermes Lite 对话试行样本
+
+在获准的 Hermes Lite 工作区运行 `scripts/system-backup-trial-hermes-history.py capture`，使用该工作区所属实例的用户和实例 ID。采集通过只读 SQLite 连接生成一致性快照，再用该 Hermes 版本自带的会话导出方法取得选定对话及父会话。将进程输出直接交给隔离部署的私有临时挂载，并把文件路径设为 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_FILE`。回执和日志只记录聚合数据。试行服务确认归属与 SQL 快照一致后，将对话随原备份 ID 一起加密并独立读回。
+
+目标部署在试行 API Pod 内增加一个使用同版 Hermes 镜像的容器，以该镜像中的 Python 启动 `system-backup-trial-hermes-history.py serve --socket /run/trial-hermes/history.sock --workspace-root /workspaces`。两个容器通过专用 `emptyDir` 共享 `/run/trial-hermes`，并使用具有该目录访问权的组。Sidecar 挂载目标演练工作区 PVC 和只读脚本配置，按目标 Hermes 实例的工作区身份写入。Unix socket 仅在同一 Pod 内使用，无需暴露 Service 或端口。
+
+仓库固定的 Hermes Lite 镜像 `ghcr.io/yuan-lab-llm/agentsruntime/hermes-lite@sha256:4fd519962d0afe796b36dade6f8e66379e7030a2c6f3c62b4a6574352b2eac44` 已通过本机原生测试。该镜像使用 `/opt/hermes-agent/.venv/bin/python`，并将 `/opt/hermes-agent` 加入 `PYTHONPATH`。在断网容器中用原生 `SessionDB` 创建一条合成会话和两条消息，经 socket 导入、读回相同摘要，并拒绝错误实例请求。
+
+API 容器设置 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_SOCKET=/run/trial-hermes/history.sock` 和 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_TARGET_ROOT=/workspaces`。先在目标 PVC 创建该实例的 `home/.hermes` 空状态目录。启动验收部署保持同一工作区根及实际 PVC。应用在写 SQL 前检查 sidecar 与目标工作区根，之后经本机 socket 发送已认证的对话。Sidecar 独立读回一致后发布 SQLite 文件。若 SQL 已恢复，可用原备份 ID 重试。重试先核对目标 SQL 与产物，再恢复缺失的对话或核对已发布的对话。
+
+浏览器取证脚本可在集群 1 用 `BACKUP_TRIAL_CAPTURE_ONLY=1` 仅发起备份，在集群 2 用 `BACKUP_TRIAL_REPLAY_ID` 恢复导入产物。两端设置 `BACKUP_TRIAL_HERMES_HISTORY=required` 可分别验证对话计数和摘要。普通用户在 Hermes 聊天页读回原对话的验收单独取证。
+
+## 工作区用户文件试行样本
+
+将获准实例的工作区快照只读挂载到 `SYSTEM_BACKUP_TRIAL_WORKSPACE_FILES_SOURCE_ROOT`，目录布局沿用 `<runtime>/user-<id>/instance-<id>`。`SYSTEM_BACKUP_TRIAL_WORKSPACE_FILES_SELECTION_FILE` 指向包含 `user_id`、`instance_id` 和 `relative_dir` 的 JSON 文件。本轮每个产物选择一个用户文件目录，支持现有 Gateway Lite 的 Hermes、OpenClaw、OpenCode 和 DeepSeek Harness。服务以同份 SQL 快照核对实例归属，归档选定目录的普通文件和子目录。选定目录的最大归档大小为 32 MiB。实例运行配置和状态目录按各自的恢复流程处理。
+
+恢复端挂载独立的目标工作区卷，将它配置为 `SYSTEM_BACKUP_TRIAL_WORKSPACE_FILES_TARGET_ROOT`。预先创建对应实例及选定目录的父目录。申请恢复时选定目录应尚未创建。成功后可以用同一备份 ID 复跑，服务会独立读回已存在的同内容目录。目标卷需支持 Linux 无覆盖原子重命名。恢复开始写数据库前，服务会在目标目录旁验证发布能力并清理探针。现场试行的 Longhorn RWX（NFSv4）卷对此操作返回 `EINVAL`，普通重命名替换临时空目录也返回 `EEXIST`。现场优先用独立 RWO 卷验证工作区恢复，归档存储仍按自身的挂载和读写条件检查。服务先在独立暂存目录写入并校验内容及 POSIX 权限，再发布到原相对路径。保持同一实例的目标运行 UID/GID 配置，启动验收 API 与运行池使用该工作区卷。
+
+设置 `BACKUP_TRIAL_WORKSPACE_FILES=required` 核对备份和恢复的工作区条目数、字节数和归档摘要。向运行时取证脚本的普通账号清单加入 `workspace_files`，用应用已有下载接口核对文件大小和 SHA-256。另一个账号的清单可加入 `forbidden_workspace_file`，从同一接口验证 HTTP 403。用于下载核对的 `path` 相对于应用的工作区文件根。
+
 ## 隔离实例启动样本
 
 用单独的隔离应用部署打开已经对账的 `cm_drill_trial_*` 目标。部署负责人提供独立的 MySQL、Kubernetes 身份、工作区、存储类、镜像和模型访问。网络策略须阻断生产依赖访问。普通应用入口依旧拒绝 `cm_drill_*` 及现有受保护格式的 `cm_restore_`、`cm_import_` 演练库。
