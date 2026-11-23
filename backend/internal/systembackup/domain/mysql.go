@@ -256,6 +256,10 @@ func captureWithCatalog(ctx context.Context, db *sql.DB, limits Limits, check fu
 }
 
 func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, readCatalog func(context.Context, queryer, func() error) ([]Table, error), countEmpty bool, sourceChecks ...func() error) (Snapshot, error) {
+	return captureRows(ctx, db, limits, check, readCatalog, countEmpty, nil, sourceChecks...)
+}
+
+func captureRows(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, readCatalog func(context.Context, queryer, func() error) ([]Table, error), countEmpty bool, predicates map[string]string, sourceChecks ...func() error) (Snapshot, error) {
 	var authorize func() error
 	if len(sourceChecks) > 1 {
 		return Snapshot{}, ErrIsolation
@@ -371,7 +375,7 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 			pk = append(pk, name)
 		}
 		name, _ := quoted(t.Name)
-		rows, err := (sourceGuardedQuery{tx, authorize}).QueryContext(ctx, "SELECT "+strings.Join(cols, ",")+" FROM "+name+" ORDER BY "+strings.Join(pk, ","))
+		rows, err := (sourceGuardedQuery{tx, authorize}).QueryContext(ctx, "SELECT "+strings.Join(cols, ",")+" FROM "+name+predicates[t.Name]+" ORDER BY "+strings.Join(pk, ","))
 		if err != nil {
 			return Snapshot{}, ErrDatabase
 		}
@@ -423,6 +427,17 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 			return Snapshot{}, ErrIsolation
 		}
 		result.Tables = append(result.Tables, t)
+	}
+	if predicates != nil {
+		// Each projected SELECT now holds a metadata lock on its source tables.
+		// Refuse schema changes between the initial catalog and the row reads.
+		locked, err := readCatalog(ctx, tx, authorize)
+		if err != nil {
+			return Snapshot{}, err
+		}
+		if !sameSourceCatalog(tables, locked) {
+			return Snapshot{}, ErrSchema
+		}
 	}
 	for _, required := range []string{"users", "user_quotas", "instances"} {
 		found := false

@@ -11,6 +11,7 @@ import BackupLiveWorkspace from './BackupLiveWorkspace';
 import { liveBackupReadEnabled } from './backupLiveSource';
 import { useBackupText } from './useBackupText';
 import BackupOverviewReadout from './BackupOverviewReadout';
+import TrialBackupPanel from './TrialBackupPanel';
 
 const tabs = [
   ['overview', 'overview'], ...backupEntryPoints.map((entry) => [entry.tab, entry.label] as const),
@@ -240,6 +241,7 @@ export default function SystemBackupsPage() {
     <div className="mx-auto max-w-[1600px] space-y-5">
       <header className="flex flex-wrap items-start justify-between gap-4"><div><div className="mb-2 flex items-center gap-2 text-slate-900"><Database className="h-5 w-5" aria-hidden="true" /><h2 className="text-lg font-semibold">{b('heading')}</h2></div><p className="text-sm leading-6 text-slate-500">{b('intro')}</p></div><div className="flex flex-wrap gap-2"><button type="button" aria-pressed={preview} onClick={changePreview} className={buttonClass}><FlaskConical className="h-4 w-4" aria-hidden="true" />{preview ? b('exitPreview') : b('showPreview')}</button>{preview && <DisabledAction><Archive className="h-4 w-4" aria-hidden="true" />{b('createBackup')}</DisabledAction>}</div></header>
       {preview ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"><div className="flex items-start gap-2 text-sm text-amber-900"><Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p><strong>{b('preview')}</strong>{' · '}{b('previewNotice')}</p></div><label className="flex items-center gap-2 text-xs text-amber-900">{b('previewState')}<select value={scenario} onChange={(event) => changeScenario(event.target.value as PreviewScenario)} className="rounded-md border border-amber-200 bg-white px-2 py-1.5 text-sm">{previewScenarios.map((value) => <option key={value} value={value}>{b(`scenario_${value}`)}</option>)}</select></label></div> : <div className="flex items-center gap-2 text-xs text-slate-500"><Info className="h-4 w-4" aria-hidden="true" />{liveReadEnabled ? b('liveWriteMode') : b('readOnly')}</div>}
+      {!preview && <TrialBackupPanel />}
       {preview
         ? <ReadWorkspace key={`${preview}-${scenario}`} source={source} onPreview={changePreview} />
         : liveReadEnabled

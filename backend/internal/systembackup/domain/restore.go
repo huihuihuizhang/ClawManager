@@ -100,7 +100,13 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 	if err != nil {
 		return RestorePlan{}, err
 	}
-	if err = checkBlankPolicy(ctx, tx, catalog, policy); err != nil {
+	if policy.trial {
+		plan.trialSeeds, err = captureTrialSeeds(ctx, tx, catalog)
+		if err != nil {
+			return RestorePlan{}, err
+		}
+	}
+	if err = checkBlankWithSeeds(ctx, tx, catalog, policy, plan.trialSeeds); err != nil {
 		return RestorePlan{}, err
 	}
 	if err = canonicalizeTargetJSON(ctx, tx, &plan); err != nil {
@@ -225,6 +231,9 @@ func checkBlank(ctx context.Context, tx *sql.Tx, tables []Table) error {
 	return checkBlankPolicy(ctx, tx, tables, Policy{})
 }
 func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Policy) error {
+	return checkBlankWithSeeds(ctx, tx, tables, policy, nil)
+}
+func checkDrillExecutableSchema(ctx context.Context, tx *sql.Tx) error {
 	// Imported code must not activate triggers/events or write through views.
 	var executable int
 	if tx.QueryRowContext(ctx, `SELECT (SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE()) + (SELECT COUNT(*) FROM information_schema.EVENTS WHERE EVENT_SCHEMA = DATABASE()) + (SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_SCHEMA = DATABASE())`).Scan(&executable) != nil {
@@ -232,6 +241,13 @@ func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Po
 	}
 	if executable != 0 {
 		return ErrSchema
+	}
+	return nil
+}
+
+func checkBlankWithSeeds(ctx context.Context, tx *sql.Tx, tables []Table, policy Policy, trialSeeds map[string][32]byte) error {
+	if err := checkDrillExecutableSchema(ctx, tx); err != nil {
+		return err
 	}
 	var admins int
 	if tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM `users` WHERE username = 'admin' AND role = 'admin'").Scan(&admins) != nil {
@@ -242,6 +258,9 @@ func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Po
 	}
 	for _, t := range tables {
 		if t.Name == "schema_migrations" {
+			continue
+		}
+		if _, baseline := trialSeeds[t.Name]; baseline {
 			continue
 		}
 		if t.Engine != "InnoDB" {
@@ -394,6 +413,10 @@ func verifyRows(ctx context.Context, conn *sql.Conn, plan RestorePlan) error {
 		return ErrDatabase
 	}
 	defer tx.Rollback()
+	return verifyRowsInTransaction(ctx, tx, plan)
+}
+
+func verifyRowsInTransaction(ctx context.Context, tx *sql.Tx, plan RestorePlan) error {
 	expected := map[string]int{}
 	for _, t := range plan.Data.Tables {
 		expected[t.Name] = len(t.Rows)
@@ -471,8 +494,20 @@ func verifyRows(ctx context.Context, conn *sql.Conn, plan RestorePlan) error {
 			return err
 		}
 	}
+	checkedTrialSeeds := 0
 	for _, t := range catalog {
 		if t.Name == "schema_migrations" {
+			continue
+		}
+		if want, baseline := plan.trialSeeds[t.Name]; baseline {
+			got, err := trialSeedDigest(ctx, tx, t)
+			if err != nil {
+				return err
+			}
+			if got != want {
+				return ErrData
+			}
+			checkedTrialSeeds++
 			continue
 		}
 		name, _ := quoted(t.Name)
@@ -483,6 +518,9 @@ func verifyRows(ctx context.Context, conn *sql.Conn, plan RestorePlan) error {
 		if n != expected[t.Name] {
 			return ErrData
 		}
+	}
+	if checkedTrialSeeds != len(plan.trialSeeds) {
+		return ErrData
 	}
 	if tx.Commit() != nil {
 		return ErrDatabase

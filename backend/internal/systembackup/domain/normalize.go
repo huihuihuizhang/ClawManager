@@ -23,6 +23,7 @@ type Placement struct {
 	Workspace, MountPath, PVC, Namespace, StorageClass string
 }
 type Policy struct {
+	trial               bool
 	Placements          map[string]Placement // source instance ID -> observed drill storage
 	Configs             ConfigNormalizer
 	WorkBuddy           *WorkBuddySchema
@@ -38,6 +39,7 @@ type RestorePlan struct {
 	Data             Snapshot
 	Users, Instances int
 	GatewayImages    *GatewayImageReceipt `json:"-"`
+	trialSeeds       map[string][32]byte
 }
 
 // Explicit versioned column inventory. New model fields do not automatically
@@ -129,11 +131,13 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 			return RestorePlan{}, err
 		}
 	}
-	if err := validateRelationshipsWithHistory(source, policy.WorkBuddy.uidLayout()); err != nil {
+	if err := validateRelationshipsForRestore(source, policy.WorkBuddy.uidLayout(), policy.trial); err != nil {
 		return RestorePlan{}, err
 	}
-	if err := validateWorkBuddy(source, policy.WorkBuddy); err != nil {
-		return RestorePlan{}, err
+	if !policy.trial {
+		if err := validateWorkBuddy(source, policy.WorkBuddy); err != nil {
+			return RestorePlan{}, err
+		}
 	}
 	if err := validateModelRestoreInputs(ctx, source, policy.Dependencies); err != nil {
 		return RestorePlan{}, err
@@ -221,7 +225,10 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		targetCols := map[string]Column{}
 		for _, c := range dest.Columns {
 			targetCols[c.Name] = c
-			if !allowed[c.Name] {
+			if policy.trial && trialGeneratedColumn(t.Name, c) {
+				continue
+			}
+			if !allowed[c.Name] && !(policy.trial && t.Name == "instances" && c.Name == "runtime_error_code") {
 				return RestorePlan{}, ErrSchema
 			}
 		}
@@ -247,6 +254,18 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 			}
 		}
 		for _, c := range dest.Columns {
+			if policy.trial && !hasColumn(out, c.Name) {
+				if trialGeneratedColumn(t.Name, c) {
+					continue
+				}
+				if _, reset := trialReset[t.Name][c.Name]; reset {
+					out.Columns = append(append([]Column(nil), out.Columns...), c)
+					continue
+				}
+				if c.Nullable || c.Default != nil {
+					continue
+				}
+			}
 			// Do not silently introduce a new target default (possibly an
 			// executable state). Only absent nullable NULL columns are harmless.
 			if !hasColumn(out, c.Name) && (!c.Nullable || c.Default != nil) {
@@ -263,6 +282,13 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 				original = row
 			}
 			n := cloneRow(original)
+			if policy.trial {
+				for _, c := range out.Columns {
+					if value, ok := trialReset[t.Name][c.Name]; ok {
+						n[c.Name] = value
+					}
+				}
+			}
 			if legacyTeamScope && hasColumn(out, "resource_scope") {
 				n["resource_scope"] = Text("cm") // Historical CM Teams never acquire an inferred owner.
 			}
@@ -414,12 +440,14 @@ func normalizeRow(ctx context.Context, table string, r Row, p Policy) error {
 		set(r, "last_login", Cell{Null: true})
 	case "instances":
 		placement, ok := p.Placements[r["id"].String()]
-		if !ok || !safeRoot(placement.Workspace) || !safeRoot(placement.MountPath) || placement.Namespace == "" {
+		if !ok || placement.Namespace == "" || (!p.trial && (!safeRoot(placement.Workspace) || !safeRoot(placement.MountPath))) {
 			return ErrNormalization
 		}
 		set(r, "status", Text("stopped"))
-		set(r, "workspace_path", Text(placement.Workspace))
-		set(r, "mount_path", Text(placement.MountPath))
+		if !p.trial {
+			set(r, "workspace_path", Text(placement.Workspace))
+			set(r, "mount_path", Text(placement.MountPath))
+		}
 		set(r, "storage_class", Text(placement.StorageClass))
 		clearFields(r, "pvc_name pod_name pod_namespace pod_ip access_url access_token agent_bootstrap_token runtime_error_message provisioning_operation_id started_at stopped_at")
 		if placement.PVC != "" {
@@ -470,11 +498,18 @@ func normalizeRow(ctx context.Context, table string, r Row, p Policy) error {
 	case "openclaw_config_resources", "openclaw_config_bundles":
 		set(r, "enabled", Text("0"))
 	case "openclaw_injection_snapshots":
-		set(r, "status", Text("archived"))
+		if !p.trial {
+			set(r, "status", Text("archived"))
+		}
 		clearFields(r, "secret_name activated_at")
 	case "instance_config_revisions":
-		set(r, "status", Text("archived"))
-		clearFields(r, "activated_at")
+		if !p.trial {
+			set(r, "status", Text("archived"))
+			clearFields(r, "activated_at")
+		}
+	}
+	if p.trial {
+		return nil
 	}
 	for _, column := range []string{"environment_overrides_json", "content_json", "resolved_resources_json", "rendered_manifest_json", "rendered_env_json", "payload_json", "result_json", "spec_json", "artifact_refs_json", "manifest_json", "provider_models_json", "request_payload", "response_payload", "quick_analyzers_json", "deep_analyzers_json", "scope_json", "summary_json"} {
 		v, ok := r[column]
@@ -515,6 +550,10 @@ func validateRelationships(s Snapshot) error {
 	return validateRelationshipsWithHistory(s, false)
 }
 func validateRelationshipsWithHistory(s Snapshot, validatedUIDHistory bool) error {
+	return validateRelationshipsForRestore(s, validatedUIDHistory, false)
+}
+
+func validateRelationshipsForRestore(s Snapshot, validatedUIDHistory, trial bool) error {
 	users := map[string]bool{}
 	instances := map[string]bool{}
 	admin := false
@@ -535,7 +574,7 @@ func validateRelationshipsWithHistory(s Snapshot, validatedUIDHistory bool) erro
 			if (provider == "" || provider == "local") && len(r["password_hash"].Bytes) == 0 {
 				return ErrData
 			}
-			if r["username"].String() == "admin" && r["role"].String() == "admin" && r["is_active"].String() == "1" {
+			if (trial || r["username"].String() == "admin") && r["role"].String() == "admin" && r["is_active"].String() == "1" {
 				admin = true
 			}
 		}
@@ -553,9 +592,11 @@ func validateRelationshipsWithHistory(s Snapshot, validatedUIDHistory bool) erro
 				return ErrData
 			}
 			instances[id] = true
-			_, err := scope.PlanRuntime(scope.Runtime{Type: r["type"].String(), Mode: r["instance_mode"].String(), Backend: r["runtime_type"].String(), Variant: r["runtime_variant"].String(), OS: r["os_type"].String()})
-			if err != nil {
-				return err
+			if !trial {
+				_, err := scope.PlanRuntime(scope.Runtime{Type: r["type"].String(), Mode: r["instance_mode"].String(), Backend: r["runtime_type"].String(), Variant: r["runtime_variant"].String(), OS: r["os_type"].String()})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

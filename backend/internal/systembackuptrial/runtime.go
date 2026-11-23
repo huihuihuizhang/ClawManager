@@ -1,0 +1,138 @@
+package systembackuptrial
+
+import (
+	"context"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"clawreef/internal/config"
+	"clawreef/internal/db"
+	"clawreef/internal/middleware"
+	"clawreef/internal/repository"
+	"clawreef/internal/systembackup/domain"
+
+	"github.com/gin-gonic/gin"
+	upper "github.com/upper/db/v4"
+)
+
+// RegisterRuntimeIdentity is only called after InitializeRuntime admits the
+// sample deployment. The site runner checks this identity before any start.
+func RegisterRuntimeIdentity(api *gin.RouterGroup, users repository.UserRepository, backupID, namespace string) {
+	api.GET("/trial-runtime", middleware.Auth(), middleware.SetUserInfo(users), func(c *gin.Context) {
+		user := middleware.GetCurrentUser(c)
+		if user == nil || !user.IsActive {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+		c.Header("Cache-Control", "no-store")
+		c.JSON(http.StatusOK, gin.H{"backup_id": backupID, "namespace": namespace})
+	})
+}
+
+// InitializeRuntime starts an isolated sample application only after
+// independently matching its stopped database rows against the sealed trial
+// artifact. The deployment owner is responsible for the namespace, credentials
+// and network being isolated for the lifetime of the application.
+func (s *Service) InitializeRuntime(ctx context.Context, cfg *config.Config, backupID string) (upper.Session, error) {
+	if cfg == nil || !taskID.MatchString(backupID) || !strings.HasPrefix(cfg.Database.Database, "cm_drill_trial_") ||
+		cfg.Auth.Enterprise.Enabled || cfg.Northbound.Enabled || cfg.IEISystem.Enabled ||
+		db.SQLGateScope() != "" ||
+		s.value("RESTORE_ISOLATED") != "true" {
+		return nil, domain.ErrIsolation
+	}
+	for _, flag := range []string{
+		"SYSTEM_BACKUP_READ_SESSIONS_ENABLED", "SYSTEM_BACKUP_READ_LIVE_ENABLED",
+		"SYSTEM_BACKUP_CONFIG_MUTATION_ENABLED", "SYSTEM_BACKUP_V2_EXECUTION_ENABLED",
+	} {
+		if value := strings.TrimSpace(s.env(flag)); value != "" && value != "false" {
+			return nil, domain.ErrIsolation
+		}
+	}
+	placement, err := prepareRuntimePlacement(cfg, s.value("RESTORE_NAMESPACE"), s.value("RESTORE_STORAGE_CLASS"))
+	if err != nil {
+		return nil, err
+	}
+	readerPath := s.value("READ_DIR")
+	if !filepath.IsAbs(readerPath) {
+		return nil, errConfig
+	}
+	readerRoot, err := os.OpenRoot(readerPath)
+	if err != nil {
+		return nil, errConfig
+	}
+	defer readerRoot.Close()
+	store := storage{reader: readerRoot}
+	key, err := s.key()
+	if err != nil {
+		return nil, err
+	}
+	defer clear(key)
+	a, err := store.metadata(backupID)
+	if err != nil {
+		return nil, errReadback
+	}
+	snapshot, m, err := store.snapshot(ctx, backupID, a, key)
+	if err != nil {
+		return nil, err
+	}
+	uuid := s.value("RESTORE_UUID")
+	if uuid == "" || uuid == m.SourceUUID {
+		return nil, domain.ErrIsolation
+	}
+	reader, readDatabase, err := s.database("RESTORE_READ")
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+	if readDatabase != cfg.Database.Database {
+		return nil, domain.ErrIsolation
+	}
+	target := domain.DrillTarget{Database: readDatabase, ServerUUID: uuid, CheckIsolation: func(ctx context.Context) error {
+		return ctx.Err()
+	}}
+	if err := domain.VerifyRestoredTrial(ctx, reader, target, snapshot, placement); err != nil {
+		return nil, err
+	}
+	pool, runtimeDatabase, err := s.database("RUNTIME")
+	if err != nil {
+		return nil, err
+	}
+	adopted := false
+	defer func() {
+		if !adopted {
+			_ = pool.Close()
+		}
+	}()
+	if runtimeDatabase != readDatabase {
+		return nil, domain.ErrIsolation
+	}
+	if err := domain.CheckTrialRuntimeWriter(ctx, pool, target); err != nil {
+		return nil, err
+	}
+	pool.SetMaxOpenConns(cfg.Database.MaxOpenConns)
+	pool.SetMaxIdleConns(cfg.Database.MaxIdleConns)
+	pool.SetConnMaxLifetime(cfg.Database.ConnMaxLifetime)
+	pool.SetConnMaxIdleTime(cfg.Database.ConnMaxIdleTime)
+	session, err := db.InitializeVerifiedTrialRuntime(ctx, pool, runtimeDatabase, uuid)
+	if err != nil {
+		return nil, err
+	}
+	adopted = true
+	return session, nil
+}
+
+func prepareRuntimePlacement(cfg *config.Config, namespace, storageClass string) (domain.Placement, error) {
+	if !strings.HasPrefix(namespace, "cm-drill-") || storageClass == "" ||
+		cfg.Kubernetes.Common.Namespace != namespace || cfg.Runtime.Namespace != namespace ||
+		cfg.GetStorageClass() != storageClass || cfg.GetInstanceStorageClass() != storageClass ||
+		cfg.GetWorkspaceStorageClass() != storageClass {
+		return domain.Placement{}, domain.ErrIsolation
+	}
+	// The control-plane leader starts the runtime scheduler. Its default
+	// namespace is the ordinary installation, even when Runtime.Namespace
+	// points at a drill. Keep both leases inside the admitted sample namespace.
+	cfg.LeaderElection.Namespace = namespace
+	return domain.Placement{Namespace: namespace, StorageClass: storageClass}, nil
+}

@@ -30,9 +30,11 @@ import (
 	"clawreef/internal/systembackup"
 	"clawreef/internal/systembackupapi"
 	"clawreef/internal/systembackupsecurity"
+	"clawreef/internal/systembackuptrial"
 	"clawreef/internal/teamtemplate"
 
 	"github.com/gin-gonic/gin"
+	upper "github.com/upper/db/v4"
 )
 
 func main() {
@@ -49,7 +51,15 @@ func main() {
 	}
 
 	// Initialize database
-	database, err := db.Initialize(cfg.Database)
+	trialRuntimeBackupID := strings.TrimSpace(os.Getenv("SYSTEM_BACKUP_TRIAL_RUNTIME_BACKUP_ID"))
+	var database upper.Session
+	if trialRuntimeBackupID == "" {
+		database, err = db.Initialize(cfg.Database)
+	} else {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		database, err = systembackuptrial.New(os.Getenv).InitializeRuntime(ctx, cfg, trialRuntimeBackupID)
+		cancel()
+	}
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -1002,6 +1012,11 @@ func main() {
 			log.Println("System backup MFA bootstrap is invalid; sensitive configuration changes disabled")
 		} else {
 			backupHandler.SetStrongAuthVerifier(backupMFA)
+		}
+		if trialRuntimeBackupID == "" {
+			systembackuptrial.New(os.Getenv).Register(api, userRepo)
+		} else {
+			systembackuptrial.RegisterRuntimeIdentity(api, userRepo, trialRuntimeBackupID, cfg.Runtime.Namespace)
 		}
 		backupAdmin := api.Group("/admin/system-backup")
 		backupAdmin.Use(middleware.Auth(), middleware.SetUserInfo(userRepo), middleware.NewAdminAuth(userRepo))
