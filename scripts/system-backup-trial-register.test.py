@@ -72,6 +72,88 @@ class TrialRegistrationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     REGISTER["validate"](config)
 
+    def deployment(self, side):
+        placement = self.config[side]
+        return {
+            "apiVersion": "apps/v1", "kind": "Deployment",
+            "metadata": {"name": "clawmanager", "namespace": placement["namespace"],
+                         "uid": "77777777-8888-4999-8aaa-bbbbbbbbbbbb", "resourceVersion": "217"},
+            "spec": {"template": {"spec": {
+                "serviceAccountName": placement["service_account"],
+                "containers": [{"name": "sidecar", "image": "sidecar:test"},
+                               {"name": "app", "image": placement["image"]}],
+            }}},
+        }
+
+    def test_app_patch_wires_projected_materials_for_its_side(self):
+        for side in ("source", "target"):
+            with self.subTest(side=side):
+                observed = self.deployment(side)
+                patch = REGISTER["app_patch"](self.config, side, observed, "app")
+                tests = {op["path"]: op["value"] for op in patch if op["op"] == "test"}
+                self.assertEqual(tests["/metadata/resourceVersion"], "217")
+                self.assertEqual(tests["/spec/template/spec/containers/1/name"], "app")
+                additions = {op["path"].rsplit("/", 1)[-1]: op["value"] for op in patch if op["op"] == "add"}
+                volumes = {vol["name"]: vol for vol in additions["volumes"]}
+                mounts = {mount["mountPath"]: mount for mount in additions["volumeMounts"]}
+                env = {item["name"]: item["value"] for item in additions["env"]}
+                root = REGISTER["APP_MATERIALS"]
+                prefix = REGISTER["TRIAL_ENV"]
+                self.assertTrue(mounts[root + "/archive-read"]["readOnly"])
+                self.assertEqual(env[prefix + "ENVIRONMENT_PROFILE_FILE"], root + "/profile/environment.json")
+                self.assertEqual(env["SSL_CERT_FILE"], root + "/ca/ca-bundle.crt")
+                for vol in volumes.values():
+                    if "secret" in vol:
+                        self.assertTrue(vol["secret"]["optional"])
+                        self.assertNotEqual(vol["secret"]["secretName"], self.config[side]["prepare"]["owner_dsn_secret"])
+                self.assertNotIn("subPath", json.dumps(mounts))
+                self.assertEqual(env[prefix + "RUNTIME_BACKUP_ID"], "")
+                if side == "source":
+                    self.assertEqual(env[prefix + "WRITE_DIR"], root + "/archive-write")
+                    self.assertFalse(mounts[root + "/archive-write"].get("readOnly", False))
+                    self.assertEqual(env[prefix + "RESTORE_DSN_FILE"], "")
+                else:
+                    self.assertTrue(volumes["trial-app-archive"]["persistentVolumeClaim"]["readOnly"])
+                    self.assertNotIn(root + "/archive-write", mounts)
+                    self.assertEqual(env[prefix + "SOURCE_DSN_FILE"], "")
+                    self.assertEqual(env[prefix + "WORKSPACE_FILES_TARGET_ROOT"], root + "/workspace")
+                    self.assertNotEqual(env[prefix + "RESTORE_DSN_FILE"], env[prefix + "RESTORE_READ_DSN_FILE"])
+
+    def test_app_patch_appends_without_echoing_existing_configuration(self):
+        observed = self.deployment("source")
+        pod = observed["spec"]["template"]["spec"]
+        app = pod["containers"][1]
+        app["env"] = [{"name": "EXISTING_PASSWORD", "value": "synthetic-must-stay-out-of-patch"}]
+        first = REGISTER["app_patch"](self.config, "source", observed, "app")
+        self.assertNotIn("synthetic-must-stay-out-of-patch", json.dumps(first))
+        self.assertTrue(any(op["path"].endswith("/env/-") for op in first))
+        volumes, mounts, env = REGISTER["app_materials"](self.config["source"], "source")
+        pod["volumes"], app["volumeMounts"] = volumes, mounts
+        app["env"] += [item if item["value"] else {"name": item["name"]} for item in env]
+        self.assertTrue(all(op["op"] == "test" for op in REGISTER["app_patch"](self.config, "source", observed, "app")))
+
+    def test_app_patch_rejects_wrong_identity_and_unsafe_target_alias(self):
+        for part, key, wrong in (
+            ("metadata", "namespace", "default"), ("app", "image", "unverified:latest"),
+            ("pod", "automountServiceAccountToken", False), ("pod", "serviceAccountName", "wrong"),
+        ):
+            with self.subTest(part=part, key=key):
+                observed = self.deployment("target")
+                pod = observed["spec"]["template"]["spec"]
+                {"metadata": observed["metadata"], "pod": pod, "app": pod["containers"][1]}[part][key] = wrong
+                with self.assertRaises(ValueError):
+                    REGISTER["app_patch"](self.config, "target", observed, "app")
+        observed = self.deployment("target")
+        pod = observed["spec"]["template"]["spec"]
+        pod["volumes"] = [{"name": "alias", "persistentVolumeClaim": {"claimName": self.config["target"]["artifact_claim"]}}]
+        pod["containers"][0]["volumeMounts"] = [{"name": "alias", "mountPath": "/alias"}]
+        with self.assertRaisesRegex(ValueError, "writable import mount"):
+            REGISTER["app_patch"](self.config, "target", observed, "app")
+        pod["containers"][0]["volumeMounts"][0]["readOnly"] = True
+        pod["containers"][1]["env"] = [{"name": REGISTER["TRIAL_ENV"] + "SOURCE_DSN_FILE", "value": "/private/source-dsn"}]
+        with self.assertRaisesRegex(ValueError, "conflicting Deployment env entry"):
+            REGISTER["app_patch"](self.config, "target", observed, "app")
+
 
 if __name__ == "__main__":
     unittest.main()

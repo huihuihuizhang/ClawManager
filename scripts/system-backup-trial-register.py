@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the registered trial resources and bind a profile to an observed Job."""
+"""Render the registered trial resources and wire an observed application Deployment."""
 
 import argparse
 import ipaddress
@@ -13,6 +13,8 @@ TEMPLATE = Path(__file__).resolve().parents[1] / "deployments/k8s/system-backup-
 REVISION_ANNOTATION = "clawmanager.io/trial-environment-revision"
 MATERIAL_ANNOTATION = "clawmanager.io/trial-material-namespace"
 COMMAND = "/usr/local/bin/system-backup-trial-prepare"
+APP_MATERIALS = "/var/run/clawmanager-trial"
+TRIAL_ENV = "SYSTEM_BACKUP_TRIAL_"
 PLACEHOLDER = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 WORKSPACE_BLOCK = re.compile(r"^ *# trial-workspace-begin\r?\n.*?^ *# trial-workspace-end\r?\n", re.MULTILINE | re.DOTALL)
 LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
@@ -261,6 +263,131 @@ def bind_profile(config, side, observed):
     return resource("v1", "ConfigMap", local["namespace"], job["profile_configmap"], data={"environment.json": json.dumps(result, indent=2) + "\n"})
 
 
+def app_materials(local, side):
+    preparation = local["prepare"]
+    volumes, mounts = [], []
+
+    def attach(name, location, volume, read_only=True):
+        volumes.append({"name": name, **volume})
+        mounts.append({"name": name, "mountPath": APP_MATERIALS + "/" + location, **({"readOnly": True} if read_only else {})})
+
+    def config_map(name, location, config_name, key):
+        attach(name, location, {"configMap": {
+            "name": config_name, "defaultMode": 0o644, "items": [{"key": key, "path": key}],
+        }})
+        return APP_MATERIALS + "/" + location + "/" + key
+
+    def secret(name, location, secret_name, key):
+        # Empty placeholders let the application start and activate the Job.
+        # Whole directory mounts receive subsequent kubelet Secret updates.
+        attach(name, location, {"secret": {
+            "secretName": secret_name, "optional": True, "defaultMode": 0o440, "items": [{"key": key, "path": key}],
+        }})
+        return APP_MATERIALS + "/" + location + "/" + key
+
+    profile = config_map("trial-app-profile", "profile", preparation["profile_configmap"], "environment.json")
+    ca = config_map("trial-app-ca", "ca", preparation["ca_configmap"], "ca-bundle.crt")
+    key = secret("trial-app-key", "key", local["key_secret"], "key")
+    claim = {"claimName": local["artifact_claim"]}
+    if side == "target":
+        claim["readOnly"] = True
+    attach("trial-app-archive", "archive-read", {"persistentVolumeClaim": claim})
+
+    settings = {
+        "ENVIRONMENT_PROFILE_FILE": profile, "KEY_FILE": key, "READ_DIR": APP_MATERIALS + "/archive-read",
+        "SOURCE_DSN_FILE": "", "SOURCE_UUID": "", "WRITE_DIR": "",
+        "RESTORE_DSN_FILE": "", "RESTORE_READ_DSN_FILE": "", "RESTORE_UUID": "",
+        "RESTORE_ISOLATED": "", "RESTORE_NAMESPACE": "", "RESTORE_STORAGE_CLASS": "",
+        "RUNTIME_BACKUP_ID": "", "RUNTIME_DSN_FILE": "", "PREPARE_OWNER_DSN_FILE": "",
+    }
+    if side == "source":
+        mounts.append({"name": "trial-app-archive", "mountPath": APP_MATERIALS + "/archive-write"})
+        settings.update(
+            SOURCE_UUID=preparation["server_uuid"], WRITE_DIR=APP_MATERIALS + "/archive-write",
+            SOURCE_DSN_FILE=secret("trial-app-source-reader", "source-reader", local["source_read_secret"], "dsn"),
+        )
+    else:
+        settings.update(
+            RESTORE_UUID=preparation["server_uuid"], RESTORE_ISOLATED="true",
+            RESTORE_NAMESPACE=local["namespace"], RESTORE_STORAGE_CLASS=local["instance_storage_class"],
+            RESTORE_DSN_FILE=secret("trial-app-writer", "writer", local["restore_write_secret"], "dsn"),
+            RESTORE_READ_DSN_FILE=secret("trial-app-reader", "reader", local["restore_read_secret"], "dsn"),
+        )
+        if "workspace_claim" in local:
+            attach("trial-app-workspace", "workspace", {
+                "persistentVolumeClaim": {"claimName": local["workspace_claim"]},
+            }, read_only=False)
+            settings["WORKSPACE_FILES_TARGET_ROOT"] = APP_MATERIALS + "/workspace"
+    env = [{"name": TRIAL_ENV + name, "value": value} for name, value in settings.items()]
+    env.append({"name": "SSL_CERT_FILE", "value": ca})
+    return volumes, mounts, env
+
+
+def patch_list(patch, parent, field, path, entries, key):
+    observed = parent.get(field, [])
+    if not isinstance(observed, list):
+        raise ValueError(f"invalid observed Deployment {field}")
+    additions = []
+    for entry in entries:
+        candidates = [item for item in observed if item.get(key) == entry[key]]
+        if not candidates:
+            additions.append(entry)
+        elif candidates != [entry] and not (
+            field == "env" and entry.get("value") == "" and candidates == [{"name": entry["name"]}]
+        ):
+            # The Kubernetes API omits the value field for explicitly empty environment values.
+            raise ValueError(f"conflicting Deployment {field} entry {entry[key]}")
+    if field not in parent and additions:
+        patch.append({"op": "add", "path": path, "value": additions})
+    else:
+        patch.extend({"op": "add", "path": path + "/-", "value": item} for item in additions)
+
+
+def app_patch(config, side, observed, container_name):
+    local = config[side]
+    try:
+        metadata = observed["metadata"]
+        pod = observed["spec"]["template"]["spec"]
+        containers = pod["containers"]
+        matches_container = [index for index, item in enumerate(containers) if item["name"] == container_name]
+        if len(matches_container) != 1:
+            raise ValueError("expected exactly one application container with the selected name")
+        index = matches_container[0]
+        container = containers[index]
+        if (observed["apiVersion"] != "apps/v1" or observed["kind"] != "Deployment"
+                or metadata["namespace"] != local["namespace"] or not dns_name(metadata["name"])
+                or not matches(metadata["uid"], UUID) or not isinstance(metadata["resourceVersion"], str)
+                or not metadata["resourceVersion"] or metadata.get("deletionTimestamp")
+                or pod["serviceAccountName"] != local["service_account"]
+                or pod.get("automountServiceAccountToken") is False or container["image"] != local["image"]):
+            raise ValueError("observed Deployment namespace, service account or pinned image differs")
+        if side == "target":
+            archive_names = {item["name"] for item in pod.get("volumes", [])
+                             if item.get("persistentVolumeClaim", {}).get("claimName") == local["artifact_claim"]}
+            for item in containers + pod.get("initContainers", []):
+                if any(mount["name"] in archive_names and mount.get("readOnly") is not True
+                       for mount in item.get("volumeMounts", [])):
+                    raise ValueError("observed target Deployment has a writable import mount")
+                if any(device["name"] in archive_names for device in item.get("volumeDevices", [])):
+                    raise ValueError("observed target Deployment exposes the import claim as a block device")
+        volumes, mounts, env = app_materials(local, side)
+        template = "/spec/template/spec"
+        selected = f"{template}/containers/{index}"
+        identities = {
+            "/metadata/name": metadata["name"], "/metadata/namespace": metadata["namespace"],
+            "/metadata/uid": metadata["uid"], "/metadata/resourceVersion": metadata["resourceVersion"],
+            template + "/serviceAccountName": local["service_account"],
+            selected + "/name": container_name, selected + "/image": local["image"],
+        }
+        patch = [{"op": "test", "path": path, "value": value} for path, value in identities.items()]
+        patch_list(patch, pod, "volumes", template + "/volumes", volumes, "name")
+        patch_list(patch, container, "volumeMounts", selected + "/volumeMounts", mounts, "mountPath")
+        patch_list(patch, container, "env", selected + "/env", env, "name")
+        return patch
+    except (AttributeError, IndexError, KeyError, TypeError) as exc:
+        raise ValueError("invalid observed application Deployment") from exc
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True, help="approved registration JSON with resource references")
@@ -270,6 +397,9 @@ def main():
     modes.add_parser("render", help="render the suspended Job and its scoped roles")
     profile = modes.add_parser("profile", help="bind the ConfigMap to the observed Kubernetes Job")
     profile.add_argument("--job", required=True, help="observed Job JSON path or - for stdin")
+    app = modes.add_parser("app-patch", help="render a JSON patch for the observed application Deployment")
+    app.add_argument("--deployment", required=True, help="observed Deployment JSON path or - for stdin")
+    app.add_argument("--container", required=True, help="name of the application container in the Deployment")
     args = parser.parse_args()
     try:
         if args.config == "-":
@@ -279,7 +409,12 @@ def main():
         if args.operation == "render":
             output = registration_manifests(config, args.side)
         else:
-            data = placeholders(config, args.side) if args.operation == "placeholders" else bind_profile(config, args.side, load_json(args.job))
+            if args.operation == "placeholders":
+                data = placeholders(config, args.side)
+            elif args.operation == "profile":
+                data = bind_profile(config, args.side, load_json(args.job))
+            else:
+                data = app_patch(config, args.side, load_json(args.deployment), args.container)
             output = json.dumps(data, indent=2) + "\n"
     except (OSError, ValueError) as exc:
         parser.exit(2, f"trial registration: {exc}\n")
