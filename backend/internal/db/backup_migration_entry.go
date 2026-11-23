@@ -113,5 +113,18 @@ func applyEmbeddedMigrationsSQL(ctx context.Context, pool *sql.DB, target *Migra
 	} else if target.HistoryReview != nil {
 		return errors.New("reviewed installation migration ledger missing")
 	}
-	return applyEmbeddedMigrationsLockedContext(ctx, conn)
+	if err := applyEmbeddedMigrationsLockedContext(ctx, conn); err != nil {
+		return err
+	}
+	if target.PrepareTrialRuntime {
+		if err := assertBackupCaptureIdle(ctx, conn); err != nil {
+			return err
+		}
+		_, err := conn.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS trial_runtime_admission (
+			id TINYINT UNSIGNED NOT NULL PRIMARY KEY CHECK (id = 1),
+			proof BINARY(32) NOT NULL
+		) ENGINE=InnoDB`)
+		return err
+	}
+	return nil
 }

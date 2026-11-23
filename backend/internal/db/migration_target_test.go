@@ -136,7 +136,7 @@ func TestPinnedMigrationTargetAndCaptureExclusion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"idempotent", "wrong-server", "wrong-database", "wrong-catalog", "unknown-ledger", "active-capture", "apply-runtime"} {
+	for _, name := range []string{"idempotent", "wrong-server", "wrong-database", "wrong-catalog", "unknown-ledger", "active-capture", "apply-runtime", "trial-runtime", "trial-active-capture", "trial-ordinary-database"} {
 		t.Run(name, func(t *testing.T) {
 			target := MigrationTarget{ServerUUID: "11111111-2222-3333-4444-555555555555", Database: "clawmanager", CatalogSHA256: catalog.Hash}
 			state := &migrationPinState{server: target.ServerUUID, database: target.Database, applied: append([]string(nil), catalog.Filenames...)}
@@ -152,6 +152,15 @@ func TestPinnedMigrationTargetAndCaptureExclusion(t *testing.T) {
 			case "active-capture":
 				state.applied = state.applied[:len(state.applied)-1]
 				state.activeGate = 1
+			case "trial-runtime", "trial-active-capture":
+				target.Database = "cm_drill_trial_fixture"
+				state.database = target.Database
+				target.PrepareTrialRuntime = true
+				if name == "trial-active-capture" {
+					state.activeGate = 1
+				}
+			case "trial-ordinary-database":
+				target.PrepareTrialRuntime = true
 			case "apply-runtime":
 				// This case exercises the four-table registration runtime, not
 				// whichever unrelated migration was appended most recently.
@@ -165,24 +174,28 @@ func TestPinnedMigrationTargetAndCaptureExclusion(t *testing.T) {
 			database := sql.OpenDB(migrationPinConnector{state})
 			defer database.Close()
 			err = ApplyPinnedMigrations(context.Background(), database, target)
-			if name == "idempotent" || name == "apply-runtime" {
+			if name == "idempotent" || name == "apply-runtime" || name == "trial-runtime" {
 				if err != nil {
 					t.Fatal(err)
 				}
 			} else if err == nil {
 				t.Fatal("unsafe migration admitted")
 			}
-			if name == "wrong-catalog" {
+			if name == "wrong-catalog" || name == "trial-ordinary-database" {
 				if state.connections != 0 {
-					t.Fatal("catalog mismatch opened database")
+					t.Fatal("invalid migration target opened database")
 				}
 				return
 			}
 			if state.connections != 1 || state.identities != 1 || state.releases != 2 {
 				t.Fatal("target and DDL did not share one released connection")
 			}
-			if name != "apply-runtime" && len(state.writes) != 0 {
+			if name != "apply-runtime" && name != "trial-runtime" && len(state.writes) != 0 {
 				t.Fatal("rejection/retry executed DDL")
+			}
+			if name == "trial-runtime" && (len(state.writes) != 1 || state.gates != 5 ||
+				!strings.HasPrefix(state.writes[0], "CREATE TABLE IF NOT EXISTS trial_runtime_admission")) {
+				t.Fatal("trial admission table was not prepared under the migration guard")
 			}
 			if name == "apply-runtime" {
 				if len(state.writes) != 5 || state.gates != 5 {

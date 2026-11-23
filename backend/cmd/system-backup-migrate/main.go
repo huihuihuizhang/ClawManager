@@ -30,6 +30,7 @@ func main() {
 }
 func run() error {
 	apply := flag.Bool("apply", false, "apply exact pinned catalog using application migration/capture locks")
+	prepareTrialRuntime := flag.Bool("prepare-trial-runtime", false, "prepare durable application admission in a pinned isolated trial target")
 	catalogOnly := flag.Bool("catalog-only", false, "print embedded public migration catalog without opening a database")
 	dsnFile := flag.String("dsn-file", "", "mounted credential file (never command-line DSN)")
 	server := flag.String("expected-server-uuid", "", "deployment-pinned database server UUID")
@@ -47,7 +48,7 @@ func run() error {
 		return err
 	}
 	if *catalogOnly {
-		if *dsnFile != "" || *server != "" || *name != "" || *digest != "" || *historyFile != "" || *historyDigest != "" || *historySources != "" {
+		if *prepareTrialRuntime || *dsnFile != "" || *server != "" || *name != "" || *digest != "" || *historyFile != "" || *historyDigest != "" || *historySources != "" {
 			return errors.New("unexpected database input")
 		}
 		return json.NewEncoder(os.Stdout).Encode(map[string]any{"algorithm": catalog.Algorithm, "sha256": catalog.Hash, "file_count": len(catalog.Filenames), "filenames": catalog.Filenames})
@@ -117,7 +118,10 @@ func run() error {
 	defer stop()
 	ctx, done := context.WithTimeout(ctx, 10*time.Minute)
 	defer done()
-	if err = appdb.ApplyPinnedMigrations(ctx, database, appdb.MigrationTarget{ServerUUID: *server, Database: *name, CatalogSHA256: *digest, HistoryReview: review}); err != nil {
+	if err = appdb.ApplyPinnedMigrations(ctx, database, appdb.MigrationTarget{
+		ServerUUID: *server, Database: *name, CatalogSHA256: *digest,
+		HistoryReview: review, PrepareTrialRuntime: *prepareTrialRuntime,
+	}); err != nil {
 		return err
 	}
 	return json.NewEncoder(os.Stdout).Encode(map[string]any{"result": "PASS", "migration_catalog_sha256": catalog.Hash, "migration_count": len(catalog.Filenames), "history_review_sha256": *historyDigest, "historical_equivalence_verified": false, "config_activated": false, "human_mfa_verified": false})

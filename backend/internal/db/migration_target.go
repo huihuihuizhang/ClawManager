@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"regexp"
+	"strings"
 )
 
 // MigrationTarget is deployment-owned authorization for an exact server,
@@ -12,6 +13,7 @@ import (
 type MigrationTarget struct {
 	ServerUUID, Database, CatalogSHA256 string
 	HistoryReview                       *MigrationHistoryReview
+	PrepareTrialRuntime                 bool
 }
 
 // ApplyPinnedMigrations is the standalone deployment entrypoint. It uses the
@@ -27,6 +29,9 @@ func ApplyPinnedMigrations(ctx context.Context, database *sql.DB, target Migrati
 	}
 	if target.HistoryReview != nil && !target.HistoryReview.matchesTarget(target) {
 		return errors.New("historical review target mismatch")
+	}
+	if target.PrepareTrialRuntime && !strings.HasPrefix(target.Database, "cm_drill_trial_") {
+		return errors.New("trial runtime preparation requires a trial database")
 	}
 	return applyEmbeddedMigrationsSQL(ctx, database, &target)
 }

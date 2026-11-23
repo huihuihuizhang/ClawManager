@@ -3,6 +3,7 @@ package systembackuptrial
 import (
 	"context"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -30,10 +31,9 @@ func RegisterRuntimeIdentity(api *gin.RouterGroup, users repository.UserReposito
 	})
 }
 
-// InitializeRuntime starts an isolated sample application only after
-// independently matching its stopped database rows against the sealed trial
-// artifact. The deployment owner is responsible for the namespace, credentials
-// and network being isolated for the lifetime of the application.
+// InitializeRuntime verifies the first isolated start against the sealed trial.
+// Later starts independently check the admission on the same target and volume.
+// The deployment owner maintains namespace, credential and network isolation.
 func (s *Service) InitializeRuntime(ctx context.Context, cfg *config.Config, backupID string) (upper.Session, error) {
 	if cfg == nil || !taskID.MatchString(backupID) || !strings.HasPrefix(cfg.Database.Database, "cm_drill_trial_") ||
 		cfg.Auth.Enterprise.Enabled || cfg.Northbound.Enabled || cfg.IEISystem.Enabled ||
@@ -58,6 +58,9 @@ func (s *Service) InitializeRuntime(ctx context.Context, cfg *config.Config, bac
 		return nil, err
 	}
 	defer readerRoot.Close()
+	if readOnly, err := restoreMountReadOnly(readerRoot); err != nil || !readOnly {
+		return nil, errConfig
+	}
 	store := storage{reader: readerRoot}
 	key, err := s.key()
 	if err != nil {
@@ -90,30 +93,23 @@ func (s *Service) InitializeRuntime(ctx context.Context, cfg *config.Config, bac
 	target := domain.DrillTarget{Database: readDatabase, ServerUUID: uuid, CheckIsolation: func(ctx context.Context) error {
 		return ctx.Err()
 	}}
-	if err := domain.VerifyRestoredTrial(ctx, reader, target, snapshot, placement); err != nil {
+	if err := domain.CheckTrialTargetReader(ctx, reader, target); err != nil {
 		return nil, err
 	}
-	if m.Hermes != nil {
-		history, err := s.historyTarget()
-		if err != nil || filepath.Clean(history.root) != filepath.Clean(cfg.Runtime.WorkspaceRoot) {
-			return nil, errHistory
-		}
-		if err := history.run(ctx, "verify", *m.Hermes, bundle.hermes); err != nil {
-			return nil, err
-		}
+	workspace := cfg.Runtime.WorkspaceRoot
+	if !filepath.IsAbs(workspace) || filepath.Clean(workspace) != workspace || filepath.Dir(workspace) == workspace {
+		return nil, errRuntimeAdmission
 	}
-	if m.Workspace != nil {
-		if s.value("WORKSPACE_FILES_TARGET_ROOT") != filepath.Clean(cfg.Runtime.WorkspaceRoot) {
-			return nil, errWorkspaceFiles
-		}
-		mount, err := s.openWorkspaceTarget()
-		if err != nil {
-			return nil, err
-		}
-		defer mount.Close()
-		if err := verifyWorkspaceFiles(ctx, mount, *m.Workspace, bundle.workspace); err != nil {
-			return nil, err
-		}
+	root, err := os.OpenRoot(workspace)
+	if err != nil {
+		return nil, errRuntimeAdmission
+	}
+	defer root.Close()
+	if m.Hermes != nil && s.value("HERMES_HISTORY_TARGET_ROOT") != workspace {
+		return nil, errHistory
+	}
+	if m.Workspace != nil && s.value("WORKSPACE_FILES_TARGET_ROOT") != workspace {
+		return nil, errWorkspaceFiles
 	}
 	pool, runtimeDatabase, err := s.database("RUNTIME")
 	if err != nil {
@@ -135,7 +131,27 @@ func (s *Service) InitializeRuntime(ctx context.Context, cfg *config.Config, bac
 	pool.SetMaxIdleConns(cfg.Database.MaxIdleConns)
 	pool.SetConnMaxLifetime(cfg.Database.ConnMaxLifetime)
 	pool.SetConnMaxIdleTime(cfg.Database.ConnMaxIdleTime)
-	session, err := db.InitializeVerifiedTrialRuntime(ctx, pool, runtimeDatabase, uuid)
+	proof := runtimeAdmissionProof(key, backupID, a.Receipt.SHA256, runtimeDatabase, uuid, placement.Namespace, placement.StorageClass, workspace)
+	session, err := db.InitializeVerifiedTrialRuntime(ctx, pool, runtimeDatabase, uuid, func() error {
+		return admitTrialRuntime(ctx, reader, pool, root, proof, func() error {
+			if err := domain.VerifyRestoredTrial(ctx, reader, target, snapshot, placement); err != nil {
+				return err
+			}
+			if m.Hermes != nil {
+				history, err := s.historyTarget()
+				if err != nil {
+					return err
+				}
+				if err := history.run(ctx, "verify", *m.Hermes, bundle.hermes); err != nil {
+					return err
+				}
+			}
+			if m.Workspace != nil {
+				return verifyWorkspaceFiles(ctx, root, *m.Workspace, bundle.workspace)
+			}
+			return nil
+		})
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -10,11 +10,11 @@ import (
 	"github.com/upper/db/v4/adapter/mysql"
 )
 
-// InitializeVerifiedTrialRuntime adopts a dedicated pool after the trial's
-// independent artifact readback. It never applies migrations. The normal
-// business connection paths still reject all drill schemas before I/O.
-func InitializeVerifiedTrialRuntime(ctx context.Context, pool *sql.DB, database, serverUUID string) (upper.Session, error) {
-	if pool == nil || !strings.HasPrefix(database, "cm_drill_trial_") || serverUUID == "" || SQLGateScope() != "" {
+// InitializeVerifiedTrialRuntime adopts a dedicated pool after checking the
+// installed schema and obtaining the trial's independent admission proof.
+// It never applies migrations. Ordinary business connections reject drill schemas.
+func InitializeVerifiedTrialRuntime(ctx context.Context, pool *sql.DB, database, serverUUID string, admit func() error) (upper.Session, error) {
+	if pool == nil || admit == nil || !strings.HasPrefix(database, "cm_drill_trial_") || serverUUID == "" || SQLGateScope() != "" {
 		return nil, errors.New("verified trial runtime database required")
 	}
 	var actualDB, actualUUID string
@@ -30,6 +30,10 @@ func InitializeVerifiedTrialRuntime(ctx context.Context, pool *sql.DB, database,
 		return nil, err
 	}
 	if err := verifyEmbeddedMigrationsApplied(session); err != nil {
+		_ = session.Close()
+		return nil, err
+	}
+	if err := admit(); err != nil {
 		_ = session.Close()
 		return nil, err
 	}
