@@ -109,7 +109,20 @@ func TestTrialTransfersSealedContentAndLegacyArtifacts(t *testing.T) {
 			if preview.BackupID != id || preview.Missing != wantMissing || preview.Readback != wantReadback {
 				t.Fatalf("unexpected artifact preflight: %+v", preview)
 			}
+			if (wantReadback && preview.CiphertextSHA256 != receipt.SHA256) || (!wantReadback && preview.CiphertextSHA256 != "") {
+				t.Fatalf("preflight advertised the wrong ciphertext digest: %+v", preview)
+			}
 			if variant == "legacy" {
+				dsnFile := filepath.Join(t.TempDir(), "target-dsn")
+				if err := os.WriteFile(dsnFile, []byte("fixture:fixture@tcp(127.0.0.1:1)/cm_drill_trial_fixture"), 0600); err != nil {
+					t.Fatal(err)
+				}
+				settings["RESTORE_DSN_FILE"], settings["RESTORE_READ_DSN_FILE"] = dsnFile, dsnFile
+				settings["RESTORE_NAMESPACE"], settings["RESTORE_STORAGE_CLASS"] = "cm-drill-fixture", "fixture"
+				wrong := Task{BackupID: id, expectedCiphertextSHA256: strings.Repeat("0", 64)}
+				if err := service.restore(ctx, &wrong); !errors.Is(err, errArtifactChanged) || wrong.Stage != "readback" || wrong.Readback {
+					t.Fatalf("restore accepted a ciphertext that differed from preflight: %v (%+v)", err, wrong)
+				}
 				settings["RESTORE_UUID"] = m.SourceUUID
 				if same := service.checkRestoreArtifact(ctx, id); same.Missing != "restore_isolation" || same.Readback {
 					t.Fatalf("source database admitted as target: %+v", same)

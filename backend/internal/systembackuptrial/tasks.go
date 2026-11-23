@@ -7,6 +7,7 @@ import (
 	"io"
 	"maps"
 	"net/http"
+	"net/url"
 	"time"
 
 	"clawreef/internal/middleware"
@@ -46,13 +47,19 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 			c.JSON(http.StatusServiceUnavailable, Readiness{Missing: missing})
 			return
 		}
-		s.start(c, "", s.backup)
+		s.start(c, Task{}, s.backup)
 	})
 	admin.POST("/backups/:id/preflight", s.handleRestorePreflight)
 	admin.POST("/backups/:id/restore", func(c *gin.Context) {
 		id := c.Param("id")
 		if !taskID.MatchString(id) {
 			c.JSON(http.StatusBadRequest, gin.H{"code": "invalid_backup_id"})
+			return
+		}
+		query, err := url.ParseQuery(c.Request.URL.RawQuery)
+		digests := query["expected_ciphertext_sha256"]
+		if err != nil || (len(digests) != 0 && (len(digests) != 1 || !ciphertextDigest.MatchString(digests[0]))) {
+			c.JSON(http.StatusBadRequest, gin.H{"code": "invalid_trial_ciphertext_digest"})
 			return
 		}
 		if missing := s.environment(c.Request.Context(), false).missing("target"); missing != "" {
@@ -63,18 +70,18 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 			c.JSON(http.StatusServiceUnavailable, Readiness{RestoreMissing: missing})
 			return
 		}
-		s.start(c, id, s.restore)
+		s.start(c, Task{BackupID: id, expectedCiphertextSHA256: query.Get("expected_ciphertext_sha256")}, s.restore)
 	})
 }
 
-func (s *Service) start(c *gin.Context, backupID string, run func(context.Context, *Task) error) {
+func (s *Service) start(c *gin.Context, task Task, run func(context.Context, *Task) error) {
 	s.mu.Lock()
 	if s.checking || (s.task != nil && s.task.Status == "running") {
 		s.mu.Unlock()
 		c.JSON(http.StatusConflict, gin.H{"code": "trial_task_running"})
 		return
 	}
-	task := Task{ID: newID(), BackupID: backupID, Status: "running", Stage: "prepare"}
+	task.ID, task.Status, task.Stage = newID(), "running", "prepare"
 	s.publishLocked(task)
 	s.mu.Unlock()
 	go func(task Task) {
@@ -208,6 +215,7 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 	}
 	complete = true
 	task.BackupID, task.Counts, task.Readback = task.ID, m.Counts, true
+	task.CiphertextSHA256 = receipt.SHA256
 	if m.Hermes != nil {
 		task.Hermes = &m.Hermes.historyReceipt
 	}
@@ -229,6 +237,9 @@ func (s *Service) restore(ctx context.Context, task *Task) error {
 	}
 	defer clear(bundle.hermes)
 	defer clear(bundle.workspace)
+	if task.expectedCiphertextSHA256 != "" && bundle.ciphertextSHA256 != task.expectedCiphertextSHA256 {
+		return errArtifactChanged
+	}
 	source, m := bundle.snapshot, bundle.manifest
 	if s.value("RESTORE_UUID") == m.SourceUUID {
 		return domain.ErrIsolation
@@ -239,6 +250,7 @@ func (s *Service) restore(ctx context.Context, task *Task) error {
 	}
 	defer targets.close()
 	task.Counts, task.Readback = m.Counts, true
+	task.CiphertextSHA256 = bundle.ciphertextSHA256
 	task.Stage = "restore"
 	s.publish(*task)
 	db, database, err := s.database("RESTORE")

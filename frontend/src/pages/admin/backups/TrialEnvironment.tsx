@@ -1,4 +1,5 @@
 import { useI18n } from '../../../contexts/I18nContext';
+import { downloadTrialJson } from './trialRestoreHandoff';
 
 type Placement = {
   cluster: string;
@@ -74,13 +75,7 @@ export default function TrialEnvironment({ environment, disabled, preparing, onP
 
   function download() {
     if (!profile) return;
-    const file = new Blob([JSON.stringify(profile, null, 2) + '\n'], { type: 'application/json' });
-    const url = URL.createObjectURL(file);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `backup-trial-${profile.side}-${profile.revision}.json`;
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    downloadTrialJson(`backup-trial-${profile.side}-${profile.revision}.json`, profile);
   }
 
   return <div className="space-y-2 rounded-lg border border-slate-200 p-3" aria-labelledby="trial-environment-title">

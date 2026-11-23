@@ -35,19 +35,23 @@ const maxTrialPlaintext = maxEncoded + maxHermesHistory + maxWorkspaceArchive + 
 
 var limits = domain.Limits{MaxRows: 100000, MaxBytes: maxEncoded}
 var taskID = regexp.MustCompile(`^[0-9a-f]{32}$`)
+var ciphertextDigest = regexp.MustCompile(`^[0-9a-f]{64}$`)
 var errConfig = errors.New("trial configuration unavailable")
 var errReadback = errors.New("trial readback mismatch")
+var errArtifactChanged = errors.New("trial ciphertext differs from the checked backup")
 
 type Task struct {
-	ID        string                `json:"id"`
-	BackupID  string                `json:"backup_id,omitempty"`
-	Status    string                `json:"status"`
-	Stage     string                `json:"stage"`
-	Error     string                `json:"error,omitempty"`
-	Readback  bool                  `json:"readback_verified"`
-	Counts    map[string]int        `json:"counts,omitempty"`
-	Hermes    *historyReceipt       `json:"hermes_history,omitempty"`
-	Workspace *workspaceFileReceipt `json:"workspace_files,omitempty"`
+	ID                       string                `json:"id"`
+	BackupID                 string                `json:"backup_id,omitempty"`
+	Status                   string                `json:"status"`
+	Stage                    string                `json:"stage"`
+	Error                    string                `json:"error,omitempty"`
+	Readback                 bool                  `json:"readback_verified"`
+	CiphertextSHA256         string                `json:"ciphertext_sha256,omitempty"`
+	Counts                   map[string]int        `json:"counts,omitempty"`
+	Hermes                   *historyReceipt       `json:"hermes_history,omitempty"`
+	Workspace                *workspaceFileReceipt `json:"workspace_files,omitempty"`
+	expectedCiphertextSHA256 string
 }
 
 type Readiness struct {
@@ -308,10 +312,11 @@ func (s storage) metadata(id string) (artifact, error) {
 }
 
 type restoredArtifact struct {
-	snapshot  domain.Snapshot
-	manifest  manifest
-	hermes    []byte
-	workspace []byte
+	snapshot         domain.Snapshot
+	manifest         manifest
+	hermes           []byte
+	workspace        []byte
+	ciphertextSHA256 string
 }
 
 func readArtifactSection(r io.Reader, length, limit int) ([]byte, error) {
@@ -385,7 +390,7 @@ func (s storage) snapshot(ctx context.Context, id string, a artifact, master []b
 		}
 	}
 	verified = true
-	return restoredArtifact{snapshot: snapshot, manifest: m, hermes: history, workspace: files}, nil
+	return restoredArtifact{snapshot: snapshot, manifest: m, hermes: history, workspace: files, ciphertextSHA256: a.Receipt.SHA256}, nil
 }
 
 func (s *Service) restoreSettings() []string {
@@ -529,6 +534,8 @@ func (s *Service) restoreDatabaseReadiness(ctx context.Context) []string {
 
 func category(err error) string {
 	switch {
+	case errors.Is(err, errArtifactChanged):
+		return "restore_artifact_changed"
 	case errors.Is(err, errWorkspaceFiles):
 		return "workspace_files"
 	case errors.Is(err, errHistory):

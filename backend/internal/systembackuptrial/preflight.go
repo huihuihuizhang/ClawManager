@@ -11,12 +11,13 @@ import (
 )
 
 type restorePreflight struct {
-	BackupID string                `json:"backup_id"`
-	Readback bool                  `json:"readback_verified"`
-	Missing  string                `json:"missing,omitempty"`
-	Counts   map[string]int        `json:"counts,omitempty"`
-	Hermes   *historyReceipt       `json:"hermes_history,omitempty"`
-	Files    *workspaceFileReceipt `json:"workspace_files,omitempty"`
+	BackupID         string                `json:"backup_id"`
+	Readback         bool                  `json:"readback_verified"`
+	CiphertextSHA256 string                `json:"ciphertext_sha256,omitempty"`
+	Missing          string                `json:"missing,omitempty"`
+	Counts           map[string]int        `json:"counts,omitempty"`
+	Hermes           *historyReceipt       `json:"hermes_history,omitempty"`
+	Files            *workspaceFileReceipt `json:"workspace_files,omitempty"`
 }
 
 func (s *Service) handleRestorePreflight(c *gin.Context) {
@@ -135,6 +136,7 @@ func (s *Service) checkRestoreArtifact(ctx context.Context, id string) restorePr
 		return result
 	}
 	result.Readback, result.Counts = true, m.Counts
+	result.CiphertextSHA256 = bundle.ciphertextSHA256
 	if m.Hermes != nil {
 		result.Hermes = &m.Hermes.historyReceipt
 	}
