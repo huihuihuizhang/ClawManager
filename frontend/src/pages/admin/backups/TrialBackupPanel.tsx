@@ -87,10 +87,16 @@ export default function TrialBackupPanel() {
     restore_credential: '目标写入凭据', restore_read_credential: '目标只读凭据',
     restore_placement: '隔离目标的存储与命名空间', restore_database_name: '隔离库名称',
     restore_artifact_mount: '试行产物只读挂载',
+    restore_artifact_writable: '导入卷可写，请重新以只读方式挂载',
+    restore_target_schema: '目标库缺少用户、配额或实例所需的表结构，请检查迁移',
+    restore_target_database: '无法检查目标库的表结构',
     restore_database_mismatch: '写入和只读凭据指向不同的库', restore_accounts_shared: '写入和只读必须使用独立账号',
     restore_writer_database: '无法使用写入凭据连接目标库', restore_writer_isolation: '写入连接的目标库身份不匹配',
     restore_reader_database: '无法使用只读凭据连接或检查目标库', restore_reader_isolation: '只读连接身份或 SELECT 授权不符合要求',
   } : {
+    restore_artifact_writable: 'Mount the trial import volume as read-only',
+    restore_target_schema: 'The target lacks the required user, quota, or instance schema. Check its migrations.',
+    restore_target_database: 'Cannot inspect the target database schema',
     restore_database_mismatch: 'Writer and reader credentials must point to the same target database',
     restore_accounts_shared: 'Writer and reader must use separate accounts',
     restore_writer_database: 'Cannot connect to the target database with the writer credentials',
@@ -117,7 +123,7 @@ export default function TrialBackupPanel() {
     {!!ready?.missing?.length && <p className="text-sm text-amber-900">{zh ? '备份缺项 · ' : 'Backup requires · '}{ready.missing.map(label).join(' · ')}</p>}
     {ready && (ready.restore_missing?.length
       ? <p className="text-sm text-amber-900">{zh ? '恢复缺项 · ' : 'Restore requires · '}{ready.restore_missing.map(label).join(' · ')}</p>
-      : <p className="text-sm text-emerald-700">{zh ? '目标库身份和只读授权已校验' : 'Target database identity and read-only grants verified'}</p>)}
+      : <p className="text-sm text-emerald-700">{zh ? '目标库身份、基础表结构和导入卷已校验' : 'Target database identity, required tables, and import mount verified'}</p>)}
     <div className="flex flex-wrap items-end gap-2">
       <label className="flex min-w-0 flex-col gap-1 text-sm text-slate-700">
         {zh ? '试行备份 ID' : 'Trial backup ID'}

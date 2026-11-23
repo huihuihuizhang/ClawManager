@@ -96,8 +96,8 @@ func TestTrialRestoreAdmissionWithOnlyTargetConfiguration(t *testing.T) {
 	}
 	service := New(func(name string) string { return settings[strings.TrimPrefix(name, "SYSTEM_BACKUP_TRIAL_")] })
 	ready := service.readiness(context.Background())
-	if got := strings.Join(ready.RestoreMissing, ","); len(ready.Missing) == 0 || got != "restore_writer_database,restore_reader_database" {
-		t.Fatalf("expected both unreachable target credentials to be reported, got %+v", ready)
+	if got := strings.Join(ready.RestoreMissing, ","); len(ready.Missing) == 0 || got != "restore_artifact_writable,restore_writer_database,restore_reader_database" {
+		t.Fatalf("expected the writable import and both unreachable credentials to be reported, got %+v", ready)
 	}
 	if got := service.restoreSettings(); len(got) != 0 {
 		t.Fatalf("expected valid restore-only settings, got %v", got)
@@ -291,7 +291,7 @@ func TestTrialMySQLRoundTrip(t *testing.T) {
 			t.Setenv("SYSTEM_BACKUP_TRIAL_RESTORE_DSN_FILE", os.Getenv("TRIAL_TEST_REPLAY_DSN_FILE"))
 			t.Setenv("SYSTEM_BACKUP_TRIAL_RESTORE_READ_DSN_FILE", os.Getenv("TRIAL_TEST_REPLAY_READ_DSN_FILE"))
 		}
-		if missing := service.restoreReadiness(ctx); len(missing) != 0 {
+		if missing := service.restoreDatabaseReadiness(ctx); len(missing) != 0 {
 			t.Fatalf("%s target readiness: %v", target, missing)
 		}
 		restore := Task{ID: newID(), BackupID: backup.ID}

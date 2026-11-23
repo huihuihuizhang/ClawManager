@@ -224,19 +224,27 @@ func (s storage) probe(ctx context.Context, master []byte) (err error) {
 	defer func() {
 		err = errors.Join(err, removeOwned(s.writer, receipt.Name))
 	}()
-	// Verify the configured reader can only read this mount by trying to
-	// create a unique directory. Clean it up immediately if writable.
-	marker := id + ".write-probe"
-	if err := s.reader.Mkdir(marker, 0700); err == nil {
-		return errors.Join(errConfig, s.reader.Remove(marker))
-	} else if !errors.Is(err, os.ErrPermission) && !errors.Is(err, syscall.EROFS) {
-		return errConfig
+	if readOnly, err := probeReadOnlyReader(s.reader); err != nil || !readOnly {
+		return errors.Join(errConfig, err)
 	}
 	var got bytes.Buffer
 	if err := s.open(ctx, receipt, key, b, &got, 128); err != nil || !bytes.Equal(got.Bytes(), challenge) {
 		return errReadback
 	}
 	return nil
+}
+
+// A unique directory distinguishes a denial from a successful write without
+// touching artifacts. Remove it immediately if the reader can write.
+func probeReadOnlyReader(reader *os.Root) (bool, error) {
+	marker := newID() + ".write-probe"
+	if err := reader.Mkdir(marker, 0700); err != nil {
+		if errors.Is(err, os.ErrPermission) || errors.Is(err, syscall.EROFS) {
+			return true, nil
+		}
+		return false, err
+	}
+	return false, reader.Remove(marker)
 }
 
 func (s storage) open(ctx context.Context, receipt staging.Receipt, key []byte, b staging.Binding, dst io.Writer, limit int64) error {
@@ -435,6 +443,21 @@ func (s *Service) restoreReadiness(ctx context.Context) []string {
 	if missing := s.restoreSettings(); len(missing) != 0 {
 		return missing
 	}
+	reader, err := s.readerRoot()
+	if err != nil {
+		return []string{"restore_artifact_mount"}
+	}
+	defer reader.Close()
+	var missing []string
+	if readOnly, err := restoreMountReadOnly(reader); err != nil {
+		missing = append(missing, "restore_artifact_mount")
+	} else if !readOnly {
+		missing = append(missing, "restore_artifact_writable")
+	}
+	return append(missing, s.restoreDatabaseReadiness(ctx)...)
+}
+
+func (s *Service) restoreDatabaseReadiness(ctx context.Context) []string {
 	writer, database, err := s.database("RESTORE")
 	if err != nil {
 		return []string{"restore_credential"}
@@ -465,6 +488,11 @@ func (s *Service) restoreReadiness(ctx context.Context) []string {
 	}
 	if writerAccount != "" && writerAccount == readerAccount {
 		missing = append(missing, "restore_accounts_shared")
+	}
+	if len(missing) == 0 {
+		if err := domain.CheckTrialRestoreSchema(ctx, reader); err != nil {
+			missing = append(missing, "restore_target_"+category(err))
+		}
 	}
 	return missing
 }

@@ -128,6 +128,49 @@ func CheckTrialTargetAccount(ctx context.Context, db *sql.DB, target DrillTarget
 	return account, nil
 }
 
+// CheckTrialRestoreSchema checks the minimum target table shape before an
+// artifact is selected. Restore still compares column types to that artifact.
+func CheckTrialRestoreSchema(ctx context.Context, reader *sql.DB) error {
+	rows, err := reader.QueryContext(ctx, `SELECT t.TABLE_NAME, t.ENGINE, c.COLUMN_NAME, c.COLUMN_KEY, c.EXTRA
+		FROM information_schema.TABLES t JOIN information_schema.COLUMNS c
+		ON c.TABLE_SCHEMA = t.TABLE_SCHEMA AND c.TABLE_NAME = t.TABLE_NAME
+		WHERE t.TABLE_SCHEMA = DATABASE() AND t.TABLE_TYPE = 'BASE TABLE'
+		AND t.TABLE_NAME IN ('users', 'user_quotas', 'instances')`)
+	if err != nil {
+		return ErrDatabase
+	}
+	defer rows.Close()
+	columnsByTable := map[string]map[string]bool{
+		"users": {}, "user_quotas": {}, "instances": {},
+	}
+	for rows.Next() {
+		var table, engine, column, key, extra string
+		if err := rows.Scan(&table, &engine, &column, &key, &extra); err != nil {
+			return ErrDatabase
+		}
+		cols, ok := columnsByTable[table]
+		if !ok || engine != "InnoDB" || (column == "id") != (key == "PRI") {
+			return ErrSchema
+		}
+		cols[column] = !generatedColumn(extra)
+	}
+	if rows.Err() != nil {
+		return ErrDatabase
+	}
+	for table, cols := range columnsByTable {
+		required := trialColumns[table]
+		if table == "instances" {
+			required += " status"
+		}
+		for _, column := range strings.Fields(required) {
+			if !cols[column] {
+				return ErrSchema
+			}
+		}
+	}
+	return nil
+}
+
 func CaptureTrial(ctx context.Context, db *sql.DB, limits Limits, database, uuid string) (Snapshot, error) {
 	snapshot, err := captureRows(ctx, db, limits, func(conn *sql.Conn) error {
 		return trialSourceSession(ctx, conn, database, uuid)
