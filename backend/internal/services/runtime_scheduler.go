@@ -66,6 +66,7 @@ const (
 	runtimeHeartbeatProbeTimeout            = 2 * time.Second
 	defaultRuntimeGatewayStartInFlightLimit = 32
 	runtimeSchedulerBatchLimit              = 1000
+	hermesLegacyGatewayImage                = "ghcr.io/yuan-lab-llm/agentsruntime/hermes-lite@sha256:4fd519962d0afe796b36dade6f8e66379e7030a2c6f3c62b4a6574352b2eac44"
 )
 
 type RuntimeGatewayEnvBuilder func(*models.Instance) (map[string]string, error)
@@ -2398,15 +2399,21 @@ func (s *RuntimeScheduler) createGatewayOnPod(ctx context.Context, instance mode
 	if start == nil || start.reservedBinding == nil {
 		return fmt.Errorf("runtime gateway start is not prepared")
 	}
+	podUID := stringValue(pod.PodUID)
 	if start.upgradeID == "" {
 		if err := s.verifyOrdinaryRuntimePod(ctx, pod); err != nil {
 			// A reservation exists: preserve it for authoritative reconciliation,
 			// never try another Pod after an uncertain start boundary.
 			return s.preservePendingGatewayStart(ctx, instance.ID, instance.RuntimeGeneration, err)
 		}
+		// The pinned Hermes Lite agent rejects pod_uid as an unknown JSON field.
+		// The scheduler still verifies the actual Pod identity before this request.
+		if runtimeType == RuntimeTypeHermes && runtimePodMatchesImage(pod, hermesLegacyGatewayImage) {
+			podUID = ""
+		}
 	}
 	resp, err := s.agentClient.CreateGateway(ctx, start.endpoint, RuntimeAgentCreateGatewayRequest{
-		PodUID:              stringValue(pod.PodUID),
+		PodUID:              podUID,
 		InstanceID:          instance.ID,
 		UserID:              instance.UserID,
 		AgentType:           runtimeType,
