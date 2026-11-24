@@ -142,6 +142,8 @@ python scripts/system-backup-trial-register.py --config approved.json --side tar
 
 目标部署在试行 API Pod 内增加一个使用同版 Hermes 镜像的容器，以该镜像中的 Python 启动 `system-backup-trial-hermes-history.py serve --socket /run/trial-hermes/history.sock --workspace-root /workspaces`。两个容器通过专用 `emptyDir` 共享 `/run/trial-hermes`，并使用具有该目录访问权的组。Sidecar 挂载目标演练工作区 PVC 和只读脚本配置，按目标 Hermes 实例的工作区身份写入。Unix socket 仅在同一 Pod 内使用，无需暴露 Service 或端口。
 
+Hermes 镜像将 `/var/run` 指向 `/run` 时，源采集与目标恢复适配器会按同一挂载识别该路径。共享目录内部仍要求使用规范路径。
+
 仓库固定的 Hermes Lite 镜像 `ghcr.io/yuan-lab-llm/agentsruntime/hermes-lite@sha256:4fd519962d0afe796b36dade6f8e66379e7030a2c6f3c62b4a6574352b2eac44` 已通过本机原生测试。该镜像使用 `/opt/hermes-agent/.venv/bin/python`，并将 `/opt/hermes-agent` 加入 `PYTHONPATH`。在断网容器中用原生 `SessionDB` 创建一条合成会话和两条消息，经 socket 导入、读回相同摘要，并拒绝错误实例请求。
 
 API 容器设置 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_SOCKET=/run/trial-hermes/history.sock` 和 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_TARGET_ROOT=/workspaces`。先在目标 PVC 创建该实例的 `home/.hermes` 空状态目录。启动验收部署保持同一工作区根及实际 PVC。应用在写 SQL 前检查 sidecar 与目标工作区根，之后经本机 socket 发送已认证的对话。Sidecar 独立读回一致后发布 SQLite 文件。若 SQL 已恢复，可用原备份 ID 重试。重试先核对目标 SQL 与产物，再恢复缺失的对话或核对已发布的对话。

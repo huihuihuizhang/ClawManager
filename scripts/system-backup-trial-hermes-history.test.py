@@ -118,6 +118,16 @@ class TrialHermesHistoryTest(unittest.TestCase):
         with self.assertRaises(history.HistoryError):
             history.verify_payload(payload, 7, 13)
 
+    @unittest.skipUnless(os.name == "posix", "requires POSIX filesystem symlinks")
+    def test_socket_mount_rejects_unregistered_symlink_parents(self):
+        mount = self.base / "socket-dir"
+        mount.mkdir()
+        alias = self.base / "socket-alias"
+        alias.symlink_to(mount, target_is_directory=True)
+        self.assertEqual(history.canonical_socket_path(mount / "history.sock"), mount / "history.sock")
+        with self.assertRaises(history.HistoryError):
+            history.canonical_socket_path(alias / "history.sock")
+
     def test_refuses_existing_state(self):
         target = self.workspace("existing")
         existing = target / "state.db"

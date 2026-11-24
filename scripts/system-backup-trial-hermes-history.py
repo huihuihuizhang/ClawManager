@@ -380,6 +380,20 @@ def reclaim_socket(path):
     path.unlink()
 
 
+def canonical_socket_path(path):
+    if not path.is_absolute():
+        raise HistoryError("invalid history adapter socket mount")
+    # Kubernetes manifests commonly use /var/run. Some Hermes images alias
+    # that directory to /run. Resolve only this platform alias so symlinks
+    # inside the shared socket mount are still rejected.
+    alias, destination = Path("/var/run"), Path("/run")
+    if path.is_relative_to(alias) and alias.is_symlink() and alias.resolve(strict=True) == destination:
+        path = destination / path.relative_to(alias)
+    if path.parent.resolve(strict=True) != path.parent:
+        raise HistoryError("invalid history adapter socket mount")
+    return path
+
+
 class HistoryServer(socketserver.TCPServer):
     address_family = getattr(socket, "AF_UNIX", 0)
 
@@ -399,10 +413,9 @@ def serve(session_db, root, socket_path, *, source=None):
     methods = ("export_session", "get_compression_lineage") if source else ("export_session", "import_sessions")
     if not all(callable(getattr(session_db, name, None)) for name in methods):
         raise HistoryError("Hermes native session portability is unavailable")
-    if (not root.is_absolute() or root.resolve(strict=True) != root or not root.is_dir() or
-            root == root.parent or not socket_path.is_absolute() or
-            socket_path.parent.resolve(strict=True) != socket_path.parent):
+    if not root.is_absolute() or root.resolve(strict=True) != root or not root.is_dir() or root == root.parent:
         raise HistoryError("invalid history adapter mounts")
+    socket_path = canonical_socket_path(socket_path)
     if source:
         user_id, instance_id, scratch = source
         if user_id <= 0 or instance_id <= 0 or not scratch.is_absolute() or scratch.resolve(strict=True) != scratch or not scratch.is_dir():
