@@ -90,24 +90,6 @@ python scripts/system-backup-trial-register.py --config approved.json --side tar
 
 目标任务将镜像的固定迁移目录应用到登记的 MySQL UUID 和库名。将该镜像中 `system-backup-migrate -catalog-only` 输出的 `sha256` 填入 `migration_catalog_sha256`。配置 `runtime_secret` 时，同时准备运行核验表。试行 API 使用目标账号和密钥的挂载，恢复入口使用导入卷上的原备份 ID。页面任务通过后，按既定流程转移密文与回执。
 
-
-在仓库根目录用 Python 3 生成各端资源。Windows 安装了 Python Launcher 时可使用 `py -3`。以下示例使用目标端，源端使用 `--side source`。`placeholders` 的输出用于首次创建，后续登记沿用这些 Secret。`render` 会检查所有占位符并生成暂停的 Job、最小权限 Role 和绑定。平台部署这些资源后，从 Kubernetes 读取实际 Job JSON，再用 `profile` 生成 API 和 Job 共用的 ConfigMap。该步骤核对 Job UID、镜像、摘要和挂载。重跑渲染会使用同一份登记配置。替换失败的 Job 时，更新该端的任务版本和名称，生成并部署新的 Job，再用 `profile` 绑定新 Job 的 UID。
-
-```sh
-python scripts/system-backup-trial-register.py --config approved.json --side target placeholders > target-secrets.json
-python scripts/system-backup-trial-register.py --config approved.json --side target render > target-prepare.yaml
-kubectl --context approved-context -n cm-drill-target get job prepare-trial-v1 -o json > target-job.json
-python scripts/system-backup-trial-register.py --config approved.json --side target profile --job target-job.json > target-profile.json
-```
-
-平台一次性创建隔离 namespace、PVC 和登记工具生成的空 `Opaque` Secret。每个输出 Secret 标注 `clawmanager.io/trial-material-namespace`，值为所在的 namespace。重跑保留原 Secret 对象及数据。Job 写出的 Secret 使用 `dsn` 或 `key` 字段。应用通过普通 Secret 卷挂载这些字段，允许准备完成前字段为空，使用完整卷目录以接收更新。
-
-登记工具为源归档卷生成一个可写挂载和一个只读挂载，源工作区以只读方式挂载。目标归档卷只读，目标工作区可写。工作区卷随该端的登记项生成。`run_as_user`、`run_as_group` 和 `volume_group` 使用该端批准的非 root 身份及卷组。任务核对 PVC 状态及已登记的存储类，并实际检验归档读回、目标只读导入和所登记工作区的访问方式。
-
-两端登记在同一集群时，源端资源会包含一条跨 namespace 授权，目标准备服务账号只可读取源端 `key_secret`。先完成源侧准备，再从目标管理员页面启动目标侧准备。目标侧将同一份备份密钥写入自己的独立 Secret，后续复跑使用已保存的目标密钥。另一集群的目标通过平台已有密钥渠道预填对应 `key` 字段。任务检测到已登记密钥消失或变化时会要求平台复核。
-
-目标任务将镜像的固定迁移目录应用到登记的 MySQL UUID 和库名。将该镜像中 `system-backup-migrate -catalog-only` 输出的 `sha256` 填入 `migration_catalog_sha256`。配置 `runtime_secret` 时，同时准备运行核验表。试行 API 使用目标账号和密钥的挂载，恢复入口使用导入卷上的原备份 ID。页面任务通过后，按既定流程转移密文与回执。
-
 ### 浏览器验收准备、备份和恢复
 
 使用 `node e2e/backup-trial-live-click.mjs --help` 查看登录和隔离参数。`BACKUP_TRIAL_PREPARE_PROFILE` 指向平台登记生成的当前端 `environment.json`。脚本先核对页面读取的源、目标、版本和 Job UID。在 Job 暂停时点击一次准备，随后等待准备和当前端实时就绪检查通过。验收输出记录 Job UID 及是否实际点击准备。
@@ -153,6 +135,12 @@ API 容器设置 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_SOCKET=/run/trial-hermes/hi
 恢复端挂载独立的目标工作区卷，将它配置为 `SYSTEM_BACKUP_TRIAL_WORKSPACE_FILES_TARGET_ROOT`。预先创建对应实例及选定目录的父目录。申请恢复时选定目录应尚未创建。成功后可以用同一备份 ID 复跑，服务会独立读回已存在的同内容目录。目标卷需支持 Linux 无覆盖原子重命名。恢复开始写数据库前，服务会在目标目录旁验证发布能力并清理探针。现场试行的 Longhorn RWX（NFSv4）卷对此操作返回 `EINVAL`，普通重命名替换临时空目录也返回 `EEXIST`。现场优先用独立 RWO 卷验证工作区恢复，归档存储仍按自身的挂载和读写条件检查。服务先在独立暂存目录写入并校验内容及 POSIX 权限，再发布到原相对路径。保持同一实例的目标运行 UID/GID 配置，启动验收 API 与运行池使用该工作区卷。
 
 设置 `BACKUP_TRIAL_WORKSPACE_FILES=required` 核对备份和恢复的工作区条目数、字节数和归档摘要。向运行时取证脚本的普通账号清单加入 `workspace_files`，用应用已有下载接口核对文件大小和 SHA-256。另一个账号的清单可加入 `forbidden_workspace_file`，从同一接口验证 HTTP 403。用于下载核对的 `path` 相对于应用的工作区文件根。
+
+## 在管理页选择备份内容
+
+从已登记的源端管理页选择「选择备份内容」，可勾选账号和实例，或切换为全部账号和实例。勾选实例会自动包含归属账号、配额及该实例使用的启动配置。按范围恢复需要至少一个启用的管理员。实例归属在提交后发生变化时，任务会提示重新选择。
+
+源端已准备的 Hermes 会话组和工作区目录在页面单独勾选。按范围备份时，选中对应实例后可勾选这些内容。任务按页面提交的 SHA-256 核对准备材料，再用同一 SQL 快照复核实例归属。原有「创建试行备份」仍可直接生成全量试行备份，并包含已配置的会话和目录。
 
 ## 隔离实例启动样本
 

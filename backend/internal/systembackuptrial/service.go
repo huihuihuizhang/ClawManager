@@ -47,11 +47,13 @@ type Task struct {
 	Stage                    string                `json:"stage"`
 	Error                    string                `json:"error,omitempty"`
 	Readback                 bool                  `json:"readback_verified"`
+	BackupMode               string                `json:"backup_mode,omitempty"`
 	CiphertextSHA256         string                `json:"ciphertext_sha256,omitempty"`
 	Counts                   map[string]int        `json:"counts,omitempty"`
 	Hermes                   *historyReceipt       `json:"hermes_history,omitempty"`
 	Workspace                *workspaceFileReceipt `json:"workspace_files,omitempty"`
 	expectedCiphertextSHA256 string
+	selection                *backupSelection
 }
 
 type Readiness struct {
@@ -543,6 +545,8 @@ func (s *Service) restoreDatabaseReadiness(ctx context.Context) []string {
 
 func category(err error) string {
 	switch {
+	case errors.Is(err, domain.ErrTrialScope):
+		return "backup_scope_changed"
 	case errors.Is(err, errArtifactChanged):
 		return "restore_artifact_changed"
 	case errors.Is(err, errWorkspaceFiles):

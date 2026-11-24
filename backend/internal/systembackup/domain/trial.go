@@ -19,10 +19,10 @@ var trialColumns = map[string]string{
 	"instance_desired_state":       "id instance_id desired_config_revision_id updated_by updated_at created_at",
 }
 
-var trialPredicates = map[string]string{
-	"openclaw_injection_snapshots": " WHERE EXISTS (SELECT 1 FROM instances i WHERE i.openclaw_config_snapshot_id = openclaw_injection_snapshots.id)",
-	"instance_desired_state":       " WHERE desired_config_revision_id IS NOT NULL",
-	"instance_config_revisions":    " WHERE EXISTS (SELECT 1 FROM instance_desired_state d WHERE d.desired_config_revision_id = instance_config_revisions.id AND d.instance_id = instance_config_revisions.instance_id)",
+var trialPredicates = map[string]capturePredicate{
+	"openclaw_injection_snapshots": {clause: " WHERE EXISTS (SELECT 1 FROM instances i WHERE i.openclaw_config_snapshot_id = openclaw_injection_snapshots.id)"},
+	"instance_desired_state":       {clause: " WHERE desired_config_revision_id IS NOT NULL"},
+	"instance_config_revisions":    {clause: " WHERE EXISTS (SELECT 1 FROM instance_desired_state d WHERE d.desired_config_revision_id = instance_config_revisions.id AND d.instance_id = instance_config_revisions.instance_id)"},
 }
 
 // TrialSourceTables is the table-level grant scope accepted by trial capture.
@@ -177,13 +177,17 @@ func CheckTrialRestoreSchema(ctx context.Context, reader *sql.DB) error {
 }
 
 func CaptureTrial(ctx context.Context, db *sql.DB, limits Limits, database, uuid string) (Snapshot, error) {
-	snapshot, err := captureRows(ctx, db, limits, func(conn *sql.Conn) error {
-		return trialSourceSession(ctx, conn, database, uuid)
-	}, trialCatalog, false, trialPredicates)
+	snapshot, err := captureTrial(ctx, db, limits, database, uuid, trialPredicates)
 	if err != nil {
 		return Snapshot{}, err
 	}
 	return snapshot, ValidateTrial(snapshot)
+}
+
+func captureTrial(ctx context.Context, db *sql.DB, limits Limits, database, uuid string, predicates map[string]capturePredicate) (Snapshot, error) {
+	return captureRows(ctx, db, limits, func(conn *sql.Conn) error {
+		return trialSourceSession(ctx, conn, database, uuid)
+	}, trialCatalog, false, predicates)
 }
 
 func ValidateTrial(s Snapshot) error {

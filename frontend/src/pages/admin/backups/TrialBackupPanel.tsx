@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios';
 import { useI18n } from '../../../contexts/I18nContext';
 import api from '../../../services/api';
 import TrialEnvironment, { type TrialEnvironmentStatus } from './TrialEnvironment';
+import TrialBackupScope, { type TrialBackupSelection } from './TrialBackupScope';
 import {
   createTrialHandoff, downloadTrialBlob, downloadTrialJson, isTrialBackupID, matchesTrialHandoff, readTrialHandoff, type TrialRestoreHandoff,
 } from './trialRestoreHandoff';
@@ -15,6 +16,7 @@ type Task = {
   stage: string;
   error?: string;
   readback_verified: boolean;
+  backup_mode?: 'all' | 'selected';
   ciphertext_sha256?: string;
   counts?: Record<string, number>;
   hermes_history?: { sessions: number; messages: number; transcript_sha256: string };
@@ -53,12 +55,14 @@ export default function TrialBackupPanel() {
   const [readingHandoff, setReadingHandoff] = useState(false);
   const [transferring, setTransferring] = useState<'download' | 'upload'>();
   const [importState, setImportState] = useState<'received' | 'invalid' | 'conflict' | 'unavailable'>();
+  const [scopeOpen, setScopeOpen] = useState(false);
   const profile = ready?.environment?.profile;
   const mayAutofillBackup = !!ready && profile?.side !== 'target';
   const running = task?.status === 'running';
   const preparationRunning = ready?.environment?.state === 'running';
   const materialsPending = waitingForProjectedMaterials(ready);
   const actionPending = running || busy || checkingBackup || preparing || readingHandoff || !!transferring;
+  const canStartBackup = !!ready && !ready.missing?.length && !actionPending;
   const handoffPlacementDiffers = !!handoff && !!ready && (profile?.side !== 'target' || !matchesTrialHandoff(handoff, profile));
   const canCheck = !!ready && !ready.restore_missing?.length && !actionPending && !handoffPlacementDiffers && isTrialBackupID(backupID);
   const matchingPreflight = preflight?.backup_id === backupID ? preflight : undefined;
@@ -155,17 +159,18 @@ export default function TrialBackupPanel() {
     }
   }
 
-  async function start(restore: boolean) {
-    if (restore && !canRestore) return;
+  async function start(restore: boolean, selection?: TrialBackupSelection) {
+    if (restore ? !canRestore : !canStartBackup) return;
     setBusy(true);
     setError(false);
     try {
       const suffix = restore ? '/backups/' + backupID + '/restore' : '/backups';
       const digest = restore ? matchingPreflight?.ciphertext_sha256 : undefined;
-      const { data } = await api.post<Task>(route + suffix, undefined,
+      const { data } = await api.post<Task>(route + suffix, selection,
         digest ? { params: { expected_ciphertext_sha256: digest } } : undefined);
       setTask(data);
       if (!restore) setBackupID('');
+      if (selection) setScopeOpen(false);
     } catch {
       setError(true);
     } finally {
@@ -250,6 +255,7 @@ export default function TrialBackupPanel() {
     restore: '写入隔离库', verify: '恢复对账', done: '已完成',
     restore_hermes_history: '恢复 Hermes 对话', hermes_history: 'Hermes 对话无法校验或恢复',
     restore_workspace_files: '恢复工作区文件', workspace_files: '工作区文件无法校验或恢复',
+    backup_scope_changed: '选定范围或准备内容已变化，请重新读取后选择。',
     running: '运行中', succeeded: '成功', failed: '失败',
     source_credential: '试行源库凭据', source_isolation: '源库身份或只读授权',
     source_schema: '源库表结构', encryption_key: '试行加密密钥', storage_mounts: '专用存储挂载',
@@ -273,6 +279,7 @@ export default function TrialBackupPanel() {
   } : {
     hermes_history: 'The target Hermes workspace failed its check',
     workspace_files: 'The target workspace files failed their check',
+    backup_scope_changed: 'The selection or prepared content changed. Reload the options and select again.',
     restore_artifact_configuration: 'Check the import directory and trial encryption key',
     restore_artifact_missing: 'The backup ciphertext or receipt is missing',
     restore_artifact_readback: 'The backup integrity or decryption check failed',
@@ -313,10 +320,16 @@ export default function TrialBackupPanel() {
       preparing={preparing} label={label} onCheck={() => { setError(false); refreshReadiness(); }}
       onPrepare={() => void prepareEnvironment()} />
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" className={button} disabled={!ready || !!ready.missing?.length || actionPending} onClick={() => void start(false)}>
+      {!scopeOpen && <button type="button" className={button} disabled={!canStartBackup} onClick={() => void start(false)}>
         {zh ? '创建试行备份' : 'Create trial backup'}
-      </button>
+      </button>}
+      {(profile?.side === 'source' || scopeOpen) && <button type="button" className={button}
+        disabled={scopeOpen ? actionPending : !canStartBackup} aria-expanded={scopeOpen}
+        onClick={() => setScopeOpen((open) => !open)}>
+        {scopeOpen ? (zh ? '返回快速备份' : 'Return to quick backup') : (zh ? '选择备份内容' : 'Choose backup contents')}
+      </button>}
     </div>
+    {scopeOpen && <TrialBackupScope disabled={!canStartBackup} onCreate={(selection) => void start(false, selection)} />}
     {error && <p role="alert" className="text-sm text-red-700">{zh ? '试行请求失败，请检查就绪状态后重试。' : 'Trial request failed. Check readiness and try again.'}</p>}
     {profile?.side === 'target' && <div className="space-y-1 text-sm text-slate-700">
       <div className="flex flex-wrap items-center gap-2">
@@ -398,6 +411,7 @@ export default function TrialBackupPanel() {
     </div>}
     {task && <div role="status" className="space-y-2 text-sm text-slate-700">
       <p>{zh ? '任务' : 'Task'} <code>{task.id}</code> · {label(task.status)} · {label(task.stage)}{task.error && ` · ${label(task.error)}`}</p>
+      {task.backup_mode === 'selected' && <p>{zh ? '范围：选定账号和实例' : 'Scope: selected accounts and instances'}</p>}
       {task.backup_id && <p>{zh ? '试行产物' : 'Trial artifact'} <code>{task.backup_id}</code></p>}
       {exportHandoff && <div className="space-y-1">
         <button type="button" className={button} disabled={actionPending} onClick={() => void downloadDelivery()}>

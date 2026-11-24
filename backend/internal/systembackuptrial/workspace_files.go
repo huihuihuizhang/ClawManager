@@ -120,8 +120,12 @@ func (b *workspaceArchiveBuffer) Write(p []byte) (int, error) {
 }
 
 func (s *Service) captureWorkspaceFiles(ctx context.Context, snapshot domain.Snapshot) ([]byte, *workspaceManifest, error) {
+	return s.captureSelectedWorkspaceFiles(ctx, snapshot, "")
+}
+
+func (s *Service) captureSelectedWorkspaceFiles(ctx context.Context, snapshot domain.Snapshot, expectedSHA256 string) ([]byte, *workspaceManifest, error) {
 	file, source := s.value("WORKSPACE_FILES_SELECTION_FILE"), s.value("WORKSPACE_FILES_SOURCE_ROOT")
-	if file == "" && source == "" {
+	if file == "" && source == "" && expectedSHA256 == "" {
 		return nil, nil, nil
 	}
 	if !filepath.IsAbs(source) || filepath.Clean(source) != source || filepath.Dir(source) == source {
@@ -131,6 +135,9 @@ func (s *Service) captureWorkspaceFiles(ctx context.Context, snapshot domain.Sna
 	var selection workspaceSelection
 	if err != nil || json.Unmarshal(selectionJSON, &selection) != nil {
 		return nil, nil, errWorkspaceFiles
+	}
+	if expectedSHA256 != "" && sourceMaterialSHA256(selectionJSON) != expectedSHA256 {
+		return nil, nil, domain.ErrTrialScope
 	}
 	m := workspaceManifest{workspaceSelection: selection, Runtime: selectedRuntime(snapshot, selection)}
 	if m.Runtime == "" {

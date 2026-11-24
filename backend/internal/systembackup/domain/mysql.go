@@ -259,7 +259,12 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 	return captureRows(ctx, db, limits, check, readCatalog, countEmpty, nil, sourceChecks...)
 }
 
-func captureRows(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, readCatalog func(context.Context, queryer, func() error) ([]Table, error), countEmpty bool, predicates map[string]string, sourceChecks ...func() error) (Snapshot, error) {
+type capturePredicate struct {
+	clause string
+	args   []any
+}
+
+func captureRows(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, readCatalog func(context.Context, queryer, func() error) ([]Table, error), countEmpty bool, predicates map[string]capturePredicate, sourceChecks ...func() error) (Snapshot, error) {
 	var authorize func() error
 	if len(sourceChecks) > 1 {
 		return Snapshot{}, ErrIsolation
@@ -375,7 +380,8 @@ func captureRows(ctx context.Context, db *sql.DB, limits Limits, check func(*sql
 			pk = append(pk, name)
 		}
 		name, _ := quoted(t.Name)
-		rows, err := (sourceGuardedQuery{tx, authorize}).QueryContext(ctx, "SELECT "+strings.Join(cols, ",")+" FROM "+name+predicates[t.Name]+" ORDER BY "+strings.Join(pk, ","))
+		predicate := predicates[t.Name]
+		rows, err := (sourceGuardedQuery{tx, authorize}).QueryContext(ctx, "SELECT "+strings.Join(cols, ",")+" FROM "+name+predicate.clause+" ORDER BY "+strings.Join(pk, ","), predicate.args...)
 		if err != nil {
 			return Snapshot{}, ErrDatabase
 		}

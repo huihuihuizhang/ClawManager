@@ -38,10 +38,21 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 		c.JSON(http.StatusOK, gin.H{"task": task})
 	})
 	admin.POST("/environment/prepare", s.handlePrepareEnvironment)
+	admin.GET("/backup-options", s.handleBackupOptions)
 	admin.GET("/backups/:id/transfer", s.handleExport)
 	admin.POST("/artifacts/import", s.handleImport)
 	admin.POST("/backups", func(c *gin.Context) {
-		if missing := s.environment(c.Request.Context(), false).missing("source"); missing != "" {
+		selection, err := readBackupSelection(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"code": "invalid_backup_scope"})
+			return
+		}
+		environment := s.environment(c.Request.Context(), false)
+		if selection != nil && environment.Profile == nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"code": "trial_environment_source"})
+			return
+		}
+		if missing := environment.missing("source"); missing != "" {
 			c.JSON(http.StatusServiceUnavailable, Readiness{Missing: []string{missing}})
 			return
 		}
@@ -49,7 +60,11 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 			c.JSON(http.StatusServiceUnavailable, Readiness{Missing: missing})
 			return
 		}
-		s.start(c, Task{}, s.backup)
+		task := Task{selection: selection}
+		if selection != nil {
+			task.BackupMode = selection.Mode
+		}
+		s.start(c, task, s.backup)
 	})
 	admin.POST("/backups/:id/preflight", s.handleRestorePreflight)
 	admin.POST("/backups/:id/restore", func(c *gin.Context) {
@@ -138,7 +153,12 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 	task.Stage = "capture"
 	s.publish(*task)
 	uuid := s.value("SOURCE_UUID")
-	snapshot, err := domain.CaptureTrial(ctx, source, limits, database, uuid)
+	var snapshot domain.Snapshot
+	if task.selection != nil && task.selection.Mode == "selected" {
+		snapshot, err = domain.CaptureSelectedTrial(ctx, source, limits, database, uuid, task.selection.TrialScope)
+	} else {
+		snapshot, err = domain.CaptureTrial(ctx, source, limits, database, uuid)
+	}
 	if err != nil {
 		return err
 	}
@@ -148,24 +168,31 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 	}
 	m := manifest{SourceUUID: uuid, SHA256: digest, Counts: counts(snapshot)}
 	var history []byte
-	if file := s.value("HERMES_HISTORY_FILE"); file != "" {
-		history, err = readSetting(file, maxHermesHistory)
+	if task.selection == nil && s.value("HERMES_HISTORY_FILE") != "" || task.selection != nil && task.selection.HistorySHA256 != "" {
+		history, err = readSetting(s.value("HERMES_HISTORY_FILE"), maxHermesHistory)
 		if err != nil {
 			return errHistory
 		}
 		defer clear(history)
+		if task.selection != nil && sourceMaterialSHA256(history) != task.selection.HistorySHA256 {
+			return domain.ErrTrialScope
+		}
 		descriptor, err := describeHistory(history, snapshot)
 		if err != nil {
 			return err
 		}
 		m.Hermes = &descriptor
 	}
-	files, descriptor, err := s.captureWorkspaceFiles(ctx, snapshot)
+	var files []byte
+	if task.selection == nil {
+		files, m.Workspace, err = s.captureWorkspaceFiles(ctx, snapshot)
+	} else if task.selection.WorkspaceSHA256 != "" {
+		files, m.Workspace, err = s.captureSelectedWorkspaceFiles(ctx, snapshot, task.selection.WorkspaceSHA256)
+	}
 	if err != nil {
 		return err
 	}
 	defer clear(files)
-	m.Workspace = descriptor
 	task.Stage = "encrypt"
 	s.publish(*task)
 	b := binding(task.ID)
