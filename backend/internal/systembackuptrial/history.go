@@ -114,10 +114,14 @@ func (s *Service) historyTarget() (historyTarget, error) {
 }
 
 func (t historyTarget) client() *http.Client {
+	return privateSocketClient(t.socket)
+}
+
+func privateSocketClient(socket string) *http.Client {
 	return &http.Client{
 		Transport: &http.Transport{
 			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-				return (&net.Dialer{}).DialContext(ctx, "unix", t.socket)
+				return (&net.Dialer{}).DialContext(ctx, "unix", socket)
 			},
 			DisableKeepAlives:      true,
 			MaxResponseHeaderBytes: 4096,

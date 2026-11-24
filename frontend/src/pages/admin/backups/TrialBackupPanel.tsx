@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useI18n } from '../../../contexts/I18nContext';
 import api from '../../../services/api';
 import TrialEnvironment, { type TrialEnvironmentStatus } from './TrialEnvironment';
 import {
-  createTrialHandoff, downloadTrialJson, isTrialBackupID, matchesTrialHandoff, readTrialHandoff, type TrialRestoreHandoff,
+  createTrialHandoff, downloadTrialBlob, downloadTrialJson, isTrialBackupID, matchesTrialHandoff, readTrialHandoff, type TrialRestoreHandoff,
 } from './trialRestoreHandoff';
 
 const route = '/admin/system-backup/trial';
@@ -19,7 +20,7 @@ type Task = {
   hermes_history?: { sessions: number; messages: number; transcript_sha256: string };
   workspace_files?: { entries: number; file_bytes: number; archive_sha256: string };
 };
-type Readiness = { missing: string[] | null; restore_missing: string[] | null; environment?: TrialEnvironmentStatus };
+type Readiness = { missing: string[] | null; restore_missing: string[] | null; environment?: TrialEnvironmentStatus; import_available?: boolean };
 type RestorePreflight = Pick<Task, 'readback_verified' | 'ciphertext_sha256' | 'counts' | 'hermes_history' | 'workspace_files'> & {
   backup_id: string;
   missing?: string;
@@ -50,12 +51,14 @@ export default function TrialBackupPanel() {
   const [handoff, setHandoff] = useState<TrialRestoreHandoff>();
   const [handoffError, setHandoffError] = useState<'invalid' | 'placement'>();
   const [readingHandoff, setReadingHandoff] = useState(false);
+  const [transferring, setTransferring] = useState<'download' | 'upload'>();
+  const [importState, setImportState] = useState<'received' | 'invalid' | 'conflict' | 'unavailable'>();
   const profile = ready?.environment?.profile;
   const mayAutofillBackup = !!ready && profile?.side !== 'target';
   const running = task?.status === 'running';
   const preparationRunning = ready?.environment?.state === 'running';
   const materialsPending = waitingForProjectedMaterials(ready);
-  const actionPending = running || busy || checkingBackup || preparing || readingHandoff;
+  const actionPending = running || busy || checkingBackup || preparing || readingHandoff || !!transferring;
   const handoffPlacementDiffers = !!handoff && !!ready && (profile?.side !== 'target' || !matchesTrialHandoff(handoff, profile));
   const canCheck = !!ready && !ready.restore_missing?.length && !actionPending && !handoffPlacementDiffers && isTrialBackupID(backupID);
   const matchingPreflight = preflight?.backup_id === backupID ? preflight : undefined;
@@ -176,6 +179,7 @@ export default function TrialBackupPanel() {
     setHandoffError(undefined);
     setBackupID('');
     setPreflight(undefined);
+    setImportState(undefined);
   }
 
   async function importHandoff(file: File) {
@@ -193,6 +197,51 @@ export default function TrialBackupPanel() {
       setHandoffError('invalid');
     } finally {
       setReadingHandoff(false);
+    }
+  }
+
+  async function downloadDelivery() {
+    if (!exportHandoff || actionPending) return;
+    setTransferring('download');
+    setError(false);
+    try {
+      const { data } = await api.get<Blob>(`${route}/backups/${exportHandoff.backup_id}/transfer`, {
+        responseType: 'blob',
+        params: { expected_ciphertext_sha256: exportHandoff.ciphertext_sha256 },
+        timeout: 240_000,
+      });
+      downloadTrialBlob(`backup-trial-${exportHandoff.backup_id}.tar`, data);
+    } catch {
+      setError(true);
+    } finally {
+      setTransferring(undefined);
+    }
+  }
+
+  async function uploadDelivery(file: File) {
+    if (!ready?.import_available || profile?.side !== 'target' || actionPending) return;
+    clearHandoff();
+    setTransferring('upload');
+    setError(false);
+    try {
+      const { data } = await api.post<TrialRestoreHandoff>(route + '/artifacts/import', file, {
+        headers: { 'Content-Type': 'application/x-tar' },
+        timeout: 240_000,
+      });
+      const verified = createTrialHandoff(profile, data.backup_id, data.ciphertext_sha256);
+      if (!verified || !matchesTrialHandoff(data, profile)) {
+        setImportState('invalid');
+        return;
+      }
+      setHandoff(verified);
+      setBackupID(verified.backup_id);
+      setImportState('received');
+    } catch (err) {
+      const code = isAxiosError<{ code?: string }>(err) ? err.response?.data?.code : undefined;
+      setImportState(code === 'invalid_trial_artifact_package' ? 'invalid'
+        : code === 'trial_artifact_import_conflict' ? 'conflict' : 'unavailable');
+    } finally {
+      setTransferring(undefined);
     }
   }
 
@@ -242,6 +291,17 @@ export default function TrialBackupPanel() {
     restore_reader_isolation: 'The reader identity or SELECT grants failed validation',
   };
   const label = (code: string) => labels[code] ?? code.replaceAll('_', ' ');
+  const importStatus = zh ? {
+    received: '原件已到目标导入卷，请检查此备份。',
+    invalid: '交付包无效，或与当前已登记的源和目标不匹配。',
+    conflict: '目标已有同一备份 ID 的不同原件，请核对目标导入卷。',
+    unavailable: '导入服务暂不可用，请检查试行环境后重试。',
+  } : {
+    received: 'The original files are on the target import volume. Run the backup check.',
+    invalid: 'The package is invalid or belongs to a different registered source and target.',
+    conflict: 'The target already has different files for this backup ID. Check the import volume.',
+    unavailable: 'The import service is unavailable. Check trial readiness and retry.',
+  };
   const button = 'rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium disabled:opacity-40';
   return <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="trial-backup-title">
     <h2 id="trial-backup-title" className="font-semibold text-slate-900">{zh ? '备份（试行版）' : 'Backup (trial)'}</h2>
@@ -249,7 +309,7 @@ export default function TrialBackupPanel() {
       ? '范围包括用户、配额、实例规格和启动所需配置。恢复到预先配置的隔离目标，实例初始为停止状态。'
       : 'Includes users, quotas, instance specifications and startup configuration. Instances are restored stopped to the configured isolated target.'}</p>
     <TrialEnvironment environment={ready?.environment} readiness={ready} checking={checkingEnvironment}
-      disabled={running || busy || checkingBackup || readingHandoff} checkDisabled={checkingBackup || preparing || readingHandoff}
+      disabled={running || busy || checkingBackup || readingHandoff || !!transferring} checkDisabled={checkingBackup || preparing || readingHandoff || !!transferring}
       preparing={preparing} label={label} onCheck={() => { setError(false); refreshReadiness(); }}
       onPrepare={() => void prepareEnvironment()} />
     <div className="flex flex-wrap items-center gap-2">
@@ -260,6 +320,17 @@ export default function TrialBackupPanel() {
     {error && <p role="alert" className="text-sm text-red-700">{zh ? '试行请求失败，请检查就绪状态后重试。' : 'Trial request failed. Check readiness and try again.'}</p>}
     {profile?.side === 'target' && <div className="space-y-1 text-sm text-slate-700">
       <div className="flex flex-wrap items-center gap-2">
+        {ready?.import_available && <label className="flex min-w-0 flex-wrap items-center gap-2">
+          {transferring === 'upload' ? (zh ? '正在导入交付包…' : 'Importing the delivery package…')
+            : (zh ? '导入备份交付包' : 'Import backup delivery package')}
+          <input type="file" accept=".tar,application/x-tar" disabled={actionPending}
+            className="max-w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-100 file:px-2 file:py-1"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              event.currentTarget.value = '';
+              if (file) void uploadDelivery(file);
+            }} />
+        </label>}
         <label className="flex min-w-0 flex-wrap items-center gap-2">
           {zh ? '选择恢复交接单' : 'Select a restore handoff'}
           <input type="file" accept=".json,application/json" disabled={actionPending}
@@ -274,10 +345,17 @@ export default function TrialBackupPanel() {
           {zh ? '清除交接单' : 'Clear handoff'}
         </button>}
       </div>
-      <p>{zh ? '将密文和存储回执交付到目标导入卷后，再检查此备份。' : 'Place the ciphertext and storage receipt on the target import volume before checking the backup.'}</p>
+      {importState !== 'received' && <p>{ready?.import_available
+        ? (zh ? '交付包会传入原件。使用单独交接单时，先交付密文和回执。'
+          : 'The package transfers the original files. When using the standalone handoff, deliver the ciphertext and receipt first.')
+        : (zh ? '将密文和存储回执交付到目标导入卷后，再检查此备份。'
+          : 'Place the ciphertext and storage receipt on the target import volume before checking the backup.')}</p>}
       {isTrialBackupID(backupID) && <p className="break-all">
         {zh ? '目标导入卷 ' : 'Target import volume '}<code>{profile.target.artifact_claim}</code>
         {zh ? ' 需要 ' : ' requires '}<code>{backupID}.trial</code>{zh ? ' 和 ' : ' and '}<code>{backupID}.receipt</code>
+      </p>}
+      {importState && <p role="status" className={importState === 'received' ? 'text-emerald-700' : 'text-red-700'}>
+        {importStatus[importState]}
       </p>}
     </div>}
     {(handoffError || handoffPlacementDiffers) && <p role="alert" className="text-sm text-red-700">
@@ -288,10 +366,11 @@ export default function TrialBackupPanel() {
     <div className="flex flex-wrap items-end gap-2">
       <label className="flex min-w-0 flex-col gap-1 text-sm text-slate-700">
         {zh ? '试行备份 ID' : 'Trial backup ID'}
-        <input value={backupID} maxLength={32} readOnly={!!handoff} disabled={checkingBackup || readingHandoff} onChange={(event) => {
+        <input value={backupID} maxLength={32} readOnly={!!handoff} disabled={checkingBackup || readingHandoff || !!transferring} onChange={(event) => {
           setBackupID(event.target.value.trim());
           setPreflight(undefined);
           setHandoffError(undefined);
+          setImportState(undefined);
         }}
           className="w-72 max-w-full rounded-lg border border-slate-200 px-3 py-2 font-mono" />
       </label>
@@ -321,11 +400,15 @@ export default function TrialBackupPanel() {
       <p>{zh ? '任务' : 'Task'} <code>{task.id}</code> · {label(task.status)} · {label(task.stage)}{task.error && ` · ${label(task.error)}`}</p>
       {task.backup_id && <p>{zh ? '试行产物' : 'Trial artifact'} <code>{task.backup_id}</code></p>}
       {exportHandoff && <div className="space-y-1">
+        <button type="button" className={button} disabled={actionPending} onClick={() => void downloadDelivery()}>
+          {transferring === 'download' ? (zh ? '正在下载交付包…' : 'Downloading delivery package…')
+            : (zh ? '下载备份交付包' : 'Download backup delivery package')}
+        </button>
         <button type="button" className={button}
           onClick={() => downloadTrialJson(`backup-trial-restore-${exportHandoff.backup_id}.json`, exportHandoff)}>
           {zh ? '下载恢复交接单' : 'Download restore handoff'}
         </button>
-        <p className="break-all">{zh ? '需另行交付 ' : 'Also deliver '}
+        <p className="break-all">{zh ? '使用单独交接单时，请交付 ' : 'When using the standalone handoff, deliver '}
           <code>{exportHandoff.backup_id}.trial</code>{zh ? ' 和 ' : ' and '}<code>{exportHandoff.backup_id}.receipt</code>
           {zh ? ' 到目标导入卷 ' : ' to the target import volume '}<code>{exportHandoff.target.artifact_claim}</code>
         </p>

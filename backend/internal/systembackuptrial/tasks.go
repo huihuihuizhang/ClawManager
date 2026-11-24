@@ -38,6 +38,8 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 		c.JSON(http.StatusOK, gin.H{"task": task})
 	})
 	admin.POST("/environment/prepare", s.handlePrepareEnvironment)
+	admin.GET("/backups/:id/transfer", s.handleExport)
+	admin.POST("/artifacts/import", s.handleImport)
 	admin.POST("/backups", func(c *gin.Context) {
 		if missing := s.environment(c.Request.Context(), false).missing("source"); missing != "" {
 			c.JSON(http.StatusServiceUnavailable, Readiness{Missing: []string{missing}})

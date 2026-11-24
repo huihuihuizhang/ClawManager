@@ -60,6 +60,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpat
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-seal-custody ./cmd/system-backup-seal-custody \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-migrate ./cmd/system-backup-migrate \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-trial-prepare ./cmd/system-backup-trial-prepare \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-trial-import ./cmd/system-backup-trial-import \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-bootstrap ./cmd/system-backup-bootstrap \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-registration ./cmd/system-backup-registration \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-controller-grants ./cmd/system-backup-controller-grants \
@@ -147,6 +148,7 @@ COPY --from=backend-builder /out/system-backup-legacy-preflight /usr/local/bin/s
 COPY --from=backend-builder /out/system-backup-seal-custody /usr/local/bin/system-backup-seal-custody
 COPY --from=backend-builder /out/system-backup-migrate /usr/local/bin/system-backup-migrate
 COPY --from=backend-builder /out/system-backup-trial-prepare /usr/local/bin/system-backup-trial-prepare
+COPY --from=backend-builder /out/system-backup-trial-import /usr/local/bin/system-backup-trial-import
 COPY --from=backend-builder /out/system-backup-bootstrap /usr/local/bin/system-backup-bootstrap
 COPY --from=backend-builder /out/system-backup-registration /usr/local/bin/system-backup-registration
 COPY --from=backend-builder /out/system-backup-controller-grants /usr/local/bin/system-backup-controller-grants

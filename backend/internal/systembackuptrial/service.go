@@ -55,9 +55,10 @@ type Task struct {
 }
 
 type Readiness struct {
-	Missing        []string                `json:"missing"`
-	RestoreMissing []string                `json:"restore_missing"`
-	Environment    *trialEnvironmentStatus `json:"environment,omitempty"`
+	Missing         []string                `json:"missing"`
+	RestoreMissing  []string                `json:"restore_missing"`
+	Environment     *trialEnvironmentStatus `json:"environment,omitempty"`
+	ImportAvailable bool                    `json:"import_available,omitempty"`
 }
 
 type Service struct {
@@ -294,21 +295,27 @@ type manifest struct {
 }
 
 func (s storage) metadata(id string) (artifact, error) {
+	out, _, err := s.metadataBytes(id)
+	return out, err
+}
+
+func (s storage) metadataBytes(id string) (artifact, []byte, error) {
 	var out artifact
 	f, err := s.reader.Open(id + ".receipt")
 	if err != nil {
-		return out, err
+		return out, nil, err
 	}
 	defer f.Close()
 	info, err := f.Stat()
 	if err != nil || !info.Mode().IsRegular() || info.Size() > 2048 {
-		return out, errReadback
+		return out, nil, errReadback
 	}
 	raw, err := io.ReadAll(io.LimitReader(f, 2049))
 	if err != nil || len(raw) > 2048 {
-		return out, errReadback
+		return out, nil, errReadback
 	}
-	return out, json.Unmarshal(raw, &out)
+	err = json.Unmarshal(raw, &out)
+	return out, raw, err
 }
 
 type restoredArtifact struct {
@@ -441,6 +448,8 @@ func (s *Service) readiness(ctx context.Context) Readiness {
 	} else {
 		result.RestoreMissing = s.restoreReadiness(ctx)
 	}
+	result.ImportAvailable = environment.Profile != nil && environment.Profile.Side == "target" &&
+		len(result.RestoreMissing) == 0 && s.importSocketReady()
 	return result
 }
 

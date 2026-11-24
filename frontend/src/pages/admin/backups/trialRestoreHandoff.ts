@@ -60,6 +60,10 @@ export function matchesTrialHandoff(handoff: TrialRestoreHandoff, pair?: Placeme
 
 export function downloadTrialJson(filename: string, content: unknown) {
   const file = new Blob([JSON.stringify(content, null, 2) + '\n'], { type: 'application/json' });
+  downloadTrialBlob(filename, file);
+}
+
+export function downloadTrialBlob(filename: string, file: Blob) {
   const url = URL.createObjectURL(file);
   const link = document.createElement('a');
   link.href = url;

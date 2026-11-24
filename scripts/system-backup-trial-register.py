@@ -14,6 +14,7 @@ REVISION_ANNOTATION = "clawmanager.io/trial-environment-revision"
 MATERIAL_ANNOTATION = "clawmanager.io/trial-material-namespace"
 COMMAND = "/usr/local/bin/system-backup-trial-prepare"
 APP_MATERIALS = "/var/run/clawmanager-trial"
+IMPORTER_CONTAINER = "trial-artifact-import"
 TRIAL_ENV = "SYSTEM_BACKUP_TRIAL_"
 PLACEHOLDER = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 WORKSPACE_BLOCK = re.compile(r"^ *# trial-workspace-begin\r?\n.*?^ *# trial-workspace-end\r?\n", re.MULTILINE | re.DOTALL)
@@ -343,8 +344,49 @@ def patch_list(patch, parent, field, path, entries, key):
         patch.extend({"op": "add", "path": path + "/-", "value": item} for item in additions)
 
 
-def app_patch(config, side, observed, container_name):
+def artifact_import_materials(local):
+    preparation = local["prepare"]
+    socket_dir = APP_MATERIALS + "/import-socket"
+    socket = socket_dir + "/delivery.sock"
+    write_dir = APP_MATERIALS + "/import-write"
+    volumes = [
+        {"name": "trial-import-socket", "emptyDir": {}},
+        {"name": "trial-import-write", "persistentVolumeClaim": {"claimName": local["artifact_claim"]}},
+        {"name": "trial-import-no-token", "emptyDir": {}},
+    ]
+    socket_mount = {"name": "trial-import-socket", "mountPath": socket_dir}
+    settings = {
+        "ENVIRONMENT_PROFILE_FILE": APP_MATERIALS + "/profile/environment.json",
+        "RESTORE_NAMESPACE": local["namespace"],
+        "RESTORE_STORAGE_CLASS": local["instance_storage_class"],
+        "IMPORT_SOCKET": socket,
+        "IMPORT_WRITE_DIR": write_dir,
+    }
+    importer = {
+        "name": IMPORTER_CONTAINER, "image": local["image"], "imagePullPolicy": "IfNotPresent",
+        "command": ["/usr/local/bin/system-backup-trial-import"],
+        "terminationMessagePath": "/dev/termination-log", "terminationMessagePolicy": "File", "resources": {},
+        "securityContext": {
+            "runAsNonRoot": True, "runAsUser": preparation["run_as_user"],
+            "runAsGroup": preparation["volume_group"], "allowPrivilegeEscalation": False,
+            "readOnlyRootFilesystem": True, "capabilities": {"drop": ["ALL"]},
+            "seccompProfile": {"type": "RuntimeDefault"},
+        },
+        "volumeMounts": [
+            socket_mount,
+            {"name": "trial-app-profile", "mountPath": APP_MATERIALS + "/profile", "readOnly": True},
+            {"name": "trial-import-write", "mountPath": write_dir},
+            {"name": "trial-import-no-token", "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount", "readOnly": True},
+        ],
+        "env": [{"name": TRIAL_ENV + name, "value": value} for name, value in settings.items()],
+    }
+    return volumes, {**socket_mount, "readOnly": True}, {"name": TRIAL_ENV + "IMPORT_SOCKET", "value": socket}, importer
+
+
+def app_patch(config, side, observed, container_name, artifact_import=False):
     local = config[side]
+    if artifact_import and (side != "target" or container_name == IMPORTER_CONTAINER):
+        raise ValueError("artifact import requires a separate container in the target Deployment")
     try:
         metadata = observed["metadata"]
         pod = observed["spec"]["template"]["spec"]
@@ -361,16 +403,32 @@ def app_patch(config, side, observed, container_name):
                 or pod["serviceAccountName"] != local["service_account"]
                 or pod.get("automountServiceAccountToken") is False or container["image"] != local["image"]):
             raise ValueError("observed Deployment namespace, service account or pinned image differs")
+        receiver = None
+        if artifact_import:
+            if pod.get("securityContext", {}).get("fsGroup") != local["prepare"]["volume_group"] or (
+                pod.get("hostPID") or pod.get("shareProcessNamespace")
+            ):
+                raise ValueError("artifact import expects the registered Pod fsGroup and separate process namespaces")
+            import_volumes, socket_mount, socket_env, receiver = artifact_import_materials(local)
         if side == "target":
             archive_names = {item["name"] for item in pod.get("volumes", [])
                              if item.get("persistentVolumeClaim", {}).get("claimName") == local["artifact_claim"]}
             for item in containers + pod.get("initContainers", []):
+                if receiver is not None and item == receiver and any(item is candidate for candidate in containers):
+                    continue
+                if artifact_import and any(mount["name"] in {"trial-import-socket", "trial-import-write"}
+                                           for mount in item.get("volumeMounts", []) if item is not container):
+                    raise ValueError("observed target Deployment exposes import materials to another container")
                 if any(mount["name"] in archive_names and mount.get("readOnly") is not True
                        for mount in item.get("volumeMounts", [])):
                     raise ValueError("observed target Deployment has a writable import mount")
                 if any(device["name"] in archive_names for device in item.get("volumeDevices", [])):
                     raise ValueError("observed target Deployment exposes the import claim as a block device")
         volumes, mounts, env = app_materials(local, side)
+        if artifact_import:
+            volumes.extend(import_volumes)
+            mounts.append(socket_mount)
+            env.append(socket_env)
         template = "/spec/template/spec"
         selected = f"{template}/containers/{index}"
         identities = {
@@ -383,6 +441,8 @@ def app_patch(config, side, observed, container_name):
         patch_list(patch, pod, "volumes", template + "/volumes", volumes, "name")
         patch_list(patch, container, "volumeMounts", selected + "/volumeMounts", mounts, "mountPath")
         patch_list(patch, container, "env", selected + "/env", env, "name")
+        if receiver is not None:
+            patch_list(patch, pod, "containers", template + "/containers", [receiver], "name")
         return patch
     except (AttributeError, IndexError, KeyError, TypeError) as exc:
         raise ValueError("invalid observed application Deployment") from exc
@@ -400,6 +460,7 @@ def main():
     app = modes.add_parser("app-patch", help="render a JSON patch for the observed application Deployment")
     app.add_argument("--deployment", required=True, help="observed Deployment JSON path or - for stdin")
     app.add_argument("--container", required=True, help="name of the application container in the Deployment")
+    app.add_argument("--artifact-import", action="store_true", help="install the private upload receiver in an isolated target")
     args = parser.parse_args()
     try:
         if args.config == "-":
@@ -414,7 +475,7 @@ def main():
             elif args.operation == "profile":
                 data = bind_profile(config, args.side, load_json(args.job))
             else:
-                data = app_patch(config, args.side, load_json(args.deployment), args.container)
+                data = app_patch(config, args.side, load_json(args.deployment), args.container, args.artifact_import)
             output = json.dumps(data, indent=2) + "\n"
     except (OSError, ValueError) as exc:
         parser.exit(2, f"trial registration: {exc}\n")

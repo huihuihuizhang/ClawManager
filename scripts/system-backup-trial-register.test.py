@@ -154,6 +154,34 @@ class TrialRegistrationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "conflicting Deployment env entry"):
             REGISTER["app_patch"](self.config, "target", observed, "app")
 
+    def test_target_delivery_grants_write_access_only_to_the_importer(self):
+        observed = self.deployment("target")
+        pod = observed["spec"]["template"]["spec"]
+        local = self.config["target"]
+        with self.assertRaisesRegex(ValueError, "fsGroup"):
+            REGISTER["app_patch"](self.config, "target", observed, "app", True)
+        pod["securityContext"] = {"fsGroup": local["prepare"]["volume_group"]}
+        patch = REGISTER["app_patch"](self.config, "target", observed, "app", True)
+        added = {op["path"]: op["value"] for op in patch if op["op"] == "add"}
+        template = "/spec/template/spec"
+        worker = added[template + "/containers/-"]
+        self.assertEqual(worker["command"], ["/usr/local/bin/system-backup-trial-import"])
+        self.assertTrue(worker["securityContext"]["runAsNonRoot"])
+        self.assertEqual(worker["securityContext"]["capabilities"], {"drop": ["ALL"]})
+        self.assertNotIn("KEY_FILE", json.dumps(worker["env"]))
+        self.assertNotIn("DSN_FILE", json.dumps(worker["env"]))
+        self.assertTrue(any(item["name"] == "trial-import-write" for item in worker["volumeMounts"]))
+        app = pod["containers"][1]
+        app["volumeMounts"] = added[template + "/containers/1/volumeMounts"]
+        self.assertTrue(all(item.get("readOnly") for item in app["volumeMounts"] if "archive" in item["name"] or "import" in item["name"]))
+        pod["volumes"] = added[template + "/volumes"]
+        app["env"] = added[template + "/containers/1/env"]
+        pod["containers"].append(worker)
+        self.assertTrue(all(op["op"] == "test" for op in REGISTER["app_patch"](self.config, "target", observed, "app", True)))
+        pod["containers"][0]["volumeMounts"] = [{"name": "trial-import-write", "mountPath": "/unsafe"}]
+        with self.assertRaisesRegex(ValueError, "another container"):
+            REGISTER["app_patch"](self.config, "target", observed, "app", True)
+
 
 if __name__ == "__main__":
     unittest.main()
