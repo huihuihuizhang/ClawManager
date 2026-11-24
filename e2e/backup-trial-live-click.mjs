@@ -1,6 +1,10 @@
 // Real browser and trial HTTP routes against an explicitly selected drill target.
-import { readFile } from 'node:fs/promises';
+import { constants, createReadStream } from 'node:fs';
+import { copyFile, lstat, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { isAbsolute } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { chooseBackupSelection, validateSelection } from './backup-trial-selection.mjs';
 
 const help = `Run one trial backup followed by one isolated restore from the admin page.
 Set BACKUP_TRIAL_ORIGIN and BACKUP_TRIAL_ISOLATED_TARGET=confirmed.
@@ -9,6 +13,8 @@ Optional BACKUP_TRIAL_REPLAY_ID restores an existing artifact without creating a
 Optional BACKUP_TRIAL_CAPTURE_ONLY=1 creates an artifact without restoring it.
 Optional BACKUP_TRIAL_PREPARE_PROFILE pins the approved environment.json for a capture-only or replay run.
 Optional BACKUP_TRIAL_SOURCE_RECEIPT verifies the source evidence before submitting a replay.
+Optional BACKUP_TRIAL_SELECTION_FILE selects accounts, instances, and optional Hermes sessions and a workspace directory in a source run. Its JSON contains selection and expected_counts and requires BACKUP_TRIAL_PREPARE_PROFILE.
+Optional BACKUP_TRIAL_DELIVERY_FILE saves or imports an absolute .tar path. Set BACKUP_TRIAL_PREPARE_PROFILE on both sides and BACKUP_TRIAL_SOURCE_RECEIPT on replay.
 Optional BACKUP_TRIAL_HERMES_HISTORY=required verifies the Hermes history receipt.
 Optional BACKUP_TRIAL_WORKSPACE_FILES=required verifies the workspace file receipt.
 Optional BACKUP_TRIAL_TIMEOUT_MS, PLAYWRIGHT_CHANNEL and PLAYWRIGHT_EXECUTABLE_PATH.
@@ -20,6 +26,7 @@ if (process.argv.includes('--help')) {
 
 const trialPath = '/api/v1/admin/system-backup/trial';
 const idPattern = /^[0-9a-f]{32}$/;
+const digestPattern = /^[0-9a-f]{64}$/;
 const namePattern = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 const uidPattern = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const terminal = new Set(['succeeded', 'failed']);
@@ -52,6 +59,7 @@ function confirmBackup(expected, actual) {
   for (const field of ['counts', 'hermes_history', 'workspace_files']) {
     requireThat(isDeepStrictEqual(expected[field], actual[field]));
   }
+  if (expected.ciphertext_sha256 !== undefined) requireThat(actual.ciphertext_sha256 === expected.ciphertext_sha256);
 }
 
 function placement(profile) {
@@ -65,6 +73,60 @@ function placement(profile) {
 async function readEvidenceFile(path) {
   const raw = await readFile(path, 'utf8');
   return JSON.parse(raw.replace(/^\uFEFF/, ''));
+}
+
+async function deliveryDigest(path) {
+  const info = await lstat(path);
+  requireThat(info.isFile() && Number.isSafeInteger(info.size) && info.size > 0);
+  const hash = createHash('sha256');
+  let bytes = 0;
+  for await (const chunk of createReadStream(path)) {
+    hash.update(chunk);
+    bytes += chunk.length;
+  }
+  requireThat(bytes === info.size);
+  return { bytes, sha256: hash.digest('hex') };
+}
+
+async function guardSubmission(page, origin, path, allow) {
+  let used = false;
+  await page.route(url => url.origin === origin && url.pathname === path, async route => {
+    const request = route.request();
+    if (request.method() !== 'POST') return route.continue();
+    try {
+      if (!used && allow(request)) {
+        used = true;
+        return route.continue();
+      }
+    } catch {
+      // Malformed requests fail closed, before the operation reaches the server.
+    }
+    return route.abort();
+  });
+}
+
+async function exportDelivery(page, panel, origin, path, backup, timeout) {
+  requireThat(digestPattern.test(backup.ciphertext_sha256));
+  const [download, response] = await Promise.all([
+    page.waitForEvent('download', { timeout }),
+    page.waitForResponse(item => observe(item, origin, 'GET', trialPath + '/backups/' + backup.backup_id + '/transfer'), { timeout }),
+    panel.getByRole('button', { name: /^(下载备份交付包|Download backup delivery package)$/ }).click({ timeout }),
+  ]);
+  requireThat(response.ok() && new URL(response.url()).searchParams.get('expected_ciphertext_sha256') === backup.ciphertext_sha256);
+  requireThat(download.suggestedFilename() === `backup-trial-${backup.backup_id}.tar`);
+  await copyFile(await download.path(), path, constants.COPYFILE_EXCL);
+  receipt.delivery = await deliveryDigest(path);
+}
+
+async function importDelivery(page, panel, origin, path, timeout) {
+  const [response] = await Promise.all([
+    page.waitForResponse(item => observe(item, origin, 'POST', trialPath + '/artifacts/import'), { timeout }),
+    panel.getByLabel(/^(导入备份交付包|Import backup delivery package)$/).setInputFiles(path, { timeout }),
+  ]);
+  requireThat(response.ok());
+  // The page verifies the handoff. Preflight below verifies the source digest
+  // again from the target mount before the script allows any restore request.
+  await panel.getByText(/^(原件已到目标导入卷，请检查此备份。|The original files are on the target import volume\. Run the backup check\.)$/).waitFor({ timeout });
 }
 
 async function expectedPreparation(file, side) {
@@ -139,6 +201,7 @@ async function execute(page, control, path, origin, timeout, result, required) {
   requireThat(idPattern.test(task.backup_id));
   confirmCounts(task.counts);
   Object.assign(result, { backup_id: task.backup_id, readback_verified: true, counts: task.counts });
+  if (digestPattern.test(task.ciphertext_sha256)) result.ciphertext_sha256 = task.ciphertext_sha256;
   if (required.history || task.hermes_history) {
     const history = task.hermes_history;
     requireThat(Number.isSafeInteger(history?.sessions) && history.sessions > 0 &&
@@ -172,9 +235,27 @@ try {
   requireThat(!captureOnly || !replay);
   const preparationFile = process.env.BACKUP_TRIAL_PREPARE_PROFILE;
   const sourceReceiptFile = process.env.BACKUP_TRIAL_SOURCE_RECEIPT;
+  const selectionFile = process.env.BACKUP_TRIAL_SELECTION_FILE;
+  const delivery = process.env.BACKUP_TRIAL_DELIVERY_FILE;
   requireThat(!preparationFile || captureOnly || replay);
   requireThat(!sourceReceiptFile || replay);
+  requireThat(!selectionFile || captureOnly && preparationFile);
+  requireThat(!delivery || (isAbsolute(delivery) && /\.tar$/i.test(delivery) && preparationFile && (captureOnly || replay && sourceReceiptFile)));
   const expectedProfile = preparationFile ? await expectedPreparation(preparationFile, captureOnly ? 'source' : 'target') : undefined;
+  let chosen;
+  if (selectionFile) {
+    chosen = await readEvidenceFile(selectionFile);
+    validateSelection(chosen, expectedProfile);
+    confirmCounts(chosen.expected_counts);
+    required.history ||= !!chosen.selection.hermes_sessions;
+    required.files ||= !!chosen.selection.workspace_directory;
+  }
+  if (delivery && captureOnly) {
+    const existing = await lstat(delivery).catch(err => {
+      if (err.code !== 'ENOENT') throw err;
+    });
+    requireThat(!existing);
+  }
   let expectedBackup;
   if (sourceReceiptFile) {
     const sourceReceipt = await readEvidenceFile(sourceReceiptFile);
@@ -186,6 +267,11 @@ try {
       const sourcePreparation = sourceReceipt.preparation;
       requireThat(sourcePreparation.side === 'source' && sourcePreparation.state === 'prepared' &&
         isDeepStrictEqual(placement(sourcePreparation), placement(expectedProfile)));
+    }
+    if (delivery) {
+      requireThat(sourceReceipt.preparation && digestPattern.test(expectedBackup.ciphertext_sha256));
+      receipt.delivery = await deliveryDigest(delivery);
+      requireThat(isDeepStrictEqual(sourceReceipt.delivery, receipt.delivery));
     }
   }
   const timeout = Number(process.env.BACKUP_TRIAL_TIMEOUT_MS || 120000);
@@ -233,13 +319,29 @@ try {
   if (!replay) {
     step = 'backup_or_readback';
     receipt.backup = {};
-    await execute(page,
-      panel.getByRole('button', { name: /^(创建试行备份|Create trial backup)$/ }),
+    let control = panel.getByRole('button', { name: /^(创建试行备份|Create trial backup)$/ });
+    if (chosen) {
+      step = 'select_backup_scope';
+      control = await chooseBackupSelection(panel, chosen.selection, expectedProfile, timeout);
+      await guardSubmission(page, origin.origin, trialPath + '/backups', request => isDeepStrictEqual(request.postDataJSON(), chosen.selection));
+      step = 'backup_or_readback';
+    }
+    await execute(page, control,
       trialPath + '/backups', origin.origin, timeout, receipt.backup, required);
     requireThat(receipt.backup.task_id === receipt.backup.backup_id);
+    if (chosen) requireThat(isDeepStrictEqual(receipt.backup.counts, chosen.expected_counts));
     await panel.getByText(/^(独立读回校验通过|Independent readback verified)$/).waitFor({ timeout });
     await success.waitFor({ timeout });
     requireThat((await input.inputValue({ timeout })) === receipt.backup.backup_id);
+    if (delivery) {
+      step = 'export_delivery';
+      await exportDelivery(page, panel, origin.origin, delivery, receipt.backup, timeout);
+    }
+  } else if (delivery) {
+    step = 'import_delivery';
+    requireThat(checks.import_available === true);
+    await importDelivery(page, panel, origin.origin, delivery, timeout);
+    requireThat((await input.inputValue({ timeout })) === expectedBackup.backup_id);
   } else {
     await input.fill(replay, { timeout });
   }
@@ -259,6 +361,12 @@ try {
     await panel.getByText(/^(产物读回和恢复内容预检通过|Artifact readback and restore content checks passed)$/).waitFor({ timeout });
     step = 'restore_or_reconcile';
     receipt.restore = {};
+    if (delivery) {
+      await guardSubmission(page, origin.origin, trialPath + '/backups/' + id + '/restore', request => {
+        const digests = new URL(request.url()).searchParams.getAll('expected_ciphertext_sha256');
+        return digests.length === 1 && digests[0] === expectedBackup.ciphertext_sha256;
+      });
+    }
     await execute(page,
       panel.getByRole('button', { name: /^(恢复到隔离环境|Restore to isolated target)$/ }),
       trialPath + '/backups/' + id + '/restore', origin.origin, timeout, receipt.restore, required);

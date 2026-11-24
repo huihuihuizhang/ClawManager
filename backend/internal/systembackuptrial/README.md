@@ -100,6 +100,26 @@ python scripts/system-backup-trial-register.py --config approved.json --side tar
 
 验收要求源端先下线时，在下线前从目标页面完成准备，等目标密钥及凭据挂载就绪，并完成密文与回执转移。源端下线后运行目标恢复脚本，它会核对已完成的目标 Job 并直接进入产物预检。
 
+选择性备份可在源端另外设置 `BACKUP_TRIAL_SELECTION_FILE` 和绝对路径 `BACKUP_TRIAL_DELIVERY_FILE`。选定文件的 `selection` 是页面提交的范围，`expected_counts` 根据隔离样本填入六张表的预期行数。以下示例选中管理员和一个实例。实例归属账号随实例纳入备份。
+
+```json
+{
+  "selection": {
+    "mode": "selected",
+    "user_ids": [1],
+    "instances": [{"id": 13, "user_id": 7}],
+    "hermes_sessions": {"user_id": 7, "instance_id": 13, "session_ids": ["child"]},
+    "workspace_directory": {"user_id": 7, "instance_id": 13, "relative_dir": "projects/example"}
+  },
+  "expected_counts": {
+    "users": 2, "user_quotas": 2, "instances": 1, "openclaw_injection_snapshots": 0,
+    "instance_desired_state": 0, "instance_config_revisions": 0
+  }
+}
+```
+
+脚本从页面完成勾选，并在请求送达服务端前比对选定范围。源端执行后保留 `.tar` 和源回执。目标端使用源回执、原备份 ID 和已转交 `.tar` 的绝对路径作为 `BACKUP_TRIAL_DELIVERY_FILE`，脚本先核对整个交付包的长度和 SHA-256，再从目标页面上传。预检和恢复会核对原密文摘要、表行数、Hermes 回执和工作区回执。
+
 ## 数据范围
 
 - `users` 和 `user_quotas` 保留身份、角色、账号状态、登录凭据哈希和配额。
