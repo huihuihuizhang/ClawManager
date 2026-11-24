@@ -43,6 +43,7 @@ export default function TrialBackupPanel() {
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [preflight, setPreflight] = useState<RestorePreflight>();
+  const [checkingEnvironment, setCheckingEnvironment] = useState(true);
   const [checkingBackup, setCheckingBackup] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -68,7 +69,8 @@ export default function TrialBackupPanel() {
     const controller = new AbortController();
     api.get<Readiness>(route + '/readiness', { signal: controller.signal })
       .then(({ data }) => { if (!controller.signal.aborted) setReady(data); })
-      .catch(() => { if (!controller.signal.aborted) setError(true); });
+      .catch(() => { if (!controller.signal.aborted) setError(true); })
+      .finally(() => { if (!controller.signal.aborted) setCheckingEnvironment(false); });
     return () => controller.abort();
   }, [revision]);
 
@@ -112,6 +114,7 @@ export default function TrialBackupPanel() {
   }, [revision, mayAutofillBackup]);
 
   function refreshReadiness() {
+    setCheckingEnvironment(true);
     setReady(undefined);
     setPreflight(undefined);
     setRevision((value) => value + 1);
@@ -245,21 +248,16 @@ export default function TrialBackupPanel() {
     <p className="text-sm text-slate-600">{zh
       ? '范围包括用户、配额、实例规格和启动所需配置。恢复到预先配置的隔离目标，实例初始为停止状态。'
       : 'Includes users, quotas, instance specifications and startup configuration. Instances are restored stopped to the configured isolated target.'}</p>
-    {ready?.environment && <TrialEnvironment environment={ready.environment} disabled={running || busy || checkingBackup || readingHandoff}
-      preparing={preparing} onPrepare={() => void prepareEnvironment()} />}
+    <TrialEnvironment environment={ready?.environment} readiness={ready} checking={checkingEnvironment}
+      disabled={running || busy || checkingBackup || readingHandoff} checkDisabled={checkingBackup || preparing || readingHandoff}
+      preparing={preparing} label={label} onCheck={() => { setError(false); refreshReadiness(); }}
+      onPrepare={() => void prepareEnvironment()} />
     <div className="flex flex-wrap items-center gap-2">
       <button type="button" className={button} disabled={!ready || !!ready.missing?.length || actionPending} onClick={() => void start(false)}>
         {zh ? '创建试行备份' : 'Create trial backup'}
       </button>
-      <button type="button" className={button} disabled={checkingBackup || preparing || readingHandoff} onClick={() => { setError(false); refreshReadiness(); }}>
-        {zh ? '检查试行就绪状态' : 'Check trial readiness'}
-      </button>
     </div>
     {error && <p role="alert" className="text-sm text-red-700">{zh ? '试行请求失败，请检查就绪状态后重试。' : 'Trial request failed. Check readiness and try again.'}</p>}
-    {!!ready?.missing?.length && <p className="text-sm text-amber-900">{zh ? '备份缺项 · ' : 'Backup requires · '}{ready.missing.map(label).join(' · ')}</p>}
-    {ready && (ready.restore_missing?.length
-      ? <p className="text-sm text-amber-900">{zh ? '恢复缺项 · ' : 'Restore requires · '}{ready.restore_missing.map(label).join(' · ')}</p>
-      : <p className="text-sm text-emerald-700">{zh ? '目标库身份、基础表结构和导入卷已校验' : 'Target database identity, required tables, and import mount verified'}</p>)}
     {profile?.side === 'target' && <div className="space-y-1 text-sm text-slate-700">
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex min-w-0 flex-wrap items-center gap-2">
@@ -277,6 +275,10 @@ export default function TrialBackupPanel() {
         </button>}
       </div>
       <p>{zh ? '将密文和存储回执交付到目标导入卷后，再检查此备份。' : 'Place the ciphertext and storage receipt on the target import volume before checking the backup.'}</p>
+      {isTrialBackupID(backupID) && <p className="break-all">
+        {zh ? '目标导入卷 ' : 'Target import volume '}<code>{profile.target.artifact_claim}</code>
+        {zh ? ' 需要 ' : ' requires '}<code>{backupID}.trial</code>{zh ? ' 和 ' : ' and '}<code>{backupID}.receipt</code>
+      </p>}
     </div>}
     {(handoffError || handoffPlacementDiffers) && <p role="alert" className="text-sm text-red-700">
       {handoffError === 'invalid'
@@ -318,10 +320,16 @@ export default function TrialBackupPanel() {
     {task && <div role="status" className="space-y-2 text-sm text-slate-700">
       <p>{zh ? '任务' : 'Task'} <code>{task.id}</code> · {label(task.status)} · {label(task.stage)}{task.error && ` · ${label(task.error)}`}</p>
       {task.backup_id && <p>{zh ? '试行产物' : 'Trial artifact'} <code>{task.backup_id}</code></p>}
-      {exportHandoff && <button type="button" className={button}
-        onClick={() => downloadTrialJson(`backup-trial-restore-${exportHandoff.backup_id}.json`, exportHandoff)}>
-        {zh ? '下载恢复交接单' : 'Download restore handoff'}
-      </button>}
+      {exportHandoff && <div className="space-y-1">
+        <button type="button" className={button}
+          onClick={() => downloadTrialJson(`backup-trial-restore-${exportHandoff.backup_id}.json`, exportHandoff)}>
+          {zh ? '下载恢复交接单' : 'Download restore handoff'}
+        </button>
+        <p className="break-all">{zh ? '需另行交付 ' : 'Also deliver '}
+          <code>{exportHandoff.backup_id}.trial</code>{zh ? ' 和 ' : ' and '}<code>{exportHandoff.backup_id}.receipt</code>
+          {zh ? ' 到目标导入卷 ' : ' to the target import volume '}<code>{exportHandoff.target.artifact_claim}</code>
+        </p>
+      </div>}
       {task.readback_verified && <p className="text-emerald-700">{zh ? '独立读回校验通过' : 'Independent readback verified'}</p>}
       {task.hermes_history && <p>{zh
         ? `Hermes 对话 · ${task.hermes_history.sessions} 个会话 · ${task.hermes_history.messages} 条消息`
