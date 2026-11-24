@@ -18,6 +18,7 @@ type restorePreflight struct {
 	Counts           map[string]int        `json:"counts,omitempty"`
 	Hermes           *historyReceipt       `json:"hermes_history,omitempty"`
 	Files            *workspaceFileReceipt `json:"workspace_files,omitempty"`
+	WorkspaceDir     *workspaceSelection   `json:"workspace_directory,omitempty"`
 }
 
 func (s *Service) handleRestorePreflight(c *gin.Context) {
@@ -142,6 +143,7 @@ func (s *Service) checkRestoreArtifact(ctx context.Context, id string) restorePr
 	}
 	if m.Workspace != nil {
 		result.Files = &m.Workspace.workspaceFileReceipt
+		result.WorkspaceDir = &m.Workspace.workspaceSelection
 	}
 	target, err := s.restoreContentTargets(ctx, bundle)
 	if err != nil {

@@ -40,6 +40,7 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 	admin.POST("/environment/prepare", s.handlePrepareEnvironment)
 	admin.GET("/backup-options", s.handleBackupOptions)
 	admin.GET("/backup-history", s.handleBackupHistory)
+	admin.GET("/backup-workspaces", s.handleBackupWorkspaces)
 	admin.GET("/backups/:id/transfer", s.handleExport)
 	admin.POST("/artifacts/import", s.handleImport)
 	admin.POST("/backups", func(c *gin.Context) {
@@ -183,6 +184,8 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 	var files []byte
 	if task.selection == nil {
 		files, m.Workspace, err = s.captureWorkspaceFiles(ctx, snapshot)
+	} else if task.selection.WorkspaceDir != nil {
+		files, m.Workspace, err = s.captureRegisteredWorkspace(ctx, snapshot, *task.selection.WorkspaceDir)
 	} else if task.selection.WorkspaceSHA256 != "" {
 		files, m.Workspace, err = s.captureSelectedWorkspaceFiles(ctx, snapshot, task.selection.WorkspaceSHA256)
 	}

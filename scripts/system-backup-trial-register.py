@@ -89,6 +89,12 @@ def output_secrets(placement, side):
     return [placement["key_secret"]] + [placement[role] for role in roles if role in placement]
 
 
+def valid_workspace_root(value):
+    return (isinstance(value, str) and 0 < len(value.encode("utf-8")) <= 240 and value != "home" and
+            not any(ch in value for ch in "\\:\x00\r\n") and
+            all(part and not part.startswith(".") for part in value.split("/")))
+
+
 def validate(config):
     require_fields(config, {"migration_catalog_sha256", "target_isolation_confirmed", "source", "target"}, set(), "registration")
     if not matches(config["migration_catalog_sha256"], SHA256) or config["target_isolation_confirmed"] is not True:
@@ -98,14 +104,14 @@ def validate(config):
         required = PLACEMENT | accounts | {"prepare"}
         optional = OPTIONAL_PLACEMENT.copy()
         if side == "source":
-            optional.add("hermes_history")
+            optional.update({"hermes_history", "workspace_files"})
         if side == "target":
             required.add("instance_storage_class")
             optional.add("runtime_secret")
         require_fields(placement, required, optional, side)
         if not matches(placement["namespace"], LABEL) or not matches(placement["image"], IMAGE):
             raise ValueError(f"invalid namespace or unpinned image in {side}")
-        if any(not dns_name(value) for key, value in placement.items() if key not in {"namespace", "image", "prepare", "hermes_history"}):
+        if any(not dns_name(value) for key, value in placement.items() if key not in {"namespace", "image", "prepare", "hermes_history", "workspace_files"}):
             raise ValueError(f"invalid resource name in {side}")
         if ("workspace_storage_class" in placement and "workspace_claim" not in placement) or placement.get("workspace_claim") == placement["artifact_claim"]:
             raise ValueError(f"invalid workspace and artifact claims in {side}")
@@ -116,6 +122,13 @@ def validate(config):
                     not dns_name(hermes["script_configmap"]) or
                     any(type(hermes[key]) is not int or not 0 < hermes[key] < 2**31 for key in ("user_id", "instance_id", "run_as_user"))):
                 raise ValueError("Hermes source requires a registered workspace snapshot, pinned image, and positive identities")
+        if "workspace_files" in placement:
+            workspace = placement["workspace_files"]
+            require_fields(workspace, {"user_id", "instance_id", "runtime", "relative_root"}, set(), "source.workspace_files")
+            if (not placement.get("workspace_claim") or not valid_workspace_root(workspace["relative_root"]) or
+                    workspace["runtime"] not in ("hermes", "openclaw", "opencode", "deepseek-harness") or
+                    any(type(workspace[key]) is not int or not 0 < workspace[key] < 2**31 for key in ("user_id", "instance_id"))):
+                raise ValueError("workspace file selection requires a registered snapshot, instance and approved relative root")
         job = placement["prepare"]
         require_fields(job, PREPARATION, set(), f"{side}.prepare")
         if not matches(job["revision"], LABEL) or not matches(job["job_name"], LABEL):
@@ -319,6 +332,13 @@ def app_materials(local, side):
             SOURCE_UUID=preparation["server_uuid"], WRITE_DIR=APP_MATERIALS + "/archive-write",
             SOURCE_DSN_FILE=secret("trial-app-source-reader", "source-reader", local["source_read_secret"], "dsn"),
         )
+        if "workspace_files" in local:
+            scope = local["workspace_files"]
+            attach("trial-app-workspace-selection", "workspace-selection", {
+                "persistentVolumeClaim": {"claimName": local["workspace_claim"], "readOnly": True},
+            })
+            mounts[-1]["subPath"] = f'{scope["runtime"]}/user-{scope["user_id"]}/instance-{scope["instance_id"]}/{scope["relative_root"]}'
+            settings["WORKSPACE_FILES_SELECTION_ROOT"] = APP_MATERIALS + "/workspace-selection"
     else:
         settings.update(
             RESTORE_UUID=preparation["server_uuid"], RESTORE_ISOLATED="true",
@@ -474,11 +494,12 @@ def app_patch(config, side, observed, container_name, artifact_import=False):
                     pod.get("hostPID") or pod.get("shareProcessNamespace")):
                 raise ValueError("Hermes capture expects the registered Pod fsGroup and a separate process namespace")
             history_volumes, history_mount, history_env, collector = hermes_source_materials(local)
-            restricted = {item["name"] for item in history_volumes}
+        if side == "source" and (collector is not None or "workspace_files" in local):
+            restricted = {item["name"] for item in history_volumes} if collector is not None else set()
             workspace_names = {item["name"] for item in pod.get("volumes", [])
                                if item.get("persistentVolumeClaim", {}).get("claimName") == local["workspace_claim"]}
             for item in containers + pod.get("initContainers", []):
-                if item == collector and any(item is candidate for candidate in containers):
+                if collector is not None and item == collector and any(item is candidate for candidate in containers):
                     continue
                 for mount in item.get("volumeMounts", []):
                     if (mount["name"] in restricted and not (item is container and mount == history_mount) or

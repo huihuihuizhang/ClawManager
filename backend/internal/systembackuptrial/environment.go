@@ -48,6 +48,7 @@ type trialPlacement struct {
 	RestoreReadSecret     string                `json:"restore_read_secret,omitempty"`
 	RuntimeSecret         string                `json:"runtime_secret,omitempty"`
 	HermesHistory         *trialHermesPlacement `json:"hermes_history,omitempty"`
+	WorkspaceFiles        *workspaceSource      `json:"workspace_files,omitempty"`
 }
 
 type trialHermesPlacement struct {
@@ -109,6 +110,7 @@ func (s *Service) environmentProfile() (trialEnvironment, error) {
 	decoder.DisallowUnknownFields()
 	if decoder.Decode(&p) != nil || decoder.Decode(new(any)) != io.EOF || !p.Source.valid() || !p.Target.valid() ||
 		!p.Source.validHermesSource() || p.Target.HermesHistory != nil ||
+		p.Target.WorkspaceFiles != nil || (p.Source.WorkspaceFiles != nil && !p.Source.WorkspaceFiles.valid(p.Source)) ||
 		len(validation.IsDNS1123Label(p.Revision)) != 0 || (p.Side != "source" && p.Side != "target") ||
 		!strings.HasPrefix(p.Target.Namespace, "cm-drill-") ||
 		(p.Source.Cluster == p.Target.Cluster && p.Source.Namespace == p.Target.Namespace) ||

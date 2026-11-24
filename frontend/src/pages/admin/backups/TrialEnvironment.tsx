@@ -1,5 +1,6 @@
 import { useI18n } from '../../../contexts/I18nContext';
 import { downloadTrialJson } from './trialRestoreHandoff';
+import type { TrialWorkspaceSource } from './TrialWorkspacePicker';
 
 type Placement = {
   cluster: string;
@@ -17,9 +18,10 @@ type Placement = {
   restore_read_secret?: string;
   runtime_secret?: string;
   hermes_history?: { user_id: number; instance_id: number; image: string; script_configmap: string; run_as_user: number };
+  workspace_files?: TrialWorkspaceSource;
 };
 
-type PlacementReference = Exclude<keyof Placement, 'hermes_history'>;
+type PlacementReference = Exclude<keyof Placement, 'hermes_history' | 'workspace_files'>;
 
 export type TrialEnvironmentStatus = {
   state: 'unregistered' | 'invalid' | 'registered' | 'waiting' | 'running' | 'prepared' | 'failed' | 'unavailable';
@@ -152,6 +154,13 @@ export default function TrialEnvironment({
                 <dt>{zh ? '采集脚本 ConfigMap' : 'Capture script ConfigMap'}</dt>
                 <dd className="break-all font-mono">{profile[side].hermes_history.script_configmap}</dd>
                 <dt>{zh ? '采集 UID' : 'Capture UID'}</dt><dd>{profile[side].hermes_history.run_as_user}</dd>
+              </>}
+              {profile[side].workspace_files && <>
+                <dt>{zh ? '工作区采集实例' : 'Workspace capture instance'}</dt>
+                <dd>#{profile[side].workspace_files.instance_id} · {profile[side].workspace_files.runtime}
+                  {' · '}{zh ? '归属账号' : 'Owner'} #{profile[side].workspace_files.user_id}</dd>
+                <dt>{zh ? '可备份目录范围' : 'Backup directory scope'}</dt>
+                <dd className="break-all font-mono">{profile[side].workspace_files.relative_root}</dd>
               </>}
             </dl>
           </div>)}

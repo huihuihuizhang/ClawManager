@@ -218,6 +218,31 @@ class TrialRegistrationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "private collector mounts"):
             REGISTER["app_patch"](self.config, "source", observed, "app")
 
+    def test_workspace_selection_mounts_only_the_registered_subtree(self):
+        local = self.config["source"]
+        local["workspace_claim"] = "workspace-snapshot"
+        local["workspace_files"] = {"user_id": 7, "instance_id": 13, "runtime": "opencode", "relative_root": "home/projects"}
+        REGISTER["validate"](self.config)
+        observed = self.deployment("source")
+        patch = REGISTER["app_patch"](self.config, "source", observed, "app")
+        added = {op["path"].rsplit("/", 1)[-1]: op["value"] for op in patch if op["op"] == "add"}
+        volume = next(item for item in added["volumes"] if item["name"] == "trial-app-workspace-selection")
+        mount = next(item for item in added["volumeMounts"] if item["name"] == volume["name"])
+        self.assertEqual(volume["persistentVolumeClaim"], {"claimName": "workspace-snapshot", "readOnly": True})
+        self.assertTrue(mount["readOnly"])
+        self.assertEqual(mount["subPath"], "opencode/user-7/instance-13/home/projects")
+        env = {item["name"]: item["value"] for item in added["env"]}
+        self.assertEqual(env[REGISTER["TRIAL_ENV"] + "WORKSPACE_FILES_SELECTION_ROOT"], mount["mountPath"])
+        self.assertEqual(env[REGISTER["TRIAL_ENV"] + "WRITE_DIR"], REGISTER["APP_MATERIALS"] + "/archive-write")
+        pod = observed["spec"]["template"]["spec"]
+        pod["volumes"] = [{"name": "alias", "persistentVolumeClaim": {"claimName": "workspace-snapshot"}}]
+        pod["containers"][0]["volumeMounts"] = [{"name": "alias", "mountPath": "/mutable"}]
+        with self.assertRaisesRegex(ValueError, "writable snapshot"):
+            REGISTER["app_patch"](self.config, "source", observed, "app")
+        local["workspace_files"]["relative_root"] = "home/../other"
+        with self.assertRaisesRegex(ValueError, "approved relative root"):
+            REGISTER["validate"](self.config)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useI18n } from '../../../contexts/I18nContext';
 import api from '../../../services/api';
 import TrialHermesHistoryPicker, { type TrialHermesSource } from './TrialHermesHistoryPicker';
+import TrialWorkspacePicker, { type TrialWorkspaceSource } from './TrialWorkspacePicker';
 
 type UserOption = { id: number; name: string; active_admin: boolean };
 type InstanceChoice = { id: number; user_id: number };
@@ -15,6 +16,7 @@ type Options = {
   hermes_history?: PreparedContent;
   hermes_source?: TrialHermesSource;
   workspace_files?: PreparedContent;
+  workspace_source?: TrialWorkspaceSource;
 };
 
 export type TrialBackupSelection = {
@@ -24,6 +26,7 @@ export type TrialBackupSelection = {
   hermes_history_sha256?: string;
   hermes_sessions?: TrialHermesSource & { session_ids: string[] };
   workspace_selection_sha256?: string;
+  workspace_directory?: { user_id: number; instance_id: number; relative_dir: string };
 };
 
 const optionsRoute = '/admin/system-backup/trial/backup-options';
@@ -46,6 +49,7 @@ export default function TrialBackupScope({ disabled, onCreate }: {
   const [includeHistory, setIncludeHistory] = useState(false);
   const [historySessions, setHistorySessions] = useState<string[]>([]);
   const [includeWorkspace, setIncludeWorkspace] = useState(false);
+  const [workspaceDir, setWorkspaceDir] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -78,6 +82,7 @@ export default function TrialBackupScope({ disabled, onCreate }: {
   const history = options?.hermes_history;
   const historySource = options?.hermes_source;
   const workspace = options?.workspace_files;
+  const workspaceSource = options?.workspace_source;
   const inScope = (item?: TrialHermesSource) => !!item && (mode === 'all' ||
     instances.some((instance) => instance.id === item.instance_id && instance.user_id === item.user_id));
   const ready = !!options && !disabled && !loading && (mode === 'all' || hasAdmin);
@@ -96,6 +101,9 @@ export default function TrialBackupScope({ disabled, onCreate }: {
         hermes_sessions: { ...historySource, session_ids: historySessions },
       }),
       ...(includeWorkspace && inScope(workspace) && { workspace_selection_sha256: workspace?.sha256 }),
+      ...(workspaceSource && inScope(workspaceSource) && workspaceDir && { workspace_directory: {
+        user_id: workspaceSource.user_id, instance_id: workspaceSource.instance_id, relative_dir: workspaceDir,
+      } }),
     });
   }
 
@@ -179,10 +187,19 @@ export default function TrialBackupScope({ disabled, onCreate }: {
           : `Include instance #${historySource.instance_id} to select its Hermes sessions.`}</p>)}
       {workspace && <label className="flex items-start gap-2">
         <input type="checkbox" checked={includeWorkspace && inScope(workspace)} disabled={!inScope(workspace)}
-          onChange={(event) => setIncludeWorkspace(event.target.checked)} />
+          onChange={(event) => {
+            setIncludeWorkspace(event.target.checked);
+            if (event.target.checked) setWorkspaceDir('');
+          }} />
         <span className="break-all">{zh ? `已准备的工作区目录 · 实例 #${workspace.instance_id}`
           : `Prepared workspace directory · Instance #${workspace.instance_id}`} · {workspace.relative_dir}</span>
       </label>}
+      {workspaceSource && (inScope(workspaceSource)
+        ? <TrialWorkspacePicker key={`${workspaceSource.user_id}/${workspaceSource.instance_id}/${workspaceSource.relative_root}`}
+            source={workspaceSource} selected={workspaceDir} disabled={includeWorkspace && inScope(workspace)} zh={zh}
+            onChange={(dir) => { setIncludeWorkspace(false); setWorkspaceDir(dir); }} />
+        : <p>{zh ? `勾选实例 #${workspaceSource.instance_id} 后可选择工作区目录。`
+          : `Include instance #${workspaceSource.instance_id} to select a workspace directory.`}</p>)}
       <button type="button" className={button} disabled={!ready} onClick={create}>
         {zh ? '创建所选备份' : 'Create selected backup'}
       </button>

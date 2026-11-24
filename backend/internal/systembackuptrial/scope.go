@@ -23,13 +23,15 @@ type backupSelection struct {
 	HistorySHA256   string                   `json:"hermes_history_sha256,omitempty"`
 	HistorySessions *historySessionSelection `json:"hermes_sessions,omitempty"`
 	WorkspaceSHA256 string                   `json:"workspace_selection_sha256,omitempty"`
+	WorkspaceDir    *workspaceSelection      `json:"workspace_directory,omitempty"`
 }
 
 func (s backupSelection) valid() bool {
 	return (s.Mode == "all" && len(s.UserIDs)+len(s.Instances) == 0 || s.Mode == "selected" && s.TrialScope.Valid()) &&
 		(s.HistorySHA256 == "" || ciphertextDigest.MatchString(s.HistorySHA256)) &&
 		(s.HistorySessions == nil || s.HistorySHA256 == "" && s.HistorySessions.valid()) &&
-		(s.WorkspaceSHA256 == "" || ciphertextDigest.MatchString(s.WorkspaceSHA256))
+		(s.WorkspaceSHA256 == "" || ciphertextDigest.MatchString(s.WorkspaceSHA256)) &&
+		(s.WorkspaceDir == nil || s.WorkspaceSHA256 == "" && s.WorkspaceDir.valid())
 }
 
 func readBackupSelection(c *gin.Context) (*backupSelection, error) {
@@ -62,9 +64,10 @@ type preparedBackupContent struct {
 
 type backupScopeOptions struct {
 	domain.TrialOptions
-	Hermes       *preparedBackupContent `json:"hermes_history,omitempty"`
-	HermesSource *historySourceBinding  `json:"hermes_source,omitempty"`
-	Workspace    *preparedBackupContent `json:"workspace_files,omitempty"`
+	Hermes          *preparedBackupContent `json:"hermes_history,omitempty"`
+	HermesSource    *historySourceBinding  `json:"hermes_source,omitempty"`
+	Workspace       *preparedBackupContent `json:"workspace_files,omitempty"`
+	WorkspaceSource *workspaceSource       `json:"workspace_source,omitempty"`
 }
 
 func sourceMaterialSHA256(raw []byte) string {
@@ -155,6 +158,9 @@ func (s *Service) handleBackupOptions(c *gin.Context) {
 		result.Hermes, result.Workspace = s.preparedHistoryOption(), s.preparedWorkspaceOption()
 		if configured, err := s.historySourceConfig(); err == nil {
 			result.HermesSource = &configured.binding
+		}
+		if configured, _, err := s.workspaceSourceConfig(environment.Profile); err == nil {
+			result.WorkspaceSource = configured
 		}
 	}
 	c.JSON(http.StatusOK, result)

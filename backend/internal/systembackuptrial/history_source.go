@@ -168,7 +168,7 @@ func (s *Service) handleBackupHistory(c *gin.Context) {
 	}
 	defer source.Close()
 	choice := domain.TrialInstanceChoice{ID: int64(collector.binding.InstanceID), UserID: int64(collector.binding.UserID)}
-	if err := domain.CheckTrialHermesOwner(ctx, source, database, s.value("SOURCE_UUID"), choice); err != nil {
+	if err := domain.CheckTrialLiteOwner(ctx, source, database, s.value("SOURCE_UUID"), choice, "hermes"); err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"code": "hermes_history"})
 		return
 	}

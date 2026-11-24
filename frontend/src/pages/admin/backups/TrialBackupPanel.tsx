@@ -24,6 +24,7 @@ type Task = {
 };
 type Readiness = { missing: string[] | null; restore_missing: string[] | null; environment?: TrialEnvironmentStatus; import_available?: boolean };
 type RestorePreflight = Pick<Task, 'readback_verified' | 'ciphertext_sha256' | 'counts' | 'hermes_history' | 'workspace_files'> & {
+  workspace_directory?: { user_id: number; instance_id: number; relative_dir: string };
   backup_id: string;
   missing?: string;
 };
@@ -255,6 +256,7 @@ export default function TrialBackupPanel() {
     restore: '写入隔离库', verify: '恢复对账', done: '已完成',
     restore_hermes_history: '恢复 Hermes 对话', hermes_history: 'Hermes 对话无法校验或恢复',
     restore_workspace_files: '恢复工作区文件', workspace_files: '工作区文件无法校验或恢复',
+    restore_workspace_instance: '目标工作区缺少实例根目录，请通过环境准备流程创建',
     backup_scope_changed: '选定范围或准备内容已变化，请重新读取后选择。',
     running: '运行中', succeeded: '成功', failed: '失败',
     source_credential: '试行源库凭据', source_isolation: '源库身份或只读授权',
@@ -279,6 +281,7 @@ export default function TrialBackupPanel() {
   } : {
     hermes_history: 'The target Hermes workspace failed its check',
     workspace_files: 'The target workspace files failed their check',
+    restore_workspace_instance: 'Prepare the instance root directory on the target workspace',
     backup_scope_changed: 'The selection or prepared content changed. Reload the options and select again.',
     restore_artifact_configuration: 'Check the import directory and trial encryption key',
     restore_artifact_missing: 'The backup ciphertext or receipt is missing',
@@ -408,6 +411,10 @@ export default function TrialBackupPanel() {
       {matchingPreflight.workspace_files && <p>{zh
         ? `${matchingPreflight.workspace_files.entries} 项工作区内容`
         : `${matchingPreflight.workspace_files.entries} workspace entries`}</p>}
+      {matchingPreflight.workspace_directory && <p className="break-all">
+        {zh ? '工作区' : 'Workspace'} #{matchingPreflight.workspace_directory.instance_id} ·{' '}
+        <code>{matchingPreflight.workspace_directory.relative_dir}</code>
+      </p>}
     </div>}
     {task && <div role="status" className="space-y-2 text-sm text-slate-700">
       <p>{zh ? '任务' : 'Task'} <code>{task.id}</code> · {label(task.status)} · {label(task.stage)}{task.error && ` · ${label(task.error)}`}</p>

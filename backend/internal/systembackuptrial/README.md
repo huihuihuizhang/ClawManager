@@ -132,7 +132,7 @@ API 容器设置 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_SOCKET=/run/trial-hermes/hi
 
 将获准实例的工作区快照只读挂载到 `SYSTEM_BACKUP_TRIAL_WORKSPACE_FILES_SOURCE_ROOT`，目录布局沿用 `<runtime>/user-<id>/instance-<id>`。`SYSTEM_BACKUP_TRIAL_WORKSPACE_FILES_SELECTION_FILE` 指向包含 `user_id`、`instance_id` 和 `relative_dir` 的 JSON 文件。本轮每个产物选择一个用户文件目录，支持现有 Gateway Lite 的 Hermes、OpenClaw、OpenCode 和 DeepSeek Harness。服务以同份 SQL 快照核对实例归属，归档选定目录的普通文件和子目录。选定目录的最大归档大小为 32 MiB。实例运行配置和状态目录按各自的恢复流程处理。
 
-恢复端挂载独立的目标工作区卷，将它配置为 `SYSTEM_BACKUP_TRIAL_WORKSPACE_FILES_TARGET_ROOT`。预先创建对应实例及选定目录的父目录。申请恢复时选定目录应尚未创建。成功后可以用同一备份 ID 复跑，服务会独立读回已存在的同内容目录。目标卷需支持 Linux 无覆盖原子重命名。恢复开始写数据库前，服务会在目标目录旁验证发布能力并清理探针。现场试行的 Longhorn RWX（NFSv4）卷对此操作返回 `EINVAL`，普通重命名替换临时空目录也返回 `EEXIST`。现场优先用独立 RWO 卷验证工作区恢复，归档存储仍按自身的挂载和读写条件检查。服务先在独立暂存目录写入并校验内容及 POSIX 权限，再发布到原相对路径。保持同一实例的目标运行 UID/GID 配置，启动验收 API 与运行池使用该工作区卷。
+恢复端挂载独立的目标工作区卷，将它配置为 `SYSTEM_BACKUP_TRIAL_WORKSPACE_FILES_TARGET_ROOT`，并预先创建对应实例的根目录。预检显示备份中的实例和目录，并验证目标的原子发布能力。实例根目录下面缺失的父目录会随归档在同一暂存树生成，继承已存在父目录的 UID、GID 和权限。服务校验选定目录中的文件后，在第一个缺失的路径上无覆盖发布。成功后可以用同一备份 ID 复跑，服务会独立读回已存在的同内容目录。目标卷需支持 Linux 无覆盖原子重命名。现场试行的 Longhorn RWX（NFSv4）卷对此操作返回 `EINVAL`，普通重命名替换临时空目录也返回 `EEXIST`。现场优先用独立 RWO 卷验证工作区恢复。保持同一实例的目标运行 UID/GID 配置，启动验收 API 与运行池使用该工作区卷。
 
 设置 `BACKUP_TRIAL_WORKSPACE_FILES=required` 核对备份和恢复的工作区条目数、字节数和归档摘要。向运行时取证脚本的普通账号清单加入 `workspace_files`，用应用已有下载接口核对文件大小和 SHA-256。另一个账号的清单可加入 `forbidden_workspace_file`，从同一接口验证 HTTP 403。用于下载核对的 `path` 相对于应用的工作区文件根。
 
@@ -149,6 +149,12 @@ API 容器设置 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_SOCKET=/run/trial-hermes/hi
 源码部署时，登记工具的 `--side source hermes-source-script` 生成不可变的脚本 ConfigMap。按原流程生成登记配置和 `app-patch` 后，采集容器通过私有 Unix socket 服务应用，源工作区以只读方式挂载。目标仍沿用上面的 Hermes 恢复适配器。管理员可在「查看源和目标配置」和下载报告中核对采集实例、镜像、脚本引用和 UID。
 
 管理员在源页选中登记的实例，再从分页会话列表勾选所需会话。选择全部账号和实例时也可单独挑选会话。列表只读取会话标题和 ID。后台用受限源库复核归属，通过 Hermes 原生快照导出选中的会话和恢复所需的关联会话，再随同一份备份加密。单份备份最多明确选择 64 场，依赖会话一并计入已有的加密产物大小限制。已有的准备文件和快速备份仍可使用。
+
+### 在源页选择工作区目录
+
+平台在源端登记 `source.workspace_claim` 和 `source.workspace_files`。后者包含 `user_id`、`instance_id`、Lite 运行类型 `runtime` 和已批准的实例相对目录 `relative_root`。原有登记工具生成只读的子树挂载，挂载点与归档存储分开。管理员可从两端配置面板下载登记的归属、运行类型和目录范围。
+
+源页按实例打开目录列表，可逐级浏览并选定一个目录及其子目录。后台从受限源库复核实例账号和 Lite 运行类型，并检查本机挂载实际为只读。目标预检会显示要恢复的目录及缺少的实例根目录。已有的准备目录和快速备份继续走原入口。
 
 ## 隔离实例启动样本
 

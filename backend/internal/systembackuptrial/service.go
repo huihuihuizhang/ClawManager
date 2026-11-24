@@ -549,6 +549,8 @@ func category(err error) string {
 		return "backup_scope_changed"
 	case errors.Is(err, errArtifactChanged):
 		return "restore_artifact_changed"
+	case errors.Is(err, errWorkspaceInstanceMissing):
+		return "restore_workspace_instance"
 	case errors.Is(err, errWorkspaceFiles):
 		return "workspace_files"
 	case errors.Is(err, errHistory):

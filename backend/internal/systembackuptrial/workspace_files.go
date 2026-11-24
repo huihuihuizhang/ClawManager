@@ -27,11 +27,16 @@ const maxWorkspaceArchive = 32 << 20
 
 var workspaceFileLimits = workspace.Limits{MaxFiles: 10000, MaxBytes: maxWorkspaceArchive}
 var errWorkspaceFiles = errors.New("trial workspace archive invalid or unavailable")
+var errWorkspaceInstanceMissing = fmt.Errorf("%w: target instance workspace is missing", errWorkspaceFiles)
 
 type workspaceSelection struct {
 	UserID      int    `json:"user_id"`
 	InstanceID  int    `json:"instance_id"`
 	RelativeDir string `json:"relative_dir"`
+}
+
+func (s workspaceSelection) valid() bool {
+	return s.UserID > 0 && s.InstanceID > 0 && validWorkspaceSelection(s.RelativeDir)
 }
 
 type workspaceFileReceipt struct {
@@ -47,8 +52,16 @@ type workspaceManifest struct {
 	workspaceFileReceipt
 }
 
+func supportedWorkspaceRuntime(name string) bool {
+	switch name {
+	case "hermes", "openclaw", "opencode", "deepseek-harness":
+		return true
+	}
+	return false
+}
+
 func selectedRuntime(snapshot domain.Snapshot, selection workspaceSelection) string {
-	if selection.UserID <= 0 || selection.InstanceID <= 0 || !validWorkspaceSelection(selection.RelativeDir) {
+	if !selection.valid() {
 		return ""
 	}
 	userID, instanceID := strconv.Itoa(selection.UserID), strconv.Itoa(selection.InstanceID)
@@ -61,8 +74,7 @@ func selectedRuntime(snapshot domain.Snapshot, selection workspaceSelection) str
 				row["instance_mode"].String() != "lite" || row["runtime_type"].String() != "gateway" {
 				continue
 			}
-			switch name := row["type"].String(); name {
-			case "hermes", "openclaw", "opencode", "deepseek-harness":
+			if name := row["type"].String(); supportedWorkspaceRuntime(name) {
 				return name
 			}
 		}
@@ -84,7 +96,11 @@ func validWorkspaceSelection(name string) bool {
 }
 
 func (m workspaceManifest) location() string {
-	return fmt.Sprintf("%s/user-%d/instance-%d/%s", m.Runtime, m.UserID, m.InstanceID, m.RelativeDir)
+	return m.instanceLocation() + "/" + m.RelativeDir
+}
+
+func (m workspaceManifest) instanceLocation() string {
+	return fmt.Sprintf("%s/user-%d/instance-%d", m.Runtime, m.UserID, m.InstanceID)
 }
 
 // Mount roots belong to the isolated deployment. Every component beneath that
@@ -148,7 +164,11 @@ func (s *Service) captureSelectedWorkspaceFiles(ctx context.Context, snapshot do
 		return nil, nil, errWorkspaceFiles
 	}
 	defer mount.Close()
-	root, err := openWorkspaceDirectory(mount, m.location())
+	return archiveWorkspaceDirectory(ctx, mount, m.location(), m)
+}
+
+func archiveWorkspaceDirectory(ctx context.Context, mount *os.Root, relativeDir string, m workspaceManifest) ([]byte, *workspaceManifest, error) {
+	root, err := openWorkspaceDirectory(mount, relativeDir)
 	if err != nil {
 		return nil, nil, errWorkspaceFiles
 	}
@@ -235,15 +255,19 @@ func checkWorkspaceDestination(ctx context.Context, mount *os.Root, m workspaceM
 	if err := verifyWorkspaceFiles(ctx, mount, m, archive); !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-	parent, err := openWorkspaceDirectory(mount, path.Dir(m.location()))
+	destination, err := workspacePublishDestination(mount, m)
 	if err != nil {
-		return errWorkspaceFiles
+		return err
 	}
-	defer parent.Close()
-	return checkWorkspacePublish(parent)
+	defer destination.parent.Close()
+	return probeWorkspacePublish(destination.parent, destination.nested)
 }
 
-func checkWorkspacePublish(parent *os.Root) (err error) {
+func checkWorkspacePublish(parent *os.Root) error {
+	return probeWorkspacePublish(parent, "")
+}
+
+func probeWorkspacePublish(parent *os.Root, nested string) (err error) {
 	name := ".trial-files-probe-" + newID()
 	if err := parent.Mkdir(name, 0700); err != nil {
 		return fmt.Errorf("%w: create workspace publication probe: %v", errWorkspaceFiles, err)
@@ -261,21 +285,92 @@ func checkWorkspacePublish(parent *os.Root) (err error) {
 	if err := probe.Mkdir("staged", 0700); err != nil {
 		return fmt.Errorf("%w: stage workspace publication probe: %v", errWorkspaceFiles, err)
 	}
+	stage, err := probe.OpenRoot("staged")
+	if err != nil {
+		return fmt.Errorf("%w: open staged workspace probe: %v", errWorkspaceFiles, err)
+	}
+	leaf, err := prepareWorkspaceLeaf(parent, stage, nested)
+	if leaf != nil {
+		leaf.Close()
+	}
+	stage.Close()
+	if err != nil {
+		return fmt.Errorf("%w: prepare workspace probe parents: %v", errWorkspaceFiles, err)
+	}
 	if err := publishWorkspaceFiles(probe, "staged", "published"); err != nil {
 		return fmt.Errorf("%w: workspace publication probe: %v", errWorkspaceFiles, err)
 	}
 	return nil
 }
 
+type workspaceDestination struct {
+	parent *os.Root
+	name   string
+	nested string
+}
+
+// Publish at the first missing path. The required instance root is the
+// boundary for creating additional directories from an imported artifact.
+func workspacePublishDestination(mount *os.Root, m workspaceManifest) (workspaceDestination, error) {
+	if !m.workspaceSelection.valid() || !supportedWorkspaceRuntime(m.Runtime) {
+		return workspaceDestination{}, errWorkspaceFiles
+	}
+	parent, err := openWorkspaceDirectory(mount, m.instanceLocation())
+	if errors.Is(err, fs.ErrNotExist) {
+		return workspaceDestination{}, errWorkspaceInstanceMissing
+	}
+	if err != nil {
+		return workspaceDestination{}, errWorkspaceFiles
+	}
+	segments := strings.Split(m.RelativeDir, "/")
+	for i, name := range segments {
+		info, err := parent.Lstat(name)
+		if errors.Is(err, fs.ErrNotExist) {
+			return workspaceDestination{parent: parent, name: name, nested: strings.Join(segments[i+1:], "/")}, nil
+		}
+		if err != nil || !info.IsDir() || i == len(segments)-1 {
+			break
+		}
+		next, err := openWorkspaceDirectory(parent, name)
+		if err != nil {
+			break
+		}
+		parent.Close()
+		parent = next
+	}
+	parent.Close()
+	return workspaceDestination{}, errWorkspaceFiles
+}
+
+func prepareWorkspaceLeaf(parent, stage *os.Root, nested string) (*os.Root, error) {
+	if nested == "" {
+		return stage.OpenRoot(".")
+	}
+	if err := stage.MkdirAll(nested, 0700); err != nil {
+		return nil, err
+	}
+	// The archive supplies the selected leaf's attributes. Newly created
+	// ancestors inherit the confirmed destination parent's identity.
+	for dir := path.Dir(nested); ; dir = path.Dir(dir) {
+		if err := inheritWorkspaceDirectory(parent, stage, dir); err != nil {
+			return nil, err
+		}
+		if dir == "." {
+			break
+		}
+	}
+	return openWorkspaceDirectory(stage, nested)
+}
+
 func restoreWorkspaceFiles(ctx context.Context, mount *os.Root, m workspaceManifest, archive []byte) error {
 	if err := verifyWorkspaceFiles(ctx, mount, m, archive); !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-	parent, leaf := path.Split(m.location())
-	root, err := openWorkspaceDirectory(mount, strings.TrimSuffix(parent, "/"))
+	destination, err := workspacePublishDestination(mount, m)
 	if err != nil {
-		return errWorkspaceFiles
+		return err
 	}
+	root := destination.parent
 	defer root.Close()
 	staging := ".trial-files-" + newID()
 	if err := root.Mkdir(staging, 0700); err != nil {
@@ -287,10 +382,15 @@ func restoreWorkspaceFiles(ctx context.Context, mount *os.Root, m workspaceManif
 		return errWorkspaceFiles
 	}
 	defer stage.Close()
-	if _, err := workspace.Restore(ctx, stage, bytes.NewReader(archive), workspaceFileLimits, true); err != nil {
+	leaf, err := prepareWorkspaceLeaf(root, stage, destination.nested)
+	if err != nil {
+		return fmt.Errorf("%w: prepare workspace parents: %v", errWorkspaceFiles, err)
+	}
+	defer leaf.Close()
+	if _, err := workspace.Restore(ctx, leaf, bytes.NewReader(archive), workspaceFileLimits, true); err != nil {
 		return fmt.Errorf("%w: extract staged files: %v", errWorkspaceFiles, err)
 	}
-	if err := verifyWorkspaceArchive(ctx, stage, m, archive); err != nil {
+	if err := verifyWorkspaceArchive(ctx, leaf, m, archive); err != nil {
 		return fmt.Errorf("%w: staged file readback differs", errWorkspaceFiles)
 	}
 	if err := syncWorkspaceStage(ctx, stage); err != nil {
@@ -299,7 +399,7 @@ func restoreWorkspaceFiles(ctx context.Context, mount *os.Root, m workspaceManif
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := publishWorkspaceFiles(root, staging, leaf); errors.Is(err, fs.ErrExist) {
+	if err := publishWorkspaceFiles(root, staging, destination.name); errors.Is(err, fs.ErrExist) {
 		// A concurrent or interrupted restore may already have published. Only
 		// the independently verified, identical directory can complete this run.
 		if err := verifyWorkspaceFiles(ctx, mount, m, archive); err != nil {
