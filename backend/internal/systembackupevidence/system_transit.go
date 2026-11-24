@@ -205,8 +205,14 @@ func (r systemTransitCredentials) Resolve(ctx context.Context, key KeyRef, op Tr
 		wipe(secret)
 		return deny()
 	}
-	if _, err := c.AuthorizeContent(ctx, c.identity); err != nil || ctx.Err() != nil || !time.Now().Before(expiry) {
+	if _, err := c.AuthorizeContent(ctx, c.identity); err != nil {
 		wipe(secret)
+		reportSystemWrap(ctx, "post_login_authority", 0, time.Until(until))
+		return deny()
+	}
+	if ctx.Err() != nil || !time.Now().Before(expiry) {
+		wipe(secret)
+		reportSystemWrap(ctx, "post_login_deadline", 0, time.Until(earlier(expiry, until)))
 		return deny()
 	}
 	return TransitCredential{Key: key, Installation: p.c.Transit.Installation, Operation: op, Secret: secret, ExpiresAt: earlier(expiry, c.until)}, nil

@@ -13,6 +13,20 @@ import (
 // bounding a provider's real TTL, not just the client's usable expiry.
 const transitClockMargin = 5 * time.Second
 
+type systemWrapDiagnosticKey struct{}
+
+// WithSystemWrapDiagnostics observes fixed failure stages and timing only.
+// It is intended for the native operator, outside the evidence and API outputs.
+func WithSystemWrapDiagnostics(ctx context.Context, report func(stage string, ttl, remaining time.Duration)) context.Context {
+	return context.WithValue(ctx, systemWrapDiagnosticKey{}, report)
+}
+
+func reportSystemWrap(ctx context.Context, stage string, ttl, remaining time.Duration) {
+	if report, ok := ctx.Value(systemWrapDiagnosticKey{}).(func(string, time.Duration, time.Duration)); ok && report != nil {
+		report(stage, ttl, remaining)
+	}
+}
+
 // transitJWTExchange exchanges one projected identity for a nonrenewable,
 // narrowly reviewed batch token. Callers must authorize before and after it.
 // until already includes the database clock margin. No caching or retries.
@@ -48,14 +62,26 @@ func transitJWTExchange(ctx context.Context, client *http.Client, c TransitJWTCo
 	raw, err := io.ReadAll(io.LimitReader(res.Body, 65537))
 	defer wipe(raw)
 	if err != nil || len(raw) > 65536 || ctx.Err() != nil {
+		reportSystemWrap(ctx, "login_body", 0, time.Until(until))
 		return deny()
 	}
 	secret, ttl, err := transitJWTToken(raw, c.Role, c.Policy)
+	if err != nil {
+		reportSystemWrap(ctx, "login_token_scope", 0, time.Until(until))
+		return deny()
+	}
 	// Receipt + TTL conservatively bounds provider expiry; request start + TTL
 	// is our earlier usable deadline. An oversized provider TTL is rejected.
+	now := time.Now()
 	expiry := started.Add(ttl)
-	if err != nil || time.Now().Add(ttl).After(until) || !time.Now().Before(expiry) {
+	if now.Add(ttl).After(until) {
 		wipe(secret)
+		reportSystemWrap(ctx, "login_ttl_window", ttl, until.Sub(now))
+		return deny()
+	}
+	if !now.Before(expiry) {
+		wipe(secret)
+		reportSystemWrap(ctx, "login_token_expired", ttl, expiry.Sub(now))
 		return deny()
 	}
 	return secret, expiry, nil

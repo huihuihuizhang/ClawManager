@@ -65,6 +65,9 @@ func newSystemTransitFixture(t *testing.T, mode string) *systemTransitFixture {
 			if mode == "long ttl" {
 				ttl = 21
 			}
+			if mode == "field wrap ttl" {
+				ttl = 10
+			}
 			json.NewEncoder(w).Encode(map[string]any{"auth": map[string]any{"client_token": "system-batch-token-0123456789", "token_type": "batch", "renewable": false, "lease_duration": ttl, "policies": []string{policy}, "metadata": map[string]any{"role": x.c.Role}}})
 		case "/v1/transit/encrypt/system-evidence-key":
 			x.encrypts.Add(1)
@@ -203,6 +206,46 @@ func TestSystemTransitRevocationAndCredentialBoundaries(t *testing.T) {
 			}
 			if mode != "after encrypt" && mode != "after staging" && x.encrypts.Load() != 0 {
 				t.Fatal("encryption reached after failed credential/authority check")
+			}
+		})
+	}
+}
+
+func TestSystemTransitFieldLoginDiagnostics(t *testing.T) {
+	for _, tc := range []struct {
+		mode   string
+		window time.Duration
+		stage  string
+	}{
+		{"field wrap ttl", 8 * time.Second, "login_ttl_window"},
+		{"field wrap ttl", 18 * time.Second, ""},
+		{"extra policy", 18 * time.Second, "login_token_scope"},
+		{"after login", 18 * time.Second, "post_login_authority"},
+	} {
+		t.Run(tc.mode+"/"+tc.window.String(), func(t *testing.T) {
+			x := newSystemTransitFixture(t, tc.mode)
+			ctx, cancel := context.WithTimeout(context.Background(), tc.window)
+			defer cancel()
+			var stages []string
+			ctx = WithSystemWrapDiagnostics(ctx, func(stage string, ttl, remaining time.Duration) {
+				stages = append(stages, stage)
+				if stage == "login_ttl_window" && (ttl != 10*time.Second || remaining <= 0 || remaining >= ttl) {
+					t.Errorf("unexpected timing: TTL %v, remaining %v", ttl, remaining)
+				}
+			})
+			var dst bytes.Buffer
+			_, err := x.p.Prepare(ctx, x.i, source(x.body), &dst)
+			if x.logins.Load() != 1 {
+				t.Fatalf("expected one successful Vault login request, got %d", x.logins.Load())
+			}
+			if tc.stage == "" {
+				if err != nil || x.encrypts.Load() != 1 || dst.Len() == 0 || len(stages) != 0 {
+					t.Fatalf("expected encryption and staged ciphertext: %v", err)
+				}
+			} else if err == nil || x.encrypts.Load() != 0 || dst.Len() != 0 {
+				t.Fatal("preparation continued after a failed login or authority check")
+			} else if len(stages) != 1 || stages[0] != tc.stage {
+				t.Fatalf("got stages %v, want %s", stages, tc.stage)
 			}
 		})
 	}

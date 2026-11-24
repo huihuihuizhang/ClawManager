@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"time"
 
 	c "clawreef/internal/systembackupcontroller"
+	"clawreef/internal/systembackupevidence"
 	execution "clawreef/internal/systembackupexecution"
 	"clawreef/internal/systembackupinstallationowner/install"
 	a "clawreef/internal/systembackupkekadapter"
@@ -292,7 +294,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			Version                                             string
 			SourceSelection, Provider, Previous, PreviousSource install.BootstrapSourceFilePin
 			CatalogDefinition, Interrupted                      install.BootstrapSourceFilePin
-			CompletedSetup                                       install.BootstrapSourceFilePin
+			CompletedSetup                                      install.BootstrapSourceFilePin
 			OutputDirectory                                     string
 			Policy                                              c.GatePolicy
 			Admin                                               execution.MinIONativeAdminFiles
@@ -419,5 +421,8 @@ func main() {
 	_ = mysql.SetLogger(log.New(io.Discard, "", 0))
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
+	ctx = systembackupevidence.WithSystemWrapDiagnostics(ctx, func(stage string, ttl, remaining time.Duration) {
+		fmt.Fprintf(os.Stderr, "system_wrap stage=%s ttl_ms=%d remaining_ms=%d\n", stage, ttl.Milliseconds(), remaining.Milliseconds())
+	})
 	os.Exit(run(ctx, os.Args[1:], os.Stdout))
 }
