@@ -15,6 +15,7 @@ MATERIAL_ANNOTATION = "clawmanager.io/trial-material-namespace"
 COMMAND = "/usr/local/bin/system-backup-trial-prepare"
 APP_MATERIALS = "/var/run/clawmanager-trial"
 IMPORTER_CONTAINER = "trial-artifact-import"
+HERMES_SOURCE_CONTAINER = "trial-hermes-source"
 TRIAL_ENV = "SYSTEM_BACKUP_TRIAL_"
 PLACEHOLDER = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 WORKSPACE_BLOCK = re.compile(r"^ *# trial-workspace-begin\r?\n.*?^ *# trial-workspace-end\r?\n", re.MULTILINE | re.DOTALL)
@@ -96,22 +97,33 @@ def validate(config):
         placement = config[side]
         required = PLACEMENT | accounts | {"prepare"}
         optional = OPTIONAL_PLACEMENT.copy()
+        if side == "source":
+            optional.add("hermes_history")
         if side == "target":
             required.add("instance_storage_class")
             optional.add("runtime_secret")
         require_fields(placement, required, optional, side)
         if not matches(placement["namespace"], LABEL) or not matches(placement["image"], IMAGE):
             raise ValueError(f"invalid namespace or unpinned image in {side}")
-        if any(not dns_name(value) for key, value in placement.items() if key not in {"namespace", "image", "prepare"}):
+        if any(not dns_name(value) for key, value in placement.items() if key not in {"namespace", "image", "prepare", "hermes_history"}):
             raise ValueError(f"invalid resource name in {side}")
         if ("workspace_storage_class" in placement and "workspace_claim" not in placement) or placement.get("workspace_claim") == placement["artifact_claim"]:
             raise ValueError(f"invalid workspace and artifact claims in {side}")
+        if "hermes_history" in placement:
+            hermes = placement["hermes_history"]
+            require_fields(hermes, {"image", "script_configmap", "user_id", "instance_id", "run_as_user"}, set(), "source.hermes_history")
+            if (not placement.get("workspace_claim") or not matches(hermes["image"], IMAGE) or
+                    not dns_name(hermes["script_configmap"]) or
+                    any(type(hermes[key]) is not int or not 0 < hermes[key] < 2**31 for key in ("user_id", "instance_id", "run_as_user"))):
+                raise ValueError("Hermes source requires a registered workspace snapshot, pinned image, and positive identities")
         job = placement["prepare"]
         require_fields(job, PREPARATION, set(), f"{side}.prepare")
         if not matches(job["revision"], LABEL) or not matches(job["job_name"], LABEL):
             raise ValueError(f"invalid Job name or revision in {side}")
         if any(not dns_name(job[key]) for key in ("service_account", "profile_configmap", "owner_dsn_secret", "ca_configmap")):
             raise ValueError(f"invalid preparation resource name in {side}")
+        if "hermes_history" in placement and placement["hermes_history"]["script_configmap"] in {job["profile_configmap"], job["ca_configmap"]}:
+            raise ValueError("the Hermes collector script requires a dedicated ConfigMap")
         if not matches(job["database"], DATABASE) or not matches(job["server_uuid"], UUID) or not mysql_host(job["account_host"]):
             raise ValueError(f"invalid MySQL identity in {side}")
         if any(type(job[key]) is not int or not 0 < job[key] < 2**31 for key in ("run_as_user", "run_as_group", "volume_group")):
@@ -383,6 +395,52 @@ def artifact_import_materials(local):
     return volumes, {**socket_mount, "readOnly": True}, {"name": TRIAL_ENV + "IMPORT_SOCKET", "value": socket}, importer
 
 
+def hermes_source_script(local):
+    hermes = local.get("hermes_history")
+    if hermes is None:
+        raise ValueError("Hermes source is not registered")
+    script = Path(__file__).with_name("system-backup-trial-hermes-history.py").read_text(encoding="utf-8")
+    return resource("v1", "ConfigMap", local["namespace"], hermes["script_configmap"],
+                    immutable=True, data={"history.py": script})
+
+
+def hermes_source_materials(local):
+    hermes = local["hermes_history"]
+    root, scratch = "/workspaces", "/trial-snapshot"
+    socket_mount = {"name": "trial-hermes-socket", "mountPath": APP_MATERIALS + "/hermes-source"}
+    address = socket_mount["mountPath"] + "/history.sock"
+    volumes = [
+        {"name": "trial-hermes-socket", "emptyDir": {}},
+        {"name": "trial-hermes-scratch", "emptyDir": {"sizeLimit": "1100Mi"}},
+        {"name": "trial-hermes-no-token", "emptyDir": {}},
+        {"name": "trial-hermes-script", "configMap": {"name": hermes["script_configmap"], "defaultMode": 0o444,
+                                                      "items": [{"key": "history.py", "path": "history.py"}]}},
+        {"name": "trial-hermes-workspace", "persistentVolumeClaim": {"claimName": local["workspace_claim"], "readOnly": True}},
+    ]
+    container = {
+        "name": HERMES_SOURCE_CONTAINER, "image": hermes["image"], "imagePullPolicy": "IfNotPresent",
+        "command": ["/opt/hermes-agent/.venv/bin/python", "-B", "/trial-script/history.py"],
+        "args": ["serve-source", "--workspace-root", root, "--socket", address, "--snapshot-dir", scratch,
+                 "--user-id", str(hermes["user_id"]), "--instance-id", str(hermes["instance_id"])],
+        "env": [{"name": "PYTHONPATH", "value": "/opt/hermes-agent"}],
+        "terminationMessagePath": "/dev/termination-log", "terminationMessagePolicy": "File", "resources": {},
+        "securityContext": {
+            "runAsNonRoot": True, "runAsUser": hermes["run_as_user"], "runAsGroup": local["prepare"]["volume_group"],
+            "allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True,
+            "capabilities": {"drop": ["ALL"]}, "seccompProfile": {"type": "RuntimeDefault"},
+        },
+        "volumeMounts": [socket_mount,
+            {"name": "trial-hermes-scratch", "mountPath": scratch},
+            {"name": "trial-hermes-workspace", "mountPath": root, "readOnly": True},
+            {"name": "trial-hermes-script", "mountPath": "/trial-script", "readOnly": True},
+            {"name": "trial-hermes-no-token", "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount", "readOnly": True},
+        ],
+    }
+    extras = {"HERMES_HISTORY_SOURCE_SOCKET": address, "HERMES_HISTORY_SOURCE_ROOT": root,
+              "HERMES_HISTORY_SOURCE_USER_ID": str(hermes["user_id"]), "HERMES_HISTORY_SOURCE_INSTANCE_ID": str(hermes["instance_id"])}
+    return volumes, {**socket_mount, "readOnly": True}, [{"name": TRIAL_ENV + key, "value": value} for key, value in extras.items()], container
+
+
 def app_patch(config, side, observed, container_name, artifact_import=False):
     local = config[side]
     if artifact_import and (side != "target" or container_name == IMPORTER_CONTAINER):
@@ -404,12 +462,30 @@ def app_patch(config, side, observed, container_name, artifact_import=False):
                 or pod.get("automountServiceAccountToken") is False or container["image"] != local["image"]):
             raise ValueError("observed Deployment namespace, service account or pinned image differs")
         receiver = None
+        collector = None
         if artifact_import:
             if pod.get("securityContext", {}).get("fsGroup") != local["prepare"]["volume_group"] or (
                 pod.get("hostPID") or pod.get("shareProcessNamespace")
             ):
                 raise ValueError("artifact import expects the registered Pod fsGroup and separate process namespaces")
             import_volumes, socket_mount, socket_env, receiver = artifact_import_materials(local)
+        if side == "source" and "hermes_history" in local:
+            if (container_name == HERMES_SOURCE_CONTAINER or pod.get("securityContext", {}).get("fsGroup") != local["prepare"]["volume_group"] or
+                    pod.get("hostPID") or pod.get("shareProcessNamespace")):
+                raise ValueError("Hermes capture expects the registered Pod fsGroup and a separate process namespace")
+            history_volumes, history_mount, history_env, collector = hermes_source_materials(local)
+            restricted = {item["name"] for item in history_volumes}
+            workspace_names = {item["name"] for item in pod.get("volumes", [])
+                               if item.get("persistentVolumeClaim", {}).get("claimName") == local["workspace_claim"]}
+            for item in containers + pod.get("initContainers", []):
+                if item == collector and any(item is candidate for candidate in containers):
+                    continue
+                for mount in item.get("volumeMounts", []):
+                    if (mount["name"] in restricted and not (item is container and mount == history_mount) or
+                            mount["name"] in workspace_names and mount.get("readOnly") is not True):
+                        raise ValueError("observed source Deployment exposes writable snapshot or private collector mounts")
+                if any(device["name"] in restricted | workspace_names for device in item.get("volumeDevices", [])):
+                    raise ValueError("observed source Deployment exposes the workspace or collector volume as a block device")
         if side == "target":
             archive_names = {item["name"] for item in pod.get("volumes", [])
                              if item.get("persistentVolumeClaim", {}).get("claimName") == local["artifact_claim"]}
@@ -429,6 +505,10 @@ def app_patch(config, side, observed, container_name, artifact_import=False):
             volumes.extend(import_volumes)
             mounts.append(socket_mount)
             env.append(socket_env)
+        if collector is not None:
+            volumes.extend(history_volumes)
+            mounts.append(history_mount)
+            env.extend(history_env)
         template = "/spec/template/spec"
         selected = f"{template}/containers/{index}"
         identities = {
@@ -443,6 +523,8 @@ def app_patch(config, side, observed, container_name, artifact_import=False):
         patch_list(patch, container, "env", selected + "/env", env, "name")
         if receiver is not None:
             patch_list(patch, pod, "containers", template + "/containers", [receiver], "name")
+        if collector is not None:
+            patch_list(patch, pod, "containers", template + "/containers", [collector], "name")
         return patch
     except (AttributeError, IndexError, KeyError, TypeError) as exc:
         raise ValueError("invalid observed application Deployment") from exc
@@ -455,6 +537,7 @@ def main():
     modes = parser.add_subparsers(dest="operation", required=True)
     modes.add_parser("placeholders", help="render empty named Secrets for first-time creation")
     modes.add_parser("render", help="render the suspended Job and its scoped roles")
+    modes.add_parser("hermes-source-script", help="render the immutable ConfigMap for the registered Hermes collector")
     profile = modes.add_parser("profile", help="bind the ConfigMap to the observed Kubernetes Job")
     profile.add_argument("--job", required=True, help="observed Job JSON path or - for stdin")
     app = modes.add_parser("app-patch", help="render a JSON patch for the observed application Deployment")
@@ -472,6 +555,8 @@ def main():
         else:
             if args.operation == "placeholders":
                 data = placeholders(config, args.side)
+            elif args.operation == "hermes-source-script":
+                data = hermes_source_script(config[args.side])
             elif args.operation == "profile":
                 data = bind_profile(config, args.side, load_json(args.job))
             else:

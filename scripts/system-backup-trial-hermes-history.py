@@ -22,11 +22,15 @@ import stat
 import sys
 import tempfile
 import time
+from urllib.parse import parse_qs
 
 
 FORMAT = "clawmanager-trial-hermes-history.v1"
 MAX_PAYLOAD = 24 * 1024 * 1024
 MAX_SNAPSHOT = 1024 * 1024 * 1024
+MAX_SESSION_ID = 256
+MAX_SESSION_SELECTION = 64
+INVENTORY_PAGE = 100
 SESSION_FIELDS = (
     "id", "source", "title", "model", "parent_session_id", "started_at",
     "ended_at", "end_reason", "archived",
@@ -120,6 +124,39 @@ def capture(session_db, workspace, scratch, session_ids):
                         rows[identifier] = row
                         identifier = row["parent_session_id"]
             return [rows[identifier] for identifier in sorted(rows)]
+
+
+def valid_session_id(identifier):
+    return (isinstance(identifier, str) and 0 < len(identifier.encode("utf-8")) <= MAX_SESSION_ID
+            and identifier == identifier.strip() and not any(ord(ch) < 32 or ord(ch) == 127 for ch in identifier))
+
+
+def source_inventory(workspace, after):
+    check_state_files(workspace, empty=False)
+    uri = (workspace / "state.db").as_uri() + "?mode=ro"
+    with contextlib.closing(sqlite3.connect(uri, uri=True, timeout=5)) as database:
+        rows = database.execute(
+            "SELECT id, substr(title,1,160) FROM sessions "
+            "WHERE id > ? AND length(CAST(id AS BLOB)) <= ? ORDER BY id LIMIT ?",
+            (after, MAX_SESSION_ID, INVENTORY_PAGE + 1),
+        ).fetchall()
+    if any(not valid_session_id(identifier) for identifier, _title in rows):
+        raise HistoryError("history inventory contains an invalid session ID")
+    return {
+        "sessions": [{"id": identifier, "title": title or ""} for identifier, title in rows[:INVENTORY_PAGE]],
+        "next": rows[INVENTORY_PAGE - 1][0] if len(rows) > INVENTORY_PAGE else "",
+    }
+
+
+def capture_payload(session_db, workspace, scratch, user_id, instance_id, ids):
+    payload = {"format": FORMAT, "user_id": user_id, "instance_id": instance_id,
+               "sessions": capture(session_db, workspace, scratch, ids)}
+    sessions = verify_payload(payload, user_id, instance_id)
+    payload["transcript_sha256"] = receipt(sessions)["transcript_sha256"]
+    encoded = encode(payload)
+    if len(encoded) > MAX_PAYLOAD:
+        raise HistoryError("history payload exceeds the trial size limit")
+    return encoded
 
 
 def verify_payload(payload, user_id, instance_id):
@@ -227,7 +264,9 @@ class HistoryRequest(BaseHTTPRequestHandler):
         pass
 
     def reply(self, status, value):
-        body = encode(value)
+        self.reply_raw(status, encode(value))
+
+    def reply_raw(self, status, body):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
@@ -269,6 +308,59 @@ class HistoryRequest(BaseHTTPRequestHandler):
         self.reply(200, result)
 
 
+class HistorySourceRequest(HistoryRequest):
+    def authorized_path(self, operation):
+        path = f"/{operation}/{self.server.source_user}/{self.server.source_instance}"
+        return (self.path.partition("?")[0] == path and
+                self.headers.get_all("X-Trial-Workspace-Root") == [str(self.server.workspace_root)])
+
+    def workspace(self):
+        return state_directory(self.server.workspace_root, self.server.source_user, self.server.source_instance)
+
+    def do_GET(self):
+        if not self.authorized_path("inventory"):
+            self.reply(404, {"error": "unknown history source route"})
+            return
+        try:
+            query = parse_qs(self.path.partition("?")[2], keep_blank_values=True, strict_parsing=True,
+                             max_num_fields=1, errors="strict")
+            if query and (set(query) != {"after"} or not valid_session_id(query["after"][0])):
+                raise ValueError("invalid cursor")
+        except ValueError:
+            self.reply(400, {"error": "invalid history source cursor"})
+            return
+        try:
+            result = source_inventory(self.workspace(), query.get("after", [""])[0])
+        except Exception:
+            self.reply(422, {"error": "Hermes source inventory is unavailable"})
+            return
+        self.reply(200, result)
+
+    def do_POST(self):
+        if not self.authorized_path("capture") or "?" in self.path:
+            self.reply(404, {"error": "unknown history source route"})
+            return
+        length = self.headers.get_all("Content-Length")
+        if (not length or len(length) != 1 or not re.fullmatch(r"[0-9]{1,5}", length[0]) or
+                "Transfer-Encoding" in self.headers or self.headers.get("Content-Type") != "application/json" or
+                not 0 < int(length[0]) <= 65536):
+            self.reply(400, {"error": "invalid history capture request"})
+            return
+        try:
+            size = int(length[0])
+            raw = self.rfile.read(size)
+            ids = json.loads(raw)
+            if (len(raw) != size or not isinstance(ids, list) or not 0 < len(ids) <= MAX_SESSION_SELECTION or
+                    any(not valid_session_id(identifier) for identifier in ids) or len(set(ids)) != len(ids)):
+                raise HistoryError("invalid history session selection")
+            payload = capture_payload(self.server.session_db, self.workspace(), self.server.scratch,
+                                      self.server.source_user, self.server.source_instance, ids)
+        except Exception:
+            self.reply(422, {"error": "Hermes source sessions could not be captured"})
+            return
+        self.reply_raw(200, payload)
+
+
 def reclaim_socket(path):
     try:
         existing = path.lstat()
@@ -301,19 +393,24 @@ class HistoryServer(socketserver.TCPServer):
         pass
 
 
-def serve(session_db, root, socket_path):
+def serve(session_db, root, socket_path, *, source=None):
     if not hasattr(socket, "AF_UNIX"):
         raise HistoryError("Unix domain sockets are unavailable")
-    if not all(callable(getattr(session_db, name, None)) for name in ("export_session", "import_sessions")):
+    methods = ("export_session", "get_compression_lineage") if source else ("export_session", "import_sessions")
+    if not all(callable(getattr(session_db, name, None)) for name in methods):
         raise HistoryError("Hermes native session portability is unavailable")
     if (not root.is_absolute() or root.resolve(strict=True) != root or not root.is_dir() or
             root == root.parent or not socket_path.is_absolute() or
             socket_path.parent.resolve(strict=True) != socket_path.parent):
         raise HistoryError("invalid history adapter mounts")
+    if source:
+        user_id, instance_id, scratch = source
+        if user_id <= 0 or instance_id <= 0 or not scratch.is_absolute() or scratch.resolve(strict=True) != scratch or not scratch.is_dir():
+            raise HistoryError("invalid source adapter binding or snapshot directory")
     reclaim_socket(socket_path)
     mask = os.umask(0o007)
     try:
-        server = HistoryServer(str(socket_path), HistoryRequest)
+        server = HistoryServer(str(socket_path), HistorySourceRequest if source else HistoryRequest)
     finally:
         os.umask(mask)
     with server:
@@ -321,6 +418,8 @@ def serve(session_db, root, socket_path):
         os.chmod(socket_path, 0o660)
         server.workspace_root = root
         server.session_db = session_db
+        if source:
+            server.source_user, server.source_instance, server.scratch = source
         try:
             server.serve_forever()
         finally:
@@ -343,6 +442,9 @@ def main():
     adapter = modes.add_parser("serve")
     adapter.add_argument("--workspace-root", type=Path, required=True)
     adapter.add_argument("--socket", type=Path, required=True)
+    source_adapter = modes.add_parser("serve-source", parents=[common])
+    source_adapter.add_argument("--socket", type=Path, required=True)
+    source_adapter.add_argument("--snapshot-dir", type=Path, required=True)
     args = parser.parse_args()
     try:
         from hermes_state import SessionDB
@@ -350,18 +452,15 @@ def main():
         if args.operation == "serve":
             serve(SessionDB, args.workspace_root, args.socket)
             return 0
+        if args.operation == "serve-source":
+            serve(SessionDB, args.workspace_root, args.socket, source=(args.user_id, args.instance_id, args.snapshot_dir))
+            return 0
         if args.user_id <= 0 or args.instance_id <= 0:
             raise HistoryError("invalid workspace identity")
         workspace = state_directory(args.workspace_root, args.user_id, args.instance_id)
         if args.operation == "capture":
-            payload = {"format": FORMAT, "user_id": args.user_id, "instance_id": args.instance_id,
-                       "sessions": capture(SessionDB, workspace, args.snapshot_dir, args.session_id)}
-            sessions = verify_payload(payload, args.user_id, args.instance_id)
-            payload["transcript_sha256"] = receipt(sessions)["transcript_sha256"]
-            encoded = encode(payload)
-            if len(encoded) > MAX_PAYLOAD:
-                raise HistoryError("history payload exceeds the trial size limit")
-            sys.stdout.buffer.write(encoded)
+            sys.stdout.buffer.write(capture_payload(SessionDB, workspace, args.snapshot_dir,
+                                                    args.user_id, args.instance_id, args.session_id))
         else:
             raw = sys.stdin.buffer.read(MAX_PAYLOAD + 1)
             result = apply_history(SessionDB, workspace, args.operation, raw, args.user_id, args.instance_id)

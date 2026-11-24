@@ -39,6 +39,7 @@ func (s *Service) Register(api *gin.RouterGroup, users repository.UserRepository
 	})
 	admin.POST("/environment/prepare", s.handlePrepareEnvironment)
 	admin.GET("/backup-options", s.handleBackupOptions)
+	admin.GET("/backup-history", s.handleBackupHistory)
 	admin.GET("/backups/:id/transfer", s.handleExport)
 	admin.POST("/artifacts/import", s.handleImport)
 	admin.POST("/backups", func(c *gin.Context) {
@@ -167,16 +168,12 @@ func (s *Service) backup(ctx context.Context, task *Task) error {
 		return err
 	}
 	m := manifest{SourceUUID: uuid, SHA256: digest, Counts: counts(snapshot)}
-	var history []byte
-	if task.selection == nil && s.value("HERMES_HISTORY_FILE") != "" || task.selection != nil && task.selection.HistorySHA256 != "" {
-		history, err = readSetting(s.value("HERMES_HISTORY_FILE"), maxHermesHistory)
-		if err != nil {
-			return errHistory
-		}
-		defer clear(history)
-		if task.selection != nil && sourceMaterialSHA256(history) != task.selection.HistorySHA256 {
-			return domain.ErrTrialScope
-		}
+	history, err := s.selectedHistory(ctx, task.selection, snapshot)
+	if err != nil {
+		return err
+	}
+	defer clear(history)
+	if len(history) != 0 {
 		descriptor, err := describeHistory(history, snapshot)
 		if err != nil {
 			return err

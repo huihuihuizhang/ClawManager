@@ -182,6 +182,42 @@ class TrialRegistrationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "another container"):
             REGISTER["app_patch"](self.config, "target", observed, "app", True)
 
+    def test_registered_hermes_source_has_a_read_only_workspace_and_private_socket(self):
+        local = self.config["source"]
+        local["workspace_claim"] = "hermes-snapshot"
+        local["hermes_history"] = {"image": "registry.example/hermes@sha256:" + "a" * 64,
+                                   "script_configmap": "hermes-collector-v1", "user_id": 7,
+                                   "instance_id": 13, "run_as_user": 200013}
+        REGISTER["validate"](self.config)
+        script = REGISTER["hermes_source_script"](local)
+        self.assertTrue(script["immutable"])
+        self.assertEqual(set(script["data"]), {"history.py"})
+        observed = self.deployment("source")
+        pod = observed["spec"]["template"]["spec"]
+        with self.assertRaisesRegex(ValueError, "fsGroup"):
+            REGISTER["app_patch"](self.config, "source", observed, "app")
+        pod["securityContext"] = {"fsGroup": local["prepare"]["volume_group"]}
+        patch = REGISTER["app_patch"](self.config, "source", observed, "app")
+        added = {op["path"]: op["value"] for op in patch if op["op"] == "add"}
+        template = "/spec/template/spec"
+        worker = added[template + "/containers/-"]
+        volumes = {item["name"]: item for item in added[template + "/volumes"]}
+        self.assertEqual(worker["image"], local["hermes_history"]["image"])
+        self.assertIn("serve-source", worker["args"])
+        self.assertEqual(worker["securityContext"]["runAsUser"], 200013)
+        self.assertTrue(volumes["trial-hermes-workspace"]["persistentVolumeClaim"]["readOnly"])
+        self.assertTrue(any(item["name"] == "trial-hermes-no-token" for item in worker["volumeMounts"]))
+        app = pod["containers"][1]
+        pod["volumes"] = added[template + "/volumes"]
+        app["volumeMounts"] = added[template + "/containers/1/volumeMounts"]
+        app["env"] = added[template + "/containers/1/env"]
+        pod["containers"].append(worker)
+        self.assertTrue(all(item.get("readOnly") for item in app["volumeMounts"] if "hermes" in item["name"]))
+        self.assertTrue(all(op["op"] == "test" for op in REGISTER["app_patch"](self.config, "source", observed, "app")))
+        pod["containers"][0]["volumeMounts"] = [{"name": "trial-hermes-socket", "mountPath": "/unsafe"}]
+        with self.assertRaisesRegex(ValueError, "private collector mounts"):
+            REGISTER["app_patch"](self.config, "source", observed, "app")
+
 
 if __name__ == "__main__":
     unittest.main()

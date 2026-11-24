@@ -33,20 +33,28 @@ type trialEnvironment struct {
 }
 
 type trialPlacement struct {
-	Cluster               string `json:"cluster"`
-	Namespace             string `json:"namespace"`
-	Image                 string `json:"image"`
-	ServiceAccount        string `json:"service_account"`
-	ArtifactClaim         string `json:"artifact_claim"`
-	ArtifactStorageClass  string `json:"artifact_storage_class,omitempty"`
-	WorkspaceClaim        string `json:"workspace_claim,omitempty"`
-	WorkspaceStorageClass string `json:"workspace_storage_class,omitempty"`
-	InstanceStorageClass  string `json:"instance_storage_class,omitempty"`
-	KeySecret             string `json:"key_secret"`
-	SourceReadSecret      string `json:"source_read_secret,omitempty"`
-	RestoreWriteSecret    string `json:"restore_write_secret,omitempty"`
-	RestoreReadSecret     string `json:"restore_read_secret,omitempty"`
-	RuntimeSecret         string `json:"runtime_secret,omitempty"`
+	Cluster               string                `json:"cluster"`
+	Namespace             string                `json:"namespace"`
+	Image                 string                `json:"image"`
+	ServiceAccount        string                `json:"service_account"`
+	ArtifactClaim         string                `json:"artifact_claim"`
+	ArtifactStorageClass  string                `json:"artifact_storage_class,omitempty"`
+	WorkspaceClaim        string                `json:"workspace_claim,omitempty"`
+	WorkspaceStorageClass string                `json:"workspace_storage_class,omitempty"`
+	InstanceStorageClass  string                `json:"instance_storage_class,omitempty"`
+	KeySecret             string                `json:"key_secret"`
+	SourceReadSecret      string                `json:"source_read_secret,omitempty"`
+	RestoreWriteSecret    string                `json:"restore_write_secret,omitempty"`
+	RestoreReadSecret     string                `json:"restore_read_secret,omitempty"`
+	RuntimeSecret         string                `json:"runtime_secret,omitempty"`
+	HermesHistory         *trialHermesPlacement `json:"hermes_history,omitempty"`
+}
+
+type trialHermesPlacement struct {
+	historySourceBinding
+	Image           string `json:"image"`
+	ScriptConfigMap string `json:"script_configmap"`
+	RunAsUser       int    `json:"run_as_user"`
 }
 
 type trialJob struct {
@@ -84,6 +92,12 @@ func (p trialPlacement) valid() bool {
 	return p.WorkspaceClaim != "" || p.WorkspaceStorageClass == ""
 }
 
+func (p trialPlacement) validHermesSource() bool {
+	h := p.HermesHistory
+	return h == nil || (p.WorkspaceClaim != "" && p.WorkspaceClaim != p.ArtifactClaim && h.UserID > 0 && h.InstanceID > 0 &&
+		h.RunAsUser > 0 && trialImage.MatchString(h.Image) && len(validation.IsDNS1123Subdomain(h.ScriptConfigMap)) == 0)
+}
+
 func (s *Service) environmentProfile() (trialEnvironment, error) {
 	var p trialEnvironment
 	raw, err := readSetting(s.value("ENVIRONMENT_PROFILE_FILE"), 16<<10)
@@ -94,6 +108,7 @@ func (s *Service) environmentProfile() (trialEnvironment, error) {
 	decoder := json.NewDecoder(bytes.NewReader(raw))
 	decoder.DisallowUnknownFields()
 	if decoder.Decode(&p) != nil || decoder.Decode(new(any)) != io.EOF || !p.Source.valid() || !p.Target.valid() ||
+		!p.Source.validHermesSource() || p.Target.HermesHistory != nil ||
 		len(validation.IsDNS1123Label(p.Revision)) != 0 || (p.Side != "source" && p.Side != "target") ||
 		!strings.HasPrefix(p.Target.Namespace, "cm-drill-") ||
 		(p.Source.Cluster == p.Target.Cluster && p.Source.Namespace == p.Target.Namespace) ||

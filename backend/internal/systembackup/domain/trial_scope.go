@@ -184,6 +184,28 @@ type TrialOptions struct {
 	NextInstanceID int64                 `json:"next_instance_id,omitempty"`
 }
 
+// CheckTrialHermesOwner verifies the bound source before its session metadata is listed.
+func CheckTrialHermesOwner(ctx context.Context, db *sql.DB, database, uuid string, choice TrialInstanceChoice) error {
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return ErrDatabase
+	}
+	defer conn.Close()
+	if err := trialSourceSession(ctx, conn, database, uuid); err != nil {
+		return err
+	}
+	var matches bool
+	err = conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM instances WHERE id = ? AND user_id = ?
+		AND type = 'hermes' AND instance_mode = 'lite' AND runtime_type = 'gateway')`, choice.ID, choice.UserID).Scan(&matches)
+	if err != nil {
+		return ErrDatabase
+	}
+	if !matches {
+		return ErrTrialScope
+	}
+	return nil
+}
+
 func ListTrialOptions(ctx context.Context, db *sql.DB, database, uuid string, afterUser, afterInstance int64) (TrialOptions, error) {
 	var options TrialOptions
 	conn, err := db.Conn(ctx)

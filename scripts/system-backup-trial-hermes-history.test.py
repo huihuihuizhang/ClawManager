@@ -7,6 +7,7 @@ import sqlite3
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 
 
 spec = importlib.util.spec_from_file_location(
@@ -14,6 +15,22 @@ spec = importlib.util.spec_from_file_location(
 )
 history = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(history)
+
+
+def socket_request(address, workspace, method, route, body=b""):
+    headers = (f"{method} {route} HTTP/1.0\r\nHost: hermes-history\r\n"
+               f"X-Trial-Workspace-Root: {workspace}\r\nContent-Type: application/json\r\n"
+               f"Content-Length: {len(body)}\r\n\r\n").encode()
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
+        connection.settimeout(3)
+        connection.connect(address)
+        connection.sendall(headers + body)
+        with connection.makefile("rb") as response:
+            status = int(response.readline().split()[1])
+            for header in response:
+                if header == b"\r\n":
+                    break
+            return status, json.loads(response.read())
 
 
 class SQLiteFixture:
@@ -142,19 +159,7 @@ class TrialHermesHistoryTest(unittest.TestCase):
         encoded = history.encode(payload)
 
         def send(method, path, *, workspace=root, body=b""):
-            headers = (f"{method} {path} HTTP/1.0\r\nHost: hermes-history\r\n"
-                       f"X-Trial-Workspace-Root: {workspace}\r\nContent-Type: application/json\r\n"
-                       f"Content-Length: {len(body)}\r\n\r\n").encode()
-            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
-                connection.settimeout(3)
-                connection.connect(address)
-                connection.sendall(headers + body)
-                with connection.makefile("rb") as response:
-                    status = int(response.readline().split()[1])
-                    for header in response:
-                        if header == b"\r\n":
-                            break
-                    return status, json.loads(response.read())
+            return socket_request(address, workspace, method, path, body)
 
         with history.HistoryServer(address, history.HistoryRequest) as server:
             server.workspace_root = root
@@ -175,6 +180,44 @@ class TrialHermesHistoryTest(unittest.TestCase):
                 before = (target / "state.db").read_bytes()
                 self.assertEqual(send("POST", "/preflight/7/13", body=encoded), (200, expected))
                 self.assertEqual((target / "state.db").read_bytes(), before)
+            finally:
+                server.shutdown()
+                thread.join()
+
+    @unittest.skipUnless(hasattr(socket, "AF_UNIX"), "requires Unix domain sockets")
+    def test_source_inventory_and_capture_use_the_pinned_workspace(self):
+        address = str(self.base / "src.sock")
+        root = self.base / "source"
+        before = (self.source / "state.db-wal").read_bytes()
+
+        def send(method, path, body=b""):
+            return socket_request(address, root, method, path, body)
+
+        with patch.object(history, "INVENTORY_PAGE", 2), history.HistoryServer(address, history.HistorySourceRequest) as server:
+            server.workspace_root, server.scratch = root, self.base
+            server.source_user, server.source_instance, server.session_db = 7, 13, SQLiteFixture
+            thread = threading.Thread(target=server.serve_forever)
+            thread.start()
+            try:
+                self.assertEqual(send("GET", "/inventory/7/14")[0], 404)
+                self.assertEqual(send("GET", "/inventory/7/13?after=parent&after=child")[0], 400)
+                status, page = send("GET", "/inventory/7/13")
+                self.assertEqual(status, 200)
+                self.assertEqual(page, {"sessions": [{"id": "child", "title": ""},
+                                                     {"id": "parent", "title": "Original title"}], "next": "parent"})
+                self.assertEqual(send("GET", "/inventory/7/13?after=parent"),
+                                 (200, {"sessions": [{"id": "unrelated", "title": ""}], "next": ""}))
+                self.assertEqual(send("POST", "/restore/7/13", b"[]")[0], 404)
+                self.assertEqual(send("POST", "/capture/8/13", b'["child"]')[0], 404)
+                self.assertEqual(send("POST", "/capture/7/13", b'["child","child"]')[0], 422)
+                self.assertEqual(send("POST", "/capture/7/13", b'["deleted"]')[0], 422)
+                status, payload = send("POST", "/capture/7/13", b'["child"]')
+                self.assertEqual(status, 200)
+                target = self.workspace("source-round-trip")
+                receipt = history.apply_history(SQLiteFixture, target, "restore", history.encode(payload), 7, 13)
+                self.assertEqual((receipt["sessions"], receipt["messages"]), (2, 2))
+                self.assertEqual([row["id"] for row in payload["sessions"]], ["child", "parent"])
+                self.assertEqual((self.source / "state.db-wal").read_bytes(), before)
             finally:
                 server.shutdown()
                 thread.join()

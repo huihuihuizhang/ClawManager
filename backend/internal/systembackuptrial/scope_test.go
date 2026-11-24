@@ -16,6 +16,9 @@ func TestReadBackupSelection(t *testing.T) {
 	}{
 		{name: "original quick backup"},
 		{name: "explicit all", body: `{"mode":"all"}`, mode: "all"},
+		{name: "live Hermes selection", body: `{"mode":"all","hermes_sessions":{"user_id":20,"instance_id":202,"session_ids":["child"]}}`, mode: "all"},
+		{name: "duplicate Hermes selection", body: `{"mode":"all","hermes_sessions":{"user_id":20,"instance_id":202,"session_ids":["child","child"]}}`, invalid: true},
+		{name: "mixed Hermes modes", body: `{"mode":"all","hermes_history_sha256":"` + strings.Repeat("a", 64) + `","hermes_sessions":{"user_id":20,"instance_id":202,"session_ids":["child"]}}`, invalid: true},
 		{name: "selected owner", body: `{"mode":"selected","instances":[{"id":202,"user_id":20}]}`, mode: "selected"},
 		{name: "empty scope", body: `{"mode":"selected"}`, invalid: true},
 		{name: "empty object", body: `{}`, invalid: true},

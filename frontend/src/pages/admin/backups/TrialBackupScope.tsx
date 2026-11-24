@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../../../contexts/I18nContext';
 import api from '../../../services/api';
+import TrialHermesHistoryPicker, { type TrialHermesSource } from './TrialHermesHistoryPicker';
 
 type UserOption = { id: number; name: string; active_admin: boolean };
 type InstanceChoice = { id: number; user_id: number };
@@ -12,6 +13,7 @@ type Options = {
   next_user_id?: number;
   next_instance_id?: number;
   hermes_history?: PreparedContent;
+  hermes_source?: TrialHermesSource;
   workspace_files?: PreparedContent;
 };
 
@@ -20,6 +22,7 @@ export type TrialBackupSelection = {
   user_ids?: number[];
   instances?: InstanceChoice[];
   hermes_history_sha256?: string;
+  hermes_sessions?: TrialHermesSource & { session_ids: string[] };
   workspace_selection_sha256?: string;
 };
 
@@ -41,6 +44,7 @@ export default function TrialBackupScope({ disabled, onCreate }: {
   const [users, setUsers] = useState<UserOption[]>([]);
   const [instances, setInstances] = useState<InstanceOption[]>([]);
   const [includeHistory, setIncludeHistory] = useState(false);
+  const [historySessions, setHistorySessions] = useState<string[]>([]);
   const [includeWorkspace, setIncludeWorkspace] = useState(false);
 
   useEffect(() => {
@@ -72,8 +76,9 @@ export default function TrialBackupScope({ disabled, onCreate }: {
 
   const hasAdmin = users.some((user) => user.active_admin) || instances.some((instance) => instance.owner_active_admin);
   const history = options?.hermes_history;
+  const historySource = options?.hermes_source;
   const workspace = options?.workspace_files;
-  const inScope = (item?: PreparedContent) => !!item && (mode === 'all' ||
+  const inScope = (item?: TrialHermesSource) => !!item && (mode === 'all' ||
     instances.some((instance) => instance.id === item.instance_id && instance.user_id === item.user_id));
   const ready = !!options && !disabled && !loading && (mode === 'all' || hasAdmin);
   const usersTotal = new Set([...users.map((user) => user.id), ...instances.map((instance) => instance.user_id)]).size;
@@ -87,6 +92,9 @@ export default function TrialBackupScope({ disabled, onCreate }: {
         instances: instances.map(({ id, user_id }) => ({ id, user_id })),
       }),
       ...(includeHistory && inScope(history) && { hermes_history_sha256: history?.sha256 }),
+      ...(historySource && inScope(historySource) && historySessions.length > 0 && {
+        hermes_sessions: { ...historySource, session_ids: historySessions },
+      }),
       ...(includeWorkspace && inScope(workspace) && { workspace_selection_sha256: workspace?.sha256 }),
     });
   }
@@ -154,10 +162,21 @@ export default function TrialBackupScope({ disabled, onCreate }: {
       </>}
       {history && <label className="flex items-start gap-2">
         <input type="checkbox" checked={includeHistory && inScope(history)} disabled={!inScope(history)}
-          onChange={(event) => setIncludeHistory(event.target.checked)} />
+          onChange={(event) => {
+            setIncludeHistory(event.target.checked);
+            if (event.target.checked) setHistorySessions([]);
+          }} />
         <span>{zh ? `已准备的 Hermes 会话 · 实例 #${history.instance_id} · ${history.sessions} 场`
           : `Prepared Hermes history · Instance #${history.instance_id} · ${history.sessions} sessions`}</span>
       </label>}
+      {historySource && (inScope(historySource)
+        ? <TrialHermesHistoryPicker key={`${historySource.user_id}/${historySource.instance_id}`} zh={zh} source={historySource}
+            selected={historySessions} disabled={includeHistory && inScope(history)} onChange={(ids) => {
+              setIncludeHistory(false);
+              setHistorySessions(ids);
+            }} />
+        : <p>{zh ? `勾选实例 #${historySource.instance_id} 后可选择 Hermes 会话。`
+          : `Include instance #${historySource.instance_id} to select its Hermes sessions.`}</p>)}
       {workspace && <label className="flex items-start gap-2">
         <input type="checkbox" checked={includeWorkspace && inScope(workspace)} disabled={!inScope(workspace)}
           onChange={(event) => setIncludeWorkspace(event.target.checked)} />

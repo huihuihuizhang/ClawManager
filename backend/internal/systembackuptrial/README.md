@@ -142,6 +142,14 @@ API 容器设置 `SYSTEM_BACKUP_TRIAL_HERMES_HISTORY_SOCKET=/run/trial-hermes/hi
 
 源端已准备的 Hermes 会话组和工作区目录在页面单独勾选。按范围备份时，选中对应实例后可勾选这些内容。任务按页面提交的 SHA-256 核对准备材料，再用同一 SQL 快照复核实例归属。原有「创建试行备份」仍可直接生成全量试行备份，并包含已配置的会话和目录。
 
+### 在源页逐场选择 Hermes 会话
+
+给源端试行登记的 `source.workspace_claim` 指定该 Hermes Lite 实例的只读工作区快照卷，并在 `source.hermes_history` 登记 `user_id`、`instance_id`、固定摘要的 Hermes 镜像 `image`、版本化的 `script_configmap` 名称和可读取该实例 SQLite 状态的非 root `run_as_user`。源 Pod 使用登记的 `prepare.volume_group` 作为 `fsGroup`。快照卷的目录布局沿用 `hermes/user-<id>/instance-<id>/home/.hermes`。
+
+源码部署时，登记工具的 `--side source hermes-source-script` 生成不可变的脚本 ConfigMap。按原流程生成登记配置和 `app-patch` 后，采集容器通过私有 Unix socket 服务应用，源工作区以只读方式挂载。目标仍沿用上面的 Hermes 恢复适配器。管理员可在「查看源和目标配置」和下载报告中核对采集实例、镜像、脚本引用和 UID。
+
+管理员在源页选中登记的实例，再从分页会话列表勾选所需会话。选择全部账号和实例时也可单独挑选会话。列表只读取会话标题和 ID。后台用受限源库复核归属，通过 Hermes 原生快照导出选中的会话和恢复所需的关联会话，再随同一份备份加密。单份备份最多明确选择 64 场，依赖会话一并计入已有的加密产物大小限制。已有的准备文件和快速备份仍可使用。
+
 ## 隔离实例启动样本
 
 用单独的隔离应用部署打开已经对账的 `cm_drill_trial_*` 目标。部署负责人提供独立的 MySQL、Kubernetes 身份、工作区、存储类、镜像和模型访问。网络策略须阻断生产依赖访问。普通应用入口依旧拒绝 `cm_drill_*` 及现有受保护格式的 `cm_restore_`、`cm_import_` 演练库。

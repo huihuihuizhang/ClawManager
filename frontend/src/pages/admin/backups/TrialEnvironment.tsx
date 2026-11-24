@@ -16,7 +16,10 @@ type Placement = {
   restore_write_secret?: string;
   restore_read_secret?: string;
   runtime_secret?: string;
+  hermes_history?: { user_id: number; instance_id: number; image: string; script_configmap: string; run_as_user: number };
 };
+
+type PlacementReference = Exclude<keyof Placement, 'hermes_history'>;
 
 export type TrialEnvironmentStatus = {
   state: 'unregistered' | 'invalid' | 'registered' | 'waiting' | 'running' | 'prepared' | 'failed' | 'unavailable';
@@ -67,7 +70,7 @@ export default function TrialEnvironment({
     failed: 'The preparation job failed. Ask the platform administrator to resolve it and register a replacement.',
     unavailable: 'Cannot read or start the registered preparation job',
   };
-  const fieldLabels: Record<keyof Placement, string> = zh ? {
+  const fieldLabels: Record<PlacementReference, string> = zh ? {
     cluster: '集群', namespace: '命名空间', image: '镜像', service_account: '服务账号',
     artifact_claim: '产物 PVC', artifact_storage_class: '产物存储类', workspace_claim: '工作区 PVC',
     workspace_storage_class: '工作区存储类', instance_storage_class: '实例存储类',
@@ -139,8 +142,17 @@ export default function TrialEnvironment({
             <h4 className="text-sm font-medium text-slate-800">{side === 'source' ? (zh ? '备份源' : 'Backup source') : (zh ? '隔离目标' : 'Isolated target')}
               {profile.side === side && (zh ? '（当前）' : ' (current)')}</h4>
             <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 py-1 text-sm text-slate-700">
-              {(Object.keys(fieldLabels) as (keyof Placement)[]).filter((key) => profile[side][key]).map((key) =>
+              {(Object.keys(fieldLabels) as PlacementReference[]).filter((key) => profile[side][key]).map((key) =>
                 <div className="contents" key={key}><dt>{fieldLabels[key]}</dt><dd className="break-all font-mono">{profile[side][key]}</dd></div>)}
+              {profile[side].hermes_history && <>
+                <dt>{zh ? 'Hermes 采集实例' : 'Hermes capture instance'}</dt>
+                <dd>#{profile[side].hermes_history.instance_id} · {zh ? '归属账号' : 'Owner'} #{profile[side].hermes_history.user_id}</dd>
+                <dt>{zh ? '采集镜像' : 'Capture image'}</dt>
+                <dd className="break-all font-mono">{profile[side].hermes_history.image}</dd>
+                <dt>{zh ? '采集脚本 ConfigMap' : 'Capture script ConfigMap'}</dt>
+                <dd className="break-all font-mono">{profile[side].hermes_history.script_configmap}</dd>
+                <dt>{zh ? '采集 UID' : 'Capture UID'}</dt><dd>{profile[side].hermes_history.run_as_user}</dd>
+              </>}
             </dl>
           </div>)}
         </div>
