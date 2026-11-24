@@ -1,6 +1,7 @@
 import { useI18n } from '../../../contexts/I18nContext';
 import { downloadTrialJson } from './trialRestoreHandoff';
 import type { TrialWorkspaceSource } from './TrialWorkspacePicker';
+import TrialReadinessDetails, { type ReadinessDetails } from './TrialReadinessDetails';
 
 type Placement = {
   cluster: string;
@@ -34,9 +35,17 @@ export type TrialEnvironmentStatus = {
   };
 };
 
+export type TrialReadiness = {
+  missing: string[] | null;
+  restore_missing: string[] | null;
+  environment?: TrialEnvironmentStatus;
+  import_available?: boolean;
+  details?: ReadinessDetails;
+};
+
 type Props = {
   environment?: TrialEnvironmentStatus;
-  readiness?: { missing: string[] | null; restore_missing: string[] | null };
+  readiness?: TrialReadiness;
   checking: boolean;
   disabled: boolean;
   checkDisabled: boolean;
@@ -53,6 +62,7 @@ export default function TrialEnvironment({
   const zh = locale.startsWith('zh');
   const profile = environment?.profile;
   const state = environment?.state;
+  const details = readiness?.details?.side === profile?.side ? readiness?.details : undefined;
   const statuses: Record<TrialEnvironmentStatus['state'], string> = zh ? {
     unregistered: '平台尚未登记试行配置',
     invalid: '登记的试行配置无效，请联系平台管理员核对',
@@ -95,6 +105,7 @@ export default function TrialEnvironment({
         side: profile.side,
         preparation_state: state,
         missing: (profile.side === 'source' ? readiness.missing : readiness.restore_missing) ?? [],
+        ...(details && { checks: details.checks }),
       },
     });
   }
@@ -127,6 +138,9 @@ export default function TrialEnvironment({
         onClick={() => downloadTrialJson(`backup-trial-${profile.side}-${profile.revision}.json`, profile)}>
         {zh ? '下载配置摘要' : 'Download configuration summary'}
       </button>}
+      {profile && readiness && <button type="button" className={button} onClick={downloadCheck}>
+        {zh ? '下载环境检查报告' : 'Download environment check report'}
+      </button>}
     </div>
     <div aria-live="polite" className="space-y-1 text-sm">
       {showSourceCheck && (sourceMissing.length
@@ -136,6 +150,7 @@ export default function TrialEnvironment({
         ? <p className="text-amber-900">{zh ? '恢复缺项 · ' : 'Restore requires · '}{targetMissing.map(label).join(' · ')}</p>
         : <p className="text-emerald-700">{zh ? '目标库身份、基础表结构和导入卷已校验' : 'Target database identity, required tables, and import mount verified'}</p>)}
     </div>
+    {details && <TrialReadinessDetails details={details} label={label} zh={zh} />}
     {profile && <>
       <details>
         <summary className="cursor-pointer text-sm text-slate-800">{zh ? '查看源和目标配置' : 'View source and target configuration'}</summary>
@@ -165,9 +180,6 @@ export default function TrialEnvironment({
             </dl>
           </div>)}
         </div>
-        {readiness && <button type="button" className={button} onClick={downloadCheck}>
-          {zh ? '下载环境检查报告' : 'Download environment check report'}
-        </button>}
       </details>
     </>}
   </div>;

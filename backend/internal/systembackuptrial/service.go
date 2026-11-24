@@ -61,6 +61,7 @@ type Readiness struct {
 	RestoreMissing  []string                `json:"restore_missing"`
 	Environment     *trialEnvironmentStatus `json:"environment,omitempty"`
 	ImportAvailable bool                    `json:"import_available,omitempty"`
+	Details         *readinessDetails       `json:"details,omitempty"`
 }
 
 type Service struct {
@@ -403,8 +404,13 @@ func (s storage) snapshot(ctx context.Context, id string, a artifact, master []b
 }
 
 func (s *Service) restoreSettings() []string {
+	return s.reportRestoreSettings(nil)
+}
+
+func (s *Service) reportRestoreSettings(details *readinessDetails) []string {
 	var missing []string
 	key, err := s.key()
+	details.key(key, err)
 	if err != nil {
 		missing = append(missing, "encryption_key")
 	}
@@ -412,27 +418,41 @@ func (s *Service) restoreSettings() []string {
 	reader, err := s.readerRoot()
 	if err != nil {
 		missing = append(missing, "restore_artifact_mount")
+		details.result("target_archive", "restore_artifact_mount")
 	} else {
 		reader.Close()
 	}
 	if s.value("RESTORE_ISOLATED") != "true" ||
 		s.value("RESTORE_UUID") == "" || s.value("RESTORE_UUID") == s.value("SOURCE_UUID") {
 		missing = append(missing, "restore_isolation")
+		details.result("target_isolation", "restore_isolation")
+	} else {
+		details.result("target_isolation", "")
 	}
-	for _, name := range []string{"RESTORE", "RESTORE_READ"} {
-		db, database, err := s.database(name)
+	for _, account := range []struct{ setting, check, missing string }{
+		{"RESTORE", "target_writer_credential", "restore_credential"},
+		{"RESTORE_READ", "target_reader_credential", "restore_read_credential"},
+	} {
+		db, database, err := s.database(account.setting)
 		if err != nil {
-			missing = append(missing, strings.ToLower(name)+"_credential")
+			missing = append(missing, account.missing)
+			details.result(account.check, account.missing)
 			continue
 		}
 		db.Close()
 		if !strings.HasPrefix(database, "cm_drill_") {
 			missing = append(missing, "restore_database_name")
+			details.result(account.check, "restore_database_name")
+		} else {
+			details.result(account.check, "")
 		}
 	}
 	if !strings.HasPrefix(s.value("RESTORE_NAMESPACE"), "cm-drill-") ||
 		s.value("RESTORE_STORAGE_CLASS") == "" {
 		missing = append(missing, "restore_placement")
+		details.result("target_placement", "restore_placement")
+	} else {
+		details.result("target_placement", "")
 	}
 	return missing
 }
@@ -440,35 +460,57 @@ func (s *Service) restoreSettings() []string {
 func (s *Service) readiness(ctx context.Context) Readiness {
 	environment := s.environment(ctx, false)
 	result := Readiness{Environment: &environment}
+	if environment.Profile != nil {
+		result.Details = newReadinessDetails(environment.Profile.Side)
+		if environment.State == "registered" {
+			result.Details.set("preparation", "not_configured", "", "", "")
+		} else {
+			result.Details.result("preparation", environment.missing(environment.Profile.Side))
+		}
+	}
 	if missing := environment.missing("source"); missing != "" {
 		result.Missing = []string{missing}
 	} else {
-		result.Missing = s.backupReadiness(ctx)
+		result.Missing = s.reportBackupReadiness(ctx, result.Details)
 	}
 	if missing := environment.missing("target"); missing != "" {
 		result.RestoreMissing = []string{missing}
 	} else {
-		result.RestoreMissing = s.restoreReadiness(ctx)
+		result.RestoreMissing = s.reportRestoreReadiness(ctx, result.Details)
 	}
 	result.ImportAvailable = environment.Profile != nil && environment.Profile.Side == "target" &&
 		len(result.RestoreMissing) == 0 && s.importSocketReady()
+	if result.Details != nil && environment.missing(environment.Profile.Side) == "" {
+		s.addReadinessDetails(ctx, environment.Profile, result.Details)
+	}
 	return result
 }
 
 func (s *Service) backupReadiness(ctx context.Context) []string {
+	return s.reportBackupReadiness(ctx, nil)
+}
+
+func (s *Service) reportBackupReadiness(ctx context.Context, details *readinessDetails) []string {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	var missing []string
 	source, database, err := s.database("SOURCE")
 	if err != nil {
 		missing = append(missing, "source_credential")
+		details.result("source_credential", "source_credential")
 	} else {
 		defer source.Close()
+		details.result("source_credential", "")
 		if err := domain.CheckTrialSource(ctx, source, database, s.value("SOURCE_UUID")); err != nil {
-			missing = append(missing, "source_"+category(err))
+			reason := "source_" + category(err)
+			missing = append(missing, reason)
+			details.result("source_read", reason)
+		} else {
+			details.result("source_read", "")
 		}
 	}
 	key, err := s.key()
+	details.key(key, err)
 	if err != nil {
 		missing = append(missing, "encryption_key")
 	}
@@ -476,45 +518,68 @@ func (s *Service) backupReadiness(ctx context.Context) []string {
 	store, err := s.storage()
 	if err != nil {
 		missing = append(missing, "storage_mounts")
+		details.result("source_storage_mounts", "storage_mounts")
 	} else {
 		defer store.close()
-		if len(key) == 32 && store.probe(ctx, key) != nil {
-			missing = append(missing, "storage_write_readback")
+		details.result("source_storage_mounts", "")
+		if len(key) == 32 {
+			if err := store.probe(ctx, key); err != nil {
+				missing = append(missing, "storage_write_readback")
+				details.result("source_storage_roundtrip", "storage_write_readback")
+			} else {
+				details.result("source_storage_roundtrip", "")
+			}
 		}
 	}
 	return missing
 }
 
 func (s *Service) restoreReadiness(ctx context.Context) []string {
-	if missing := s.restoreSettings(); len(missing) != 0 {
+	return s.reportRestoreReadiness(ctx, nil)
+}
+
+func (s *Service) reportRestoreReadiness(ctx context.Context, details *readinessDetails) []string {
+	if missing := s.reportRestoreSettings(details); len(missing) != 0 {
 		return missing
 	}
 	reader, err := s.readerRoot()
 	if err != nil {
+		details.result("target_archive", "restore_artifact_mount")
 		return []string{"restore_artifact_mount"}
 	}
 	defer reader.Close()
 	var missing []string
 	if readOnly, err := restoreMountReadOnly(reader); err != nil {
 		missing = append(missing, "restore_artifact_mount")
+		details.result("target_archive", "restore_artifact_mount")
 	} else if !readOnly {
 		missing = append(missing, "restore_artifact_writable")
+		details.result("target_archive", "restore_artifact_writable")
+	} else {
+		details.result("target_archive", "")
 	}
-	return append(missing, s.restoreDatabaseReadiness(ctx)...)
+	return append(missing, s.reportRestoreDatabase(ctx, details)...)
 }
 
 func (s *Service) restoreDatabaseReadiness(ctx context.Context) []string {
+	return s.reportRestoreDatabase(ctx, nil)
+}
+
+func (s *Service) reportRestoreDatabase(ctx context.Context, details *readinessDetails) []string {
 	writer, database, err := s.database("RESTORE")
 	if err != nil {
+		details.result("target_writer_credential", "restore_credential")
 		return []string{"restore_credential"}
 	}
 	defer writer.Close()
 	reader, readDatabase, err := s.database("RESTORE_READ")
 	if err != nil {
+		details.result("target_reader_credential", "restore_read_credential")
 		return []string{"restore_read_credential"}
 	}
 	defer reader.Close()
 	if database != readDatabase {
+		details.result("target_accounts", "restore_database_mismatch")
 		return []string{"restore_database_mismatch"}
 	}
 
@@ -526,18 +591,42 @@ func (s *Service) restoreDatabaseReadiness(ctx context.Context) []string {
 	var missing []string
 	writerAccount, err := domain.CheckTrialTargetAccount(ctx, writer, target, false)
 	if err != nil {
-		missing = append(missing, "restore_writer_"+category(err))
+		reason := "restore_writer_" + category(err)
+		missing = append(missing, reason)
+		details.result("target_writer", reason)
+	} else {
+		details.result("target_writer", "")
 	}
 	readerAccount, err := domain.CheckTrialTargetAccount(ctx, reader, target, true)
 	if err != nil {
-		missing = append(missing, "restore_reader_"+category(err))
+		reason := "restore_reader_" + category(err)
+		missing = append(missing, reason)
+		details.result("target_reader", reason)
+	} else {
+		details.result("target_reader", "")
 	}
-	if writerAccount != "" && writerAccount == readerAccount {
-		missing = append(missing, "restore_accounts_shared")
+	if writerAccount != "" && readerAccount != "" {
+		if writerAccount == readerAccount {
+			missing = append(missing, "restore_accounts_shared")
+			details.result("target_accounts", "restore_accounts_shared")
+		} else {
+			details.result("target_accounts", "")
+		}
 	}
 	if len(missing) == 0 {
 		if err := domain.CheckTrialRestoreSchema(ctx, reader); err != nil {
-			missing = append(missing, "restore_target_"+category(err))
+			reason := "restore_target_" + category(err)
+			missing = append(missing, reason)
+			details.result("target_schema", reason)
+		} else {
+			details.result("target_schema", "")
+		}
+	}
+	if details != nil && writerAccount != "" && ctx.Err() == nil {
+		if err := domain.CheckTrialRuntimeWriter(ctx, writer, target); err != nil {
+			details.result("target_writer_grants", "restore_writer_grants")
+		} else {
+			details.result("target_writer_grants", "")
 		}
 	}
 	return missing

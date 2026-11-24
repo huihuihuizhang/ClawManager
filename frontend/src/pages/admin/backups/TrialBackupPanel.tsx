@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { useI18n } from '../../../contexts/I18nContext';
 import api from '../../../services/api';
-import TrialEnvironment, { type TrialEnvironmentStatus } from './TrialEnvironment';
+import TrialEnvironment, { type TrialEnvironmentStatus, type TrialReadiness as Readiness } from './TrialEnvironment';
 import TrialBackupScope, { type TrialBackupSelection } from './TrialBackupScope';
 import {
   createTrialHandoff, downloadTrialBlob, downloadTrialJson, isTrialBackupID, matchesTrialHandoff, readTrialHandoff, type TrialRestoreHandoff,
@@ -22,7 +22,6 @@ type Task = {
   hermes_history?: { sessions: number; messages: number; transcript_sha256: string };
   workspace_files?: { entries: number; file_bytes: number; archive_sha256: string };
 };
-type Readiness = { missing: string[] | null; restore_missing: string[] | null; environment?: TrialEnvironmentStatus; import_available?: boolean };
 type RestorePreflight = Pick<Task, 'readback_verified' | 'ciphertext_sha256' | 'counts' | 'hermes_history' | 'workspace_files'> & {
   workspace_directory?: { user_id: number; instance_id: number; relative_dir: string };
   backup_id: string;
@@ -256,7 +255,7 @@ export default function TrialBackupPanel() {
     restore: '写入隔离库', verify: '恢复对账', done: '已完成',
     restore_hermes_history: '恢复 Hermes 对话', hermes_history: 'Hermes 对话无法校验或恢复',
     restore_workspace_files: '恢复工作区文件', workspace_files: '工作区文件无法校验或恢复',
-    restore_workspace_instance: '目标工作区缺少实例根目录，请通过环境准备流程创建',
+    restore_workspace_instance: '目标工作区缺少实例根目录，请联系平台准备',
     backup_scope_changed: '选定范围或准备内容已变化，请重新读取后选择。',
     running: '运行中', succeeded: '成功', failed: '失败',
     source_credential: '试行源库凭据', source_isolation: '源库身份或只读授权',
@@ -278,6 +277,9 @@ export default function TrialBackupPanel() {
     restore_database_mismatch: '写入和只读凭据指向不同的库', restore_accounts_shared: '写入和只读必须使用独立账号',
     restore_writer_database: '无法使用写入凭据连接目标库', restore_writer_isolation: '写入连接的目标库身份不匹配',
     restore_reader_database: '无法使用只读凭据连接或检查目标库', restore_reader_isolation: '只读连接身份或 SELECT 授权不符合要求',
+    database_system_trust: '使用系统 CA 信任库', database_ca_invalid: '数据库 CA 文件无法读取或解析',
+    restore_writer_grants: '账号需要目标库专属的 SELECT、INSERT、UPDATE、DELETE 权限',
+    trial_artifact_import_unavailable: '接收器无法在导入卷写入并读回',
   } : {
     hermes_history: 'The target Hermes workspace failed its check',
     workspace_files: 'The target workspace files failed their check',
@@ -299,6 +301,9 @@ export default function TrialBackupPanel() {
     restore_writer_isolation: 'The writer connection returned a different target identity',
     restore_reader_database: 'Cannot connect to or inspect the target database with the reader credentials',
     restore_reader_isolation: 'The reader identity or SELECT grants failed validation',
+    database_system_trust: 'Uses the system CA trust store', database_ca_invalid: 'Cannot read or parse the database CA file',
+    restore_writer_grants: 'The writer needs SELECT, INSERT, UPDATE, and DELETE on the target database',
+    trial_artifact_import_unavailable: 'The importer could not write and verify the import volume',
   };
   const label = (code: string) => labels[code] ?? code.replaceAll('_', ' ');
   const importStatus = zh ? {

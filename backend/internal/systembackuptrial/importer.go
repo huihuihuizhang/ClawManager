@@ -161,6 +161,19 @@ func (s *Service) RunArtifactImporter(ctx context.Context) error {
 func artifactImporter(root *os.Root, profile trialEnvironment) http.Handler {
 	mux := http.NewServeMux()
 	var upload sync.Mutex
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, request *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		if !upload.TryLock() {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+		defer upload.Unlock()
+		if err := probeImporterWrite(root); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
 	mux.HandleFunc("POST /delivery", func(w http.ResponseWriter, request *http.Request) {
 		if request.Header.Get("Content-Type") != transferMediaType ||
 			request.ContentLength <= 0 || request.ContentLength > maxTransferSize {
@@ -187,4 +200,22 @@ func artifactImporter(root *os.Root, profile trialEnvironment) http.Handler {
 		}
 	})
 	return mux
+}
+
+func probeImporterWrite(root *os.Root) (err error) {
+	marker := ".trial-import-probe-" + newID()
+	file, err := root.OpenFile(marker, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return err
+	}
+	defer func() { err = errors.Join(err, root.Remove(marker)) }()
+	_, writeErr := file.WriteString(marker)
+	if err := errors.Join(writeErr, file.Sync(), file.Close()); err != nil {
+		return err
+	}
+	actual, err := root.ReadFile(marker)
+	if err != nil || string(actual) != marker {
+		return errReadback
+	}
+	return nil
 }
