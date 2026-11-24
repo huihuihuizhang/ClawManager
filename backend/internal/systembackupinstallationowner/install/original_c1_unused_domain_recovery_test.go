@@ -194,6 +194,30 @@ func TestOriginalC1UnusedDomainRecoveryExpiredAcquire(t *testing.T) {
 	if originalC1AcquireIsUnused(q, digests, receipt, grant, changed, target, now) {
 		t.Fatal("an advanced run qualified")
 	}
+	observed := c1stamp(now.Add(-90 * time.Second))
+	changed.ObservedAt, changed.ObservationExpiresAt = &observed, &end
+	if originalC1ExpiredAcquireCanBeFenced(q, digests, receipt, grant, changed, target, now) {
+		t.Fatal("epoch 4 accepted an observed run")
+	}
+	for _, epoch := range []pd.Counter{"5", "6", "7", "8"} {
+		q.ExpectedDomainEpoch = epoch
+		receipt.Request = q
+		grant.DomainEpoch = epoch
+		if !originalC1ExpiredAcquireCanBeFenced(q, digests, receipt, grant, changed, target, now) {
+			t.Fatalf("the exact expired epoch %s observation did not qualify", epoch)
+		}
+		if originalC1ExpiredAcquireCanBeFenced(q, digests, receipt, grant, run, target, now) {
+			t.Fatalf("epoch %s accepted an unobserved run", epoch)
+		}
+		pending := changed
+		pending.State = "pending"
+		if originalC1ExpiredAcquireCanBeFenced(q, digests, receipt, grant, pending, target, now) {
+			t.Fatalf("epoch %s accepted pending evidence", epoch)
+		}
+		if originalC1ExpiredAcquireCanBeFenced(q, digests, receipt, grant, changed, target, now.Add(-75*time.Second)) {
+			t.Fatalf("epoch %s accepted a live observation", epoch)
+		}
+	}
 	receipt.RequestHash = ""
 	if originalC1AcquireIsUnused(q, digests, receipt, grant, run, target, now) {
 		t.Fatal("a different receipt qualified")

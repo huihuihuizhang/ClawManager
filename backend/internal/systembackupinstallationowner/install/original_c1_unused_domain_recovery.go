@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,14 +29,15 @@ type OriginalC1ExpiredAcquirePins struct {
 }
 
 type originalC1UnusedDomainRecovery struct {
-	source originalC1DomainSource
-	record []byte
-	issuer ed25519.PublicKey
-	input  OriginalC1UnusedDomainRecoveryInputs
-	domain pd.DomainRecord
-	epoch  pd.Counter
-	next   pd.Counter
-	orphan *pd.CommandRequest
+	source   originalC1DomainSource
+	record   []byte
+	issuer   ed25519.PublicKey
+	input    OriginalC1UnusedDomainRecoveryInputs
+	domain   pd.DomainRecord
+	epoch    pd.Counter
+	next     pd.Counter
+	orphan   *pd.CommandRequest
+	acquires []*originalC1UnusedDomainRecovery
 }
 
 func (s *authenticatedOperator) readOriginalC1UnusedDomainRecovery(in *OriginalC1UnusedDomainRecoveryInputs, enrollment EnrollmentPin, scope pd.Scope, now time.Time) (*originalC1UnusedDomainRecovery, error) {
@@ -47,15 +49,8 @@ func (s *authenticatedOperator) readOriginalC1UnusedDomainRecovery(in *OriginalC
 		return nil, err
 	}
 	epoch, err := recovery.domain.Epoch.Uint64()
-	if err != nil || epoch < 1 || epoch > 4 || (epoch == 4) != (in.Orphan != nil) {
+	if err != nil || epoch < 1 || epoch > 8 {
 		return nil, ErrInstall
-	}
-	if in.Orphan != nil {
-		command, err := readC1ExpiredAcquireCommand(in.Orphan, recovery.domain)
-		if err != nil {
-			return nil, err
-		}
-		recovery.orphan = &command
 	}
 	recovery.next = c1counter(epoch + 1)
 	// The current row and each signed predecessor must use consecutive
@@ -63,6 +58,17 @@ func (s *authenticatedOperator) readOriginalC1UnusedDomainRecovery(in *OriginalC
 	for child := recovery; epoch > 0; epoch-- {
 		if !child.matches(child.domain, now) || child.domain.Epoch != c1counter(epoch) || child.domain.CreatedAt != recovery.domain.CreatedAt {
 			return nil, ErrInstall
+		}
+		if (epoch >= 4) != (child.input.Orphan != nil) {
+			return nil, ErrInstall
+		}
+		if child.input.Orphan != nil {
+			command, err := readC1ExpiredAcquireCommand(child.input.Orphan, child.domain)
+			if err != nil {
+				return nil, err
+			}
+			child.orphan = &command
+			recovery.acquires = append(recovery.acquires, child)
 		}
 		if epoch == 1 {
 			if child.source.Recovery != nil || child.domain.CreatedAt != child.domain.UpdatedAt {
@@ -74,7 +80,7 @@ func (s *authenticatedOperator) readOriginalC1UnusedDomainRecovery(in *OriginalC
 			return nil, ErrInstall
 		}
 		parent, err := s.readOriginalC1RecoveryAnchor(*child.source.Recovery, enrollment, scope, now)
-		if err != nil || parent.input.Orphan != nil || child.source.NotBefore.Before(parent.source.Until.Truncate(time.Microsecond)) {
+		if err != nil || child.source.NotBefore.Before(parent.source.Until.Truncate(time.Microsecond)) {
 			return nil, ErrInstall
 		}
 		child = parent
@@ -171,10 +177,37 @@ func (r *originalC1UnusedDomainRecovery) lockExpiredAcquire(ctx context.Context,
 		!check(pd.RecordKey{ID: q.Next.GrantID}, &grant, pins.GrantSHA256) ||
 		!check(pd.RecordKey{ID: q.Next.RunID}, &run, pins.RunSHA256) ||
 		!check(pd.RecordKey{Hash: run.TargetHash}, &target, pins.TargetSHA256) ||
-		!originalC1AcquireIsUnused(q, digests, receipt, grant, run, target, now) {
+		!originalC1ExpiredAcquireCanBeFenced(q, digests, receipt, grant, run, target, now) {
+		return ErrInstall
+	}
+	var evidence int
+	err = tx.QueryRowContext(ctx, "SELECT 1 FROM system_backup_v2_evidence WHERE public_id=? LIMIT 1 FOR SHARE", run.EvidenceID).Scan(&evidence)
+	if !errors.Is(err, sql.ErrNoRows) {
 		return ErrInstall
 	}
 	return nil
+}
+
+func originalC1ExpiredAcquireCanBeFenced(q pd.CommandRequest, digests pd.CommandDigests, receipt pd.CommandReceiptRecord, grant pd.GrantRecord, run pd.RunRecord, target pd.TargetRecord, now time.Time) bool {
+	switch q.ExpectedDomainEpoch {
+	case "4":
+	case "5", "6", "7", "8":
+		if run.RowVersion != "2" || run.ObservedAt == nil || run.ObservationExpiresAt == nil {
+			return false
+		}
+		observed, observedErr := run.ObservedAt.Time()
+		expires, expiryErr := run.ObservationExpiresAt.Time()
+		ownerUntil, ownerErr := run.OwnerWriteExpiresAt.Time()
+		if observedErr != nil || expiryErr != nil || ownerErr != nil || !observed.Before(expires) || expires.After(ownerUntil) || now.Before(expires) {
+			return false
+		}
+		// The locked bytes above must match the pinned version-2 record.
+		// Compare the rest against the original acquire on this local copy.
+		run.RowVersion, run.ObservedAt, run.ObservationExpiresAt = "1", nil, nil
+	default:
+		return false
+	}
+	return originalC1AcquireIsUnused(q, digests, receipt, grant, run, target, now)
 }
 
 func originalC1AcquireIsUnused(q pd.CommandRequest, digests pd.CommandDigests, receipt pd.CommandReceiptRecord, grant pd.GrantRecord, run pd.RunRecord, target pd.TargetRecord, now time.Time) bool {
@@ -213,14 +246,12 @@ func (r *originalC1UnusedDomainRecovery) lockUnusedPrior(ctx context.Context, tx
 	if err != nil {
 		return ErrInstall
 	}
-	// The native opener already holds the domain row. Allow only the pinned
-	// expired acquire when the original receipt confirms no observation.
-	var afterExactAcquire string
-	if r.orphan != nil {
-		if r.lockExpiredAcquire(ctx, tx, *prior, now) != nil {
+	// The native opener already holds the domain row. Accept only the pinned
+	// expired acquires. Their grant, command, target and run bytes stay intact.
+	for _, acquire := range r.acquires {
+		if acquire.lockExpiredAcquire(ctx, tx, acquire.domain, now) != nil {
 			return ErrInstall
 		}
-		afterExactAcquire = " OFFSET 1"
 	}
 	for _, table := range []string{
 		"system_backup_producer_grants",
@@ -229,7 +260,7 @@ func (r *originalC1UnusedDomainRecovery) lockUnusedPrior(ctx context.Context, tx
 		"system_backup_producer_command_receipts",
 	} {
 		var marker int
-		err := tx.QueryRowContext(ctx, "SELECT 1 FROM "+table+" WHERE scope_key=? LIMIT 1"+afterExactAcquire+" FOR SHARE", key).Scan(&marker)
+		err := tx.QueryRowContext(ctx, "SELECT 1 FROM "+table+" WHERE scope_key=? LIMIT 1 OFFSET "+strconv.Itoa(len(r.acquires))+" FOR SHARE", key).Scan(&marker)
 		if !errors.Is(err, sql.ErrNoRows) {
 			return ErrInstall
 		}
